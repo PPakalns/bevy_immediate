@@ -132,7 +132,7 @@ impl<'w, 's> Imm<'w, 's> {
         let stored_current = self.current;
 
         self.current = Current {
-            id: id,
+            id,
             entity: Some(entity),
             idx: 0,
         };
@@ -175,6 +175,18 @@ impl<'r, 'w, 's> ImmEntityBuilder<'r, 'w, 's> {
         self
     }
 
+    /// Issue [`EntityCommands`] at this moment if condition is met
+    pub fn at_this_moment_apply_commands_if<F>(self, f: F, condition: impl FnOnce() -> bool) -> Self
+    where
+        F: FnOnce(&mut EntityCommands),
+    {
+        if condition() {
+            self.at_this_moment_apply_commands(f)
+        } else {
+            self
+        }
+    }
+
     /// Issue [`EntityCommands`]
     /// (issued only when entity is created).
     pub fn on_spawn_apply_commands<F>(self, f: F) -> Self
@@ -195,11 +207,10 @@ impl<'r, 'w, 's> ImmEntityBuilder<'r, 'w, 's> {
         F: FnOnce(&mut EntityCommands),
     {
         if self.currently_creating {
-            if condition() {
-                return self.at_this_moment_apply_commands(f);
-            }
+            self.at_this_moment_apply_commands_if(f, condition)
+        } else {
+            self
         }
-        self
     }
 
     /// Insert [`Bundle`] similarly to [`EntityCommands::insert`].
@@ -285,6 +296,7 @@ impl<'r, 'w, 's> ImmEntityBuilder<'r, 'w, 's> {
     /// Finalize building of entity and provide immediate mode function to build descendants of this entity
     ///
     /// Function will return [`ImmReturn`] that can be used to check events
+    #[allow(clippy::should_implement_trait)]
     pub fn add<R>(self, f: impl FnOnce(&mut Imm<'w, 's>) -> R) -> ImmReturn<'r, 'w, 's, R> {
         let resp = self.sui.add(self.id, self.entity, f);
 
