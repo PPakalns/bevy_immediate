@@ -1,10 +1,14 @@
-use std::ops::{Deref, DerefMut};
+use std::{
+    marker::PhantomData,
+    ops::{Deref, DerefMut},
+};
 
 use bevy_ecs::{
     bundle::Bundle,
     entity::Entity,
     event::Event,
     hierarchy::ChildOf,
+    query::{With, Without},
     schedule::IntoScheduleConfigs,
     system::{Commands, EntityCommands, IntoObserverSystem, Query, ResMut},
 };
@@ -14,34 +18,71 @@ use bevy_ecs::{
 pub struct ImmediateSystemSet;
 
 /// Plugin for immediate mode functionality in bevy
-pub struct BevyImmediatePlugin;
+pub struct BevyImmediatePlugin<Marker = ()>(PhantomData<Marker>);
 
-impl bevy_app::Plugin for BevyImmediatePlugin {
+impl<Marker> Default for BevyImmediatePlugin<Marker> {
+    fn default() -> Self {
+        Self(Default::default())
+    }
+}
+
+impl<Marker> bevy_app::Plugin for BevyImmediatePlugin<Marker>
+where
+    Marker: Send + Sync + 'static,
+{
     fn build(&self, app: &mut bevy_app::App) {
         app.add_systems(
             bevy_app::PostUpdate,
-            immediate_mode_tracked_entity_upkeep_system.in_set(ImmediateSystemSet),
+            immediate_mode_tracked_entity_upkeep_system::<Marker>.in_set(ImmediateSystemSet),
         );
+        app.insert_resource(ImmediateModeStateResource::<Marker>::default());
 
-        app.insert_resource(ImmediateModeStateResource::default());
-
-        entity_mapping::init(app);
+        entity_mapping::init::<Marker>(app);
     }
 }
 
 mod entity_mapping;
 
-mod immctx;
-pub use immctx::ImmCtx;
+mod ctx;
+pub use ctx::ImmCtx;
 
-mod immid;
-pub use immid::{ImmId, ImmIdBuilder, imm_id};
+mod id;
+pub use id::{ImmId, ImmIdBuilder, imm_id};
+
+mod capabilities;
+pub use capabilities::ImmCapabilities;
+
+/// Trait used to simplify passing around immediate mode
+/// extension capabilities and marker type to use in query filter.
+///
+/// See [`ImmCapabilities`] and [`ImmMarker`], [`ImmAvoid`].
+pub trait ImmCM: 'static + Send + Sync {
+    type Capabilities: 'static + Send + Sync + ImmCapabilities;
+    type Marker: 'static + Send + Sync;
+}
+
+impl<Cap> ImmCM for Cap
+where
+    Cap: 'static + Send + Sync + ImmCapabilities,
+{
+    type Capabilities = Cap;
+    type Marker = ();
+}
+
+impl<Cap, Marker> ImmCM for (Cap, Marker)
+where
+    Cap: 'static + Send + Sync + ImmCapabilities,
+    Marker: 'static + Send + Sync,
+{
+    type Capabilities = Cap;
+    type Marker = Marker;
+}
 
 /// Immediate mode manager that manages entity [`Self::current`]
 ///
 /// Can be used to build new child entities with [`Self::build`] and similar methods.
-pub struct Imm<'w, 's> {
-    ctx: ImmCtx<'w, 's>,
+pub struct Imm<'w, 's, CM: ImmCM> {
+    ctx: ImmCtx<'w, 's, CM>,
     current: Current,
 }
 
@@ -52,13 +93,13 @@ struct Current {
     idx: usize,
 }
 
-impl<'w, 's> Imm<'w, 's> {
+impl<'w, 's, CM: ImmCM> Imm<'w, 's, CM> {
     /// Build new entity with auto generated id.
     ///
     /// Use [`Self::build_id`] if building entities that may not always exist when parent entity exists.
     ///
     /// Read more [`ImmId`], [`ImmIdBuilder`].
-    pub fn child(&mut self) -> ImmEntityBuilder<'_, 'w, 's> {
+    pub fn child(&mut self) -> ImmEntityBuilder<'_, 'w, 's, CM> {
         self.child_with_manual_id(ImmIdBuilder::Auto)
     }
 
@@ -66,14 +107,14 @@ impl<'w, 's> Imm<'w, 's> {
     /// make truly unique id.
     ///
     /// Read more [`ImmId`], [`ImmIdBuilder`].
-    pub fn child_with_id<T: std::hash::Hash>(&mut self, id: T) -> ImmEntityBuilder<'_, 'w, 's> {
+    pub fn child_with_id<T: std::hash::Hash>(&mut self, id: T) -> ImmEntityBuilder<'_, 'w, 's, CM> {
         self.child_with_manual_id(ImmIdBuilder::Hierarchy(ImmId::new(id)))
     }
 
     /// Build new entity with provided id.
     ///
     /// Read more [`ImmId`], [`ImmIdBuilder`].
-    pub fn child_with_manual_id(&mut self, id: ImmIdBuilder) -> ImmEntityBuilder<'_, 'w, 's> {
+    pub fn child_with_manual_id(&mut self, id: ImmIdBuilder) -> ImmEntityBuilder<'_, 'w, 's, CM> {
         let id = id.resolve(self);
 
         let mut currently_creating = false;
@@ -97,10 +138,16 @@ impl<'w, 's> Imm<'w, 's> {
                 entity
             }
             None => {
-                let mut commands = self.ctx.commands.spawn(ImmediateModeTrackerComponent {
-                    id,
-                    iteration: self.ctx.state.iteration,
-                });
+                let mut commands = self.ctx.commands.spawn((
+                    ImmTrackerComponent::<CM::Marker> {
+                        id,
+                        iteration: self.ctx.state.iteration,
+                        _ph: PhantomData,
+                    },
+                    // Add marker component that users can use in QueryFilter Without statements
+                    ImmMarker::<CM::Marker>::new(),
+                ));
+
                 if let Some(entity) = self.current.entity {
                     commands.insert(ChildOf(entity));
                 }
@@ -118,7 +165,12 @@ impl<'w, 's> Imm<'w, 's> {
     }
 
     /// Manage entity with provided [`ImmId`] and [`Entity`] attributes with following logic
-    fn add<R>(&mut self, id: ImmId, entity: Entity, f: impl FnOnce(&mut Imm<'w, 's>) -> R) -> R {
+    fn add<R>(
+        &mut self,
+        id: ImmId,
+        entity: Entity,
+        f: impl FnOnce(&mut Imm<'w, 's, CM>) -> R,
+    ) -> R {
         self.add_dyn(id, entity, Box::new(f))
     }
 
@@ -127,7 +179,7 @@ impl<'w, 's> Imm<'w, 's> {
         &mut self,
         id: ImmId,
         entity: Entity,
-        f: Box<dyn FnOnce(&mut Imm<'w, 's>) -> R + '_>,
+        f: Box<dyn FnOnce(&mut Imm<'w, 's, CM>) -> R + '_>,
     ) -> R {
         let stored_current = self.current;
 
@@ -151,20 +203,26 @@ impl<'w, 's> Imm<'w, 's> {
     pub fn current_entity(&self) -> Option<Entity> {
         self.current.entity
     }
+
+    /// Retrieve access to commands
+    #[inline]
+    pub fn commands_mut(&mut self) -> &mut Commands<'w, 's> {
+        &mut self.ctx.commands
+    }
 }
 
 /// Builder to build new entity that is managed by immediate mode logic
 ///
 /// Construction should end with calls to [`Self::add`] or [`Self::add_empty`].
 #[must_use]
-pub struct ImmEntityBuilder<'r, 'w, 's> {
-    sui: &'r mut Imm<'w, 's>,
+pub struct ImmEntityBuilder<'r, 'w, 's, CM: ImmCM> {
+    sui: &'r mut Imm<'w, 's, CM>,
     id: ImmId,
     entity: Entity,
     currently_creating: bool,
 }
 
-impl<'r, 'w, 's> ImmEntityBuilder<'r, 'w, 's> {
+impl<'r, 'w, 's, CM: ImmCM> ImmEntityBuilder<'r, 'w, 's, CM> {
     /// Issue [`EntityCommands`] at this moment
     pub fn at_this_moment_apply_commands<F>(self, f: F) -> Self
     where
@@ -297,7 +355,7 @@ impl<'r, 'w, 's> ImmEntityBuilder<'r, 'w, 's> {
     ///
     /// Function will return [`ImmReturn`] that can be used to check events
     #[allow(clippy::should_implement_trait)]
-    pub fn add<R>(self, f: impl FnOnce(&mut Imm<'w, 's>) -> R) -> ImmReturn<'r, 'w, 's, R> {
+    pub fn add<R>(self, f: impl FnOnce(&mut Imm<'w, 's, CM>) -> R) -> ImmReturn<'r, 'w, 's, R, CM> {
         let resp = self.sui.add(self.id, self.entity, f);
 
         ImmReturn {
@@ -313,7 +371,7 @@ impl<'r, 'w, 's> ImmEntityBuilder<'r, 'w, 's> {
     /// Finalize building of entity
     ///
     /// Function will return [`ImmReturn`] that can be used to check events
-    pub fn add_empty(self) -> ImmEntity<'r, 'w, 's> {
+    pub fn add_empty(self) -> ImmEntity<'r, 'w, 's, CM> {
         ImmEntity {
             ui: self.sui,
             entity: self.entity,
@@ -323,22 +381,22 @@ impl<'r, 'w, 's> ImmEntityBuilder<'r, 'w, 's> {
 }
 
 /// Stores return value of closure and builded entity response
-pub struct ImmReturn<'r, 'w, 's, Inner> {
+pub struct ImmReturn<'r, 'w, 's, Inner, CM: ImmCM> {
     /// Return value of closure that was provided to [`ImmBuilder::add`].
     pub inner: Inner,
     /// Stores information about entity that was built
-    pub resp: ImmEntity<'r, 'w, 's>,
+    pub resp: ImmEntity<'r, 'w, 's, CM>,
 }
 
-impl<'r, 'w, 's, Inner> Deref for ImmReturn<'r, 'w, 's, Inner> {
-    type Target = ImmEntity<'r, 'w, 's>;
+impl<'r, 'w, 's, Inner, CM: ImmCM> Deref for ImmReturn<'r, 'w, 's, Inner, CM> {
+    type Target = ImmEntity<'r, 'w, 's, CM>;
 
     fn deref(&self) -> &Self::Target {
         &self.resp
     }
 }
 
-impl<'r, 'w, 's, Inner> DerefMut for ImmReturn<'r, 'w, 's, Inner> {
+impl<'r, 'w, 's, Inner, CM: ImmCM> DerefMut for ImmReturn<'r, 'w, 's, Inner, CM> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.resp
     }
@@ -350,13 +408,29 @@ impl<'r, 'w, 's, Inner> DerefMut for ImmReturn<'r, 'w, 's, Inner> {
 /// * If entity was clicked,
 /// * If entity was spawned,
 /// * etc.
-pub struct ImmEntity<'r, 'w, 's> {
+pub struct ImmEntity<'r, 'w, 's, CM: ImmCM> {
     currently_creating: bool,
     entity: Entity,
-    ui: &'r mut Imm<'w, 's>,
+    ui: &'r mut Imm<'w, 's, CM>,
 }
 
-impl<'r, 'w, 's> ImmEntity<'r, 'w, 's> {
+impl<'r, 'w, 's, CM: ImmCM> ImmEntity<'r, 'w, 's, CM> {
+    /// Retrieve [`Entity`] value for this entity
+    pub fn entity(&self) -> Entity {
+        self.entity
+    }
+
+    /// Gain access to [`Commands`]
+    pub fn commands(&mut self) -> &mut Commands<'w, 's> {
+        self.ui.commands_mut()
+    }
+
+    /// Gain access to [`EntityCommands`] for this entity
+    pub fn entity_commands<R>(&mut self) -> EntityCommands<'_> {
+        let commands = &mut self.ui.ctx.commands;
+        commands.entity(self.entity)
+    }
+
     /// Entity will be spawned when [`Commands`] will be processed.
     pub fn will_be_spawned(&self) -> bool {
         self.currently_creating
@@ -381,21 +455,55 @@ impl<'r, 'w, 's> ImmEntity<'r, 'w, 's> {
 
 /// Component that is added to entities that are managed
 /// by immediate mode system
+///
+/// Useful to add query filter [`ImmAvoid<Marker>`] or [`bevy_ecs::query::Without<ImmMarker>`] to your queries.
+/// In cases where you want to access entities that are constructed by immediate mode.
+/// Use other type inside marker than () `[ImmMarker<()>]` in your system and queries.
 #[derive(bevy_ecs::component::Component)]
-pub struct ImmediateModeTrackerComponent {
+pub struct ImmMarker<Marker = ()> {
+    _ph: PhantomData<Marker>,
+}
+
+impl<M> ImmMarker<M> {
+    fn new() -> Self {
+        Self { _ph: PhantomData }
+    }
+}
+
+/// Type to use in QueryFilter to avoid query collisions
+pub type ImmAvoid<Marker = ()> = Without<ImmMarker<Marker>>;
+
+type CMMarker<CM> = <CM as ImmCM>::Marker;
+type WithImmMarker<CM> = With<ImmMarker<<CM as ImmCM>::Marker>>;
+
+/// Component that is added to entities that are managed
+/// by immediate mode system
+#[derive(bevy_ecs::component::Component)]
+struct ImmTrackerComponent<Marker> {
     id: ImmId,
     iteration: u32,
+    _ph: PhantomData<Marker>,
 }
 
-#[derive(bevy_ecs::resource::Resource, Default)]
-struct ImmediateModeStateResource {
+#[derive(bevy_ecs::resource::Resource)]
+struct ImmediateModeStateResource<Marker: Send + Sync + 'static> {
     // Current iteration for unused entity removal
     iteration: u32,
+    _ph: PhantomData<Marker>,
 }
 
-fn immediate_mode_tracked_entity_upkeep_system(
-    query: Query<(Entity, &ImmediateModeTrackerComponent)>,
-    mut state: ResMut<ImmediateModeStateResource>,
+impl<Marker: Send + Sync + 'static> Default for ImmediateModeStateResource<Marker> {
+    fn default() -> Self {
+        Self {
+            iteration: Default::default(),
+            _ph: Default::default(),
+        }
+    }
+}
+
+fn immediate_mode_tracked_entity_upkeep_system<Marker: Send + Sync + 'static>(
+    query: Query<(Entity, &ImmTrackerComponent<Marker>), With<ImmMarker<Marker>>>,
+    mut state: ResMut<ImmediateModeStateResource<Marker>>,
     mut commands: Commands,
 ) {
     for (entity, marker) in query {

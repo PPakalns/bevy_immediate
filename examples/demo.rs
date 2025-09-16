@@ -6,7 +6,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         //
         // Add immediate mode plugin and ui extensions for ergonomic API
-        .add_plugins(BevyImmediatePlugin)
+        .add_plugins(BevyImmediatePlugin::<()>::default())
         .add_plugins(BevyImmediateUiExtensionPlugin)
         //
         // Only run the app when there is user input. This will significantly reduce CPU/GPU use.
@@ -36,7 +36,7 @@ enum Tab {
     Tab3,
 }
 
-fn immediate_ui_demo(ctx: ImmCtx, mut state: ResMut<State>) {
+fn immediate_ui_demo(ctx: ImmCtx<()>, mut state: ResMut<State>) {
     ctx.init("main_ui")
         .child()
         .on_spawn_insert(|| Node {
