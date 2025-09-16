@@ -1,47 +1,59 @@
-use std::marker::PhantomData;
-
 use bevy_ecs::{
+    entity::Entity,
     hierarchy::ChildOf,
+    query::With,
     system::{Commands, Query, Res},
 };
 
 use crate::{
-    Imm, ImmCM, ImmId,
+    Imm, ImmCap, ImmId, ImmMarker,
     immediate::{
-        CMMarker, Current, ImmMarker, ImmTrackerComponent, ImmediateModeStateResource,
+        Current, ImmTrackerComponent, ImmediateModeStateResource, capabilities::ImmCapSystemParams,
         entity_mapping::ImmediateModeEntityMapping,
     },
 };
-#[cfg(feature = "picking")]
-use crate::{immediate::WithImmMarker, ui::picking};
 
 /// Immediate mode ctx
 #[derive(bevy_ecs::system::SystemParam)]
-pub struct ImmCtx<'w, 's, CM: ImmCM> {
-    pub(super) query: Query<'w, 's, ImmEntityQuery<CMMarker<CM>>, WithImmMarker<CM>>,
+pub struct ImmCtx<'w, 's, Cap: ImmCap> {
+    pub(super) state: Res<'w, ImmediateModeStateResource<Cap>>,
+    pub(super) mapping: Res<'w, ImmediateModeEntityMapping<Cap>>,
+    pub(super) query: Query<'w, 's, ImmEntityQuery<Cap>, With<ImmMarker<Cap>>>,
 
-    #[cfg(feature = "picking")]
-    pub(super) track_clicked_query:
-        Query<'w, 's, &'static picking::TrackClicked, WithImmMarker<CM>>,
+    /// Access data from entities for components that were requested in extensions
+    pub params: ImmCapSystemParams<'w, 's, Cap>,
 
-    pub(super) state: Res<'w, ImmediateModeStateResource<CMMarker<CM>>>,
-    pub(super) mapping: Res<'w, ImmediateModeEntityMapping<CMMarker<CM>>>,
-    pub(super) commands: Commands<'w, 's>,
-
-    ph: PhantomData<CM>,
+    /// World commands
+    pub commands: Commands<'w, 's>,
 }
 
 impl<'w, 's, CM> ImmCtx<'w, 's, CM>
 where
-    CM: ImmCM,
+    CM: ImmCap,
 {
     /// Initialize entity hierarchy managed by immediate mode
-    pub fn init<T: std::hash::Hash>(self, root_id: T) -> Imm<'w, 's, CM> {
+    pub fn build_immediate_root<T: std::hash::Hash>(self, root_id: T) -> Imm<'w, 's, CM> {
         Imm {
             ctx: self,
             current: Current {
                 id: ImmId::new(root_id),
                 entity: None,
+                idx: 0,
+            },
+        }
+    }
+
+    /// Initialize entity hierarchy managed by immediate mode starting from given entity
+    pub fn build_immediate_from<T: std::hash::Hash>(
+        self,
+        root_id: T,
+        entity: Entity,
+    ) -> Imm<'w, 's, CM> {
+        Imm {
+            ctx: self,
+            current: Current {
+                id: ImmId::new(root_id),
+                entity: Some(entity),
                 idx: 0,
             },
         }

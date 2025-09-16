@@ -1,13 +1,15 @@
 use bevy::{color::palettes::basic::*, prelude::*, winit::WinitSettings};
-use bevy_immediate::{BevyImmediatePlugin, BevyImmediateUiExtensionPlugin, ImmCtx};
+use bevy_immediate::{
+    BevyImmediatePlugin, ImmCtx,
+    ui::{ImmCapUi, picking::ImmUiClicked},
+};
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         //
         // Add immediate mode plugin and ui extensions for ergonomic API
-        .add_plugins(BevyImmediatePlugin::<()>::default())
-        .add_plugins(BevyImmediateUiExtensionPlugin)
+        .add_plugins(BevyImmediatePlugin::<ImmCapUi>::default())
         //
         // Only run the app when there is user input. This will significantly reduce CPU/GPU use.
         .insert_resource(WinitSettings::desktop_app())
@@ -36,8 +38,8 @@ enum Tab {
     Tab3,
 }
 
-fn immediate_ui_demo(ctx: ImmCtx<()>, mut state: ResMut<State>) {
-    ctx.init("main_ui")
+fn immediate_ui_demo(ctx: ImmCtx<ImmCapUi>, mut state: ResMut<State>) {
+    ctx.build_immediate_root("main_ui")
         .child()
         .on_spawn_insert(|| Node {
             flex_direction: FlexDirection::Column,

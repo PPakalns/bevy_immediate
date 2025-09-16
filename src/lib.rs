@@ -1,4 +1,3 @@
-#![forbid(unsafe_code)]
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
@@ -10,5 +9,3 @@ pub use immediate::*;
 /// creating UI ([`bevy_ui`]) in immediate mode
 #[cfg(feature = "ui")]
 pub mod ui;
-#[cfg(feature = "ui")]
-pub use ui::BevyImmediateUiExtensionPlugin;

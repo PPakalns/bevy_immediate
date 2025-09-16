@@ -5,19 +5,61 @@ use bevy_ecs::{
 };
 use bevy_picking::events::{Click, Pointer};
 
-/// Add UI related functionality to immediate mode API
-pub struct BevyImmediateUiPickingExtensionPlugin;
+use crate::{ImmCap, ImmCapabilitiesRequests, ImmEntity, ImmImplCap};
 
-impl bevy_app::Plugin for BevyImmediateUiPickingExtensionPlugin {
+/// Immediate mode capability for `.clicked()`
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ImmCapUiClicked;
+
+impl ImmCap for ImmCapUiClicked {
+    fn build<CM: ImmCap>(app: &mut bevy_app::App, cap_req: &mut ImmCapabilitiesRequests<CM>) {
+        if !app.is_plugin_added::<TrackClickedPlugin>() {
+            app.add_plugins(TrackClickedPlugin);
+        }
+
+        cap_req.request_optional_component::<TrackClicked>(app.world_mut(), false);
+    }
+}
+
+/// Implements support for `.clicked()`
+pub trait ImmUiClicked {
+    /// Entity clicked during last frame
+    fn clicked(&mut self) -> bool;
+}
+
+impl<Cap: ImmCap> ImmUiClicked for ImmEntity<'_, '_, '_, Cap>
+where
+    Cap: ImmImplCap<ImmCapUiClicked>,
+{
+    fn clicked(&mut self) -> bool {
+        let entity = self.entity();
+
+        let mut query = self.ctx().params.get_query::<Option<&TrackClicked>>();
+
+        match query.query().get(entity) {
+            Ok(Some(entity)) => entity.clicked,
+            Ok(None) | Err(_) => {
+                self.entity_commands()
+                    .insert(TrackClicked::default())
+                    .observe(on_click);
+                false
+            }
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/// Add click tracking related logic
+pub struct TrackClickedPlugin;
+
+impl bevy_app::Plugin for TrackClickedPlugin {
     fn build(&self, app: &mut bevy_app::App) {
+        println!("Initializing track clicked plugin!");
         app.insert_resource(TrackClickedResetResource::default());
         app.add_systems(bevy_app::First, reset_clicked_tracking);
     }
 }
-
-// pub trait ImmediateClicked {
-//     pub fn clicked(&mut self) -> bool {}
-// }
 
 /// Tracks if entity has been clicked in this frame.
 #[derive(bevy_ecs::component::Component, Default)]
@@ -39,6 +81,7 @@ pub(crate) fn on_click(
 ) {
     let entity = trigger.target();
     if let Ok(mut comp) = query.get_mut(entity) {
+        println!("Clicked");
         comp.clicked = true;
         resource.clicked.push(entity);
     }
@@ -56,6 +99,7 @@ fn reset_clicked_tracking(
 ) {
     for entity in res.clicked.drain(..) {
         if let Ok(mut comp) = query.get_mut(entity) {
+            println!("Cleaned");
             comp.clicked = false;
         }
     }
