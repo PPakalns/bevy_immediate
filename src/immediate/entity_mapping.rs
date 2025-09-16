@@ -6,23 +6,23 @@ use bevy_ecs::{
     world::{OnAdd, OnRemove},
 };
 
-use crate::{SuiId, SuiMarker};
+use crate::{ImmId, ImmediateModeTrackerComponent};
 
 #[derive(bevy_ecs::resource::Resource, Default)]
-pub struct SimpleUiIdMapping {
-    pub(super) id_to_entity: HashMap<SuiId, Entity>,
+pub struct ImmediateModeEntityMapping {
+    pub(super) id_to_entity: HashMap<ImmId, Entity>,
 }
 
 pub fn init(app: &mut bevy_app::App) {
-    app.insert_resource(SimpleUiIdMapping::default());
+    app.insert_resource(ImmediateModeEntityMapping::default());
     app.add_observer(on_sui_marker_added)
         .add_observer(on_sui_marker_removed);
 }
 
 fn on_sui_marker_added(
-    trigger: Trigger<OnAdd, SuiMarker>,
-    marker: Query<&SuiMarker>,
-    mut mapping: ResMut<SimpleUiIdMapping>,
+    trigger: Trigger<OnAdd, ImmediateModeTrackerComponent>,
+    marker: Query<&ImmediateModeTrackerComponent>,
+    mut mapping: ResMut<ImmediateModeEntityMapping>,
 ) {
     let entity = trigger.target();
     if let Ok(marker) = marker.get(entity) {
@@ -31,9 +31,9 @@ fn on_sui_marker_added(
 }
 
 fn on_sui_marker_removed(
-    trigger: Trigger<OnRemove, SuiMarker>,
-    marker: Query<&SuiMarker>,
-    mut mapping: ResMut<SimpleUiIdMapping>,
+    trigger: Trigger<OnRemove, ImmediateModeTrackerComponent>,
+    marker: Query<&ImmediateModeTrackerComponent>,
+    mut mapping: ResMut<ImmediateModeEntityMapping>,
 ) {
     let entity = trigger.target();
     if let Ok(marker) = marker.get(entity) {

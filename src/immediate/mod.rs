@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::ops::{Deref, DerefMut};
 
 use bevy_ecs::{
     bundle::Bundle,
@@ -6,142 +6,82 @@ use bevy_ecs::{
     event::Event,
     hierarchy::ChildOf,
     schedule::IntoScheduleConfigs,
-    system::{Commands, EntityCommands, IntoObserverSystem, Query, Res, ResMut},
+    system::{Commands, EntityCommands, IntoObserverSystem, Query, ResMut},
 };
-use bevy_ui::UiSystem;
-use id_mapping::SimpleUiIdMapping;
 
-#[cfg(feature = "picking")]
-use crate::ui::picking;
+/// System set for systems that power `bevy_immediate` immediate mode functionality
+#[derive(bevy_ecs::schedule::SystemSet, PartialEq, Eq, Clone, Debug, Hash)]
+pub struct ImmediateSystemSet;
 
+/// Plugin for immediate mode functionality in bevy
 pub struct BevyImmediatePlugin;
 
 impl bevy_app::Plugin for BevyImmediatePlugin {
     fn build(&self, app: &mut bevy_app::App) {
         app.add_systems(
             bevy_app::PostUpdate,
-            upkeep_ui_system.before(UiSystem::Prepare),
+            immediate_mode_tracked_entity_upkeep_system.in_set(ImmediateSystemSet),
         );
 
-        app.insert_resource(SimpleUiState::default());
+        app.insert_resource(ImmediateModeStateResource::default());
 
-        id_mapping::init(app);
+        entity_mapping::init(app);
     }
 }
 
-mod id_mapping;
+mod entity_mapping;
 
-#[derive(bevy_ecs::system::SystemParam)]
-pub struct SimpleUiCtx<'w, 's> {
-    query: Query<'w, 's, SUiNodeQuery>,
+mod immctx;
+pub use immctx::ImmCtx;
 
-    #[cfg(feature = "picking")]
-    track_clicked_query: Query<'w, 's, &'static picking::TrackClicked>,
+mod immid;
+pub use immid::{ImmId, ImmIdBuilder, imm_id};
 
-    state: Res<'w, SimpleUiState>,
-    id_mapping: Res<'w, SimpleUiIdMapping>,
-    commands: Commands<'w, 's>,
-
-    _ph: PhantomData<&'s ()>,
-}
-impl<'w, 's> SimpleUiCtx<'w, 's> {
-    pub fn init_ui<T: std::hash::Hash>(self, root_id: T) -> Sui<'w, 's> {
-        Sui {
-            ctx: self,
-            current: Current {
-                id: SuiId::new(root_id),
-                entity: None,
-                idx: 0,
-            },
-        }
-    }
-}
-
-#[derive(bevy_ecs::query::QueryData)]
-#[query_data(mutable)]
-struct SUiNodeQuery {
-    sui_marker: &'static mut SuiMarker,
-    child_of: Option<&'static ChildOf>,
-}
-
-#[derive(bevy_ecs::resource::Resource, Default)]
-struct SimpleUiState {
-    iteration: u32,
-}
-
-#[derive(bevy_ecs::component::Component)]
-pub struct SuiMarker {
-    id: SuiId,
-    iteration: u32,
-}
-
-pub enum SuiIdBuilder {
-    Auto,
-    Hierarchy(SuiId),
-    Unique(SuiId),
-}
-impl SuiIdBuilder {
-    fn resolve(self, sui: &Sui<'_, '_>) -> SuiId {
-        match self {
-            SuiIdBuilder::Auto => {
-                let id = sui.current.id.with(sui.current.idx);
-                id
-            }
-            SuiIdBuilder::Hierarchy(sui_id) => sui.current.id.with(sui_id),
-            SuiIdBuilder::Unique(sui_id) => sui_id,
-        }
-    }
-}
-
-#[derive(Hash, Clone, Copy, PartialEq, Eq)]
-pub struct SuiId {
-    id: u64,
-}
-impl SuiId {
-    pub fn new(source: impl std::hash::Hash) -> Self {
-        Self {
-            id: ahash::RandomState::with_seeds(1, 2, 3, 4).hash_one(source),
-        }
-    }
-
-    pub fn with(self, child: impl std::hash::Hash) -> Self {
-        use std::hash::{BuildHasher as _, Hasher as _};
-        let mut hasher = ahash::RandomState::with_seeds(1, 2, 3, 4).build_hasher();
-        hasher.write_u64(self.id);
-        child.hash(&mut hasher);
-        Self {
-            id: hasher.finish(),
-        }
-    }
-}
-
-pub struct Sui<'w, 's> {
-    ctx: SimpleUiCtx<'w, 's>,
+/// Immediate mode manager that manages entity [`Self::current`]
+///
+/// Can be used to build new child entities with [`Self::build`] and similar methods.
+pub struct Imm<'w, 's> {
+    ctx: ImmCtx<'w, 's>,
     current: Current,
 }
 
 #[derive(Clone, Copy)]
 struct Current {
-    id: SuiId,
+    id: ImmId,
     entity: Option<Entity>,
     idx: usize,
 }
 
-impl<'w, 's> Sui<'w, 's> {
-    pub fn build(&mut self) -> SuiBuilder<'_, 'w, 's> {
-        self.build_id(SuiIdBuilder::Auto)
+impl<'w, 's> Imm<'w, 's> {
+    /// Build new entity with auto generated id.
+    ///
+    /// Use [`Self::build_id`] if building entities that may not always exist when parent entity exists.
+    ///
+    /// Read more [`ImmId`], [`ImmIdBuilder`].
+    pub fn child(&mut self) -> ImmEntityBuilder<'_, 'w, 's> {
+        self.child_with_manual_id(ImmIdBuilder::Auto)
     }
 
-    pub fn build_id(&mut self, id: SuiIdBuilder) -> SuiBuilder<'_, 'w, 's> {
+    /// Build new entity with manually provided id that will be combined with parent entity id to
+    /// make truly unique id.
+    ///
+    /// Read more [`ImmId`], [`ImmIdBuilder`].
+    pub fn child_with_id<T: std::hash::Hash>(&mut self, id: T) -> ImmEntityBuilder<'_, 'w, 's> {
+        self.child_with_manual_id(ImmIdBuilder::Hierarchy(ImmId::new(id)))
+    }
+
+    /// Build new entity with provided id.
+    ///
+    /// Read more [`ImmId`], [`ImmIdBuilder`].
+    pub fn child_with_manual_id(&mut self, id: ImmIdBuilder) -> ImmEntityBuilder<'_, 'w, 's> {
         let id = id.resolve(self);
-        self.current.idx += 1;
 
         let mut currently_creating = false;
 
-        let entity = match self.ctx.id_mapping.id_to_entity.get(&id).copied() {
+        let entity = match self.ctx.mapping.id_to_entity.get(&id).copied() {
             Some(entity) => {
                 if let Ok(mut qentity) = self.ctx.query.get_mut(entity) {
-                    qentity.sui_marker.iteration = self.ctx.state.iteration;
+                    qentity.tracker.iteration = self.ctx.state.iteration;
                     if qentity.child_of.map(|ch| ch.parent()) != self.current.entity {
                         let mut entity_commands = self.ctx.commands.entity(entity);
                         match self.current.entity {
@@ -157,7 +97,7 @@ impl<'w, 's> Sui<'w, 's> {
                 entity
             }
             None => {
-                let mut commands = self.ctx.commands.spawn(SuiMarker {
+                let mut commands = self.ctx.commands.spawn(ImmediateModeTrackerComponent {
                     id,
                     iteration: self.ctx.state.iteration,
                 });
@@ -169,7 +109,7 @@ impl<'w, 's> Sui<'w, 's> {
             }
         };
 
-        SuiBuilder {
+        ImmEntityBuilder {
             sui: self,
             id,
             currently_creating,
@@ -177,15 +117,17 @@ impl<'w, 's> Sui<'w, 's> {
         }
     }
 
-    fn add<R>(&mut self, id: SuiId, entity: Entity, f: impl FnOnce(&mut Sui<'w, 's>) -> R) -> R {
+    /// Manage entity with provided [`ImmId`] and [`Entity`] attributes with following logic
+    fn add<R>(&mut self, id: ImmId, entity: Entity, f: impl FnOnce(&mut Imm<'w, 's>) -> R) -> R {
         self.add_dyn(id, entity, Box::new(f))
     }
 
+    /// Manage entity with provided [`ImmId`] and [`Entity`] attributes with following logic
     fn add_dyn<R>(
         &mut self,
-        id: SuiId,
+        id: ImmId,
         entity: Entity,
-        f: Box<dyn FnOnce(&mut Sui<'w, 's>) -> R + '_>,
+        f: Box<dyn FnOnce(&mut Imm<'w, 's>) -> R + '_>,
     ) -> R {
         let stored_current = self.current;
 
@@ -201,17 +143,30 @@ impl<'w, 's> Sui<'w, 's> {
 
         resp
     }
+
+    /// Entity that is currently being managed
+    ///
+    /// If building root of entity tree, this value may be [`None`]
+    #[inline]
+    pub fn current_entity(&self) -> Option<Entity> {
+        self.current.entity
+    }
 }
 
+/// Builder to build new entity that is managed by immediate mode logic
+///
+/// Construction should end with calls to [`Self::add`] or [`Self::add_empty`].
 #[must_use]
-pub struct SuiBuilder<'r, 'w, 's> {
-    sui: &'r mut Sui<'w, 's>,
-    id: SuiId,
+pub struct ImmEntityBuilder<'r, 'w, 's> {
+    sui: &'r mut Imm<'w, 's>,
+    id: ImmId,
     entity: Entity,
     currently_creating: bool,
 }
-impl<'r, 'w, 's> SuiBuilder<'r, 'w, 's> {
-    pub fn at_this_moment_insert_commands<F>(self, f: F) -> Self
+
+impl<'r, 'w, 's> ImmEntityBuilder<'r, 'w, 's> {
+    /// Issue [`EntityCommands`] at this moment
+    pub fn at_this_moment_apply_commands<F>(self, f: F) -> Self
     where
         F: FnOnce(&mut EntityCommands),
     {
@@ -220,37 +175,100 @@ impl<'r, 'w, 's> SuiBuilder<'r, 'w, 's> {
         self
     }
 
-    pub fn on_insert_commands<F>(self, f: F) -> Self
+    /// Issue [`EntityCommands`]
+    /// (issued only when entity is created).
+    pub fn on_spawn_apply_commands<F>(self, f: F) -> Self
     where
         F: FnOnce(&mut EntityCommands),
     {
         if self.currently_creating {
-            self.at_this_moment_insert_commands(f)
+            self.at_this_moment_apply_commands(f)
         } else {
             self
         }
     }
 
-    pub fn on_insert_add_bundle<F, B>(self, f: F) -> Self
+    /// Issue [`EntityCommands`] if condition is met.
+    /// (issued only when entity is created).
+    pub fn on_spawn_apply_commands_if<F>(self, f: F, condition: impl FnOnce() -> bool) -> Self
+    where
+        F: FnOnce(&mut EntityCommands),
+    {
+        if self.currently_creating {
+            if condition() {
+                return self.at_this_moment_apply_commands(f);
+            }
+        }
+        self
+    }
+
+    /// Insert [`Bundle`] similarly to [`EntityCommands::insert`].
+    /// (inserted only when entity is created).
+    pub fn on_spawn_insert<F, B>(self, f: F) -> Self
     where
         F: FnOnce() -> B,
         B: Bundle,
     {
-        self.on_insert_commands(|commands| {
+        self.on_spawn_apply_commands(|commands| {
             commands.insert(f());
         })
     }
 
-    pub fn on_insert_add_observer<E: Event, B: Bundle, M>(
+    /// Insert [`Bundle`] similarly to [`EntityCommands::insert_if`]
+    /// (inserted only when entity is created).
+    pub fn on_spawn_insert_if<F, B, Cond>(self, f: F, condition: impl FnOnce() -> bool) -> Self
+    where
+        F: FnOnce() -> B,
+        B: Bundle,
+    {
+        self.on_spawn_apply_commands_if(
+            |commands| {
+                commands.insert(f());
+            },
+            condition,
+        )
+    }
+
+    /// Insert [`Bundle`] similarly to [`EntityCommands::insert_if_new`].
+    /// (inserted only when entity is created).
+    pub fn on_spawn_insert_if_new<F, B>(self, f: F) -> Self
+    where
+        F: FnOnce() -> B,
+        B: Bundle,
+    {
+        self.on_spawn_apply_commands(|commands| {
+            commands.insert_if_new(f());
+        })
+    }
+
+    /// Insert [`Bundle`] similarly to [`EntityCommands::insert_if_new_and`].
+    /// (inserted only when entity is created).
+    pub fn on_spawn_insert_if_new_and<F, B>(self, f: F, condition: impl FnOnce() -> bool) -> Self
+    where
+        F: FnOnce() -> B,
+        B: Bundle,
+    {
+        self.on_spawn_apply_commands_if(
+            |commands| {
+                commands.insert_if_new(f());
+            },
+            condition,
+        )
+    }
+
+    /// Observe with [`bevy_ecs::system::ObserverSystem`]
+    /// (added only when entity is created).
+    pub fn on_spawn_observe<E: Event, B: Bundle, M>(
         self,
         observer: impl IntoObserverSystem<E, B, M>,
     ) -> Self {
-        self.on_insert_commands(|commands| {
+        self.on_spawn_apply_commands(|commands| {
             commands.observe(observer);
         })
     }
 
-    pub fn on_change_add_bundle<F, B>(self, changed: bool, f: F) -> Self
+    /// If changed, insert [`Bundle`] into entity
+    pub fn on_change_insert<F, B>(self, changed: bool, f: F) -> Self
     where
         F: FnOnce() -> B,
         B: Bundle,
@@ -264,20 +282,27 @@ impl<'r, 'w, 's> SuiBuilder<'r, 'w, 's> {
         }
     }
 
-    pub fn add<R>(self, f: impl FnOnce(&mut Sui<'w, 's>) -> R) -> SuiReturn<'r, 'w, 's, R> {
+    /// Finalize building of entity and provide immediate mode function to build descendants of this entity
+    ///
+    /// Function will return [`ImmReturn`] that can be used to check events
+    pub fn add<R>(self, f: impl FnOnce(&mut Imm<'w, 's>) -> R) -> ImmReturn<'r, 'w, 's, R> {
         let resp = self.sui.add(self.id, self.entity, f);
 
-        SuiReturn {
-            value: resp,
-            ui: self.sui,
-            entity: self.entity,
-            currently_creating: self.currently_creating,
+        ImmReturn {
+            inner: resp,
+            resp: ImmEntity {
+                ui: self.sui,
+                entity: self.entity,
+                currently_creating: self.currently_creating,
+            },
         }
     }
 
-    pub fn add_empty(self) -> SuiReturn<'r, 'w, 's, ()> {
-        SuiReturn {
-            value: (),
+    /// Finalize building of entity
+    ///
+    /// Function will return [`ImmReturn`] that can be used to check events
+    pub fn add_empty(self) -> ImmEntity<'r, 'w, 's> {
+        ImmEntity {
             ui: self.sui,
             entity: self.entity,
             currently_creating: self.currently_creating,
@@ -285,19 +310,47 @@ impl<'r, 'w, 's> SuiBuilder<'r, 'w, 's> {
     }
 }
 
-pub fn sid<T: std::hash::Hash>(val: T) -> SuiIdBuilder {
-    SuiIdBuilder::Hierarchy(SuiId::new(val))
+/// Stores return value of closure and builded entity response
+pub struct ImmReturn<'r, 'w, 's, Inner> {
+    /// Return value of closure that was provided to [`ImmBuilder::add`].
+    pub inner: Inner,
+    /// Stores information about entity that was built
+    pub resp: ImmEntity<'r, 'w, 's>,
 }
 
-pub struct SuiReturn<'r, 'w, 's, Inner> {
-    pub value: Inner,
+impl<'r, 'w, 's, Inner> Deref for ImmReturn<'r, 'w, 's, Inner> {
+    type Target = ImmEntity<'r, 'w, 's>;
 
+    fn deref(&self) -> &Self::Target {
+        &self.resp
+    }
+}
+
+impl<'r, 'w, 's, Inner> DerefMut for ImmReturn<'r, 'w, 's, Inner> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.resp
+    }
+}
+
+/// Immediate mode response from entity that was built.
+///
+/// Can be used to look up relevant information:
+/// * If entity was clicked,
+/// * If entity was spawned,
+/// * etc.
+pub struct ImmEntity<'r, 'w, 's> {
     currently_creating: bool,
     entity: Entity,
-    ui: &'r mut Sui<'w, 's>,
+    ui: &'r mut Imm<'w, 's>,
 }
 
-impl<'r, 'w, 's, Inner> SuiReturn<'r, 'w, 's, Inner> {
+impl<'r, 'w, 's> ImmEntity<'r, 'w, 's> {
+    /// Entity will be spawned when [`Commands`] will be processed.
+    pub fn will_be_spawned(&self) -> bool {
+        self.currently_creating
+    }
+
+    /// Entity clicked during last frame
     #[cfg(feature = "picking")]
     pub fn clicked(&mut self) -> bool {
         if let Ok(clicked) = self.ui.ctx.track_clicked_query.get(self.entity) {
@@ -314,9 +367,23 @@ impl<'r, 'w, 's, Inner> SuiReturn<'r, 'w, 's, Inner> {
     }
 }
 
-fn upkeep_ui_system(
-    query: Query<(Entity, &SuiMarker)>,
-    mut state: ResMut<SimpleUiState>,
+/// Component that is added to entities that are managed
+/// by immediate mode system
+#[derive(bevy_ecs::component::Component)]
+pub struct ImmediateModeTrackerComponent {
+    id: ImmId,
+    iteration: u32,
+}
+
+#[derive(bevy_ecs::resource::Resource, Default)]
+struct ImmediateModeStateResource {
+    // Current iteration for unused entity removal
+    iteration: u32,
+}
+
+fn immediate_mode_tracked_entity_upkeep_system(
+    query: Query<(Entity, &ImmediateModeTrackerComponent)>,
+    mut state: ResMut<ImmediateModeStateResource>,
     mut commands: Commands,
 ) {
     for (entity, marker) in query {
@@ -326,5 +393,5 @@ fn upkeep_ui_system(
         commands.entity(entity).despawn();
     }
 
-    state.iteration += 1;
+    state.iteration = state.iteration.wrapping_add(1);
 }

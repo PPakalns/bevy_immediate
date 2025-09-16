@@ -11,6 +11,8 @@ Powerful and easy to use UI library for bevy. Construct complex UI in one single
 
 Focus on what matters!
 
+Additionally this library provides immediate mode API to easily manage entity hierarchies.
+
 This library is in active development and some breaking changes are expected, but they will be kept as small as possible.
 
 ### 👉 [Web Demo](https://ppakalns.github.io/bevy_immediate/) 👈 of the latest released version.

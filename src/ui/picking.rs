@@ -5,6 +5,7 @@ use bevy_ecs::{
 };
 use bevy_picking::events::{Click, Pointer};
 
+/// Add UI related functionality to immediate mode API
 pub struct BevyImmediateUiPickingExtensionPlugin;
 
 impl bevy_app::Plugin for BevyImmediateUiPickingExtensionPlugin {
@@ -17,12 +18,14 @@ impl bevy_app::Plugin for BevyImmediateUiPickingExtensionPlugin {
 // pub trait ImmediateClicked {
 //     pub fn clicked(&mut self) -> bool {}
 // }
-//
+
+/// Tracks if entity has been clicked in this frame.
 #[derive(bevy_ecs::component::Component, Default)]
 pub struct TrackClicked {
     clicked: bool,
 }
 impl TrackClicked {
+    /// Retrieve whether entity has been clicked in this frame
     pub fn get(&self) -> bool {
         self.clicked
     }
@@ -41,8 +44,9 @@ pub(crate) fn on_click(
     }
 }
 
+// TODO: Remove pub(crate)
 #[derive(bevy_ecs::resource::Resource, Default)]
-pub struct TrackClickedResetResource {
+pub(crate) struct TrackClickedResetResource {
     clicked: Vec<Entity>,
 }
 

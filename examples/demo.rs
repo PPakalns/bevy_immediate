@@ -1,5 +1,5 @@
 use bevy::{color::palettes::basic::*, prelude::*, winit::WinitSettings};
-use bevy_immediate::{BevyImmediatePlugin, BevyImmediateUiExtensionPlugin, SimpleUiCtx, sid};
+use bevy_immediate::{BevyImmediatePlugin, BevyImmediateUiExtensionPlugin, ImmCtx};
 
 fn main() {
     App::new()
@@ -36,10 +36,10 @@ enum Tab {
     Tab3,
 }
 
-fn immediate_ui_demo(ctx: SimpleUiCtx, mut state: ResMut<State>) {
-    ctx.init_ui("main_ui")
-        .build()
-        .on_insert_add_bundle(|| Node {
+fn immediate_ui_demo(ctx: ImmCtx, mut state: ResMut<State>) {
+    ctx.init("main_ui")
+        .child()
+        .on_spawn_insert(|| Node {
             flex_direction: FlexDirection::Column,
             width: Val::Percent(100.0),
             height: Val::Percent(100.0),
@@ -49,8 +49,8 @@ fn immediate_ui_demo(ctx: SimpleUiCtx, mut state: ResMut<State>) {
             ..default()
         })
         .add(|ui| {
-            ui.build()
-                .on_insert_add_bundle(|| Node {
+            ui.child()
+                .on_spawn_insert(|| Node {
                     flex_direction: FlexDirection::Row,
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
@@ -59,8 +59,8 @@ fn immediate_ui_demo(ctx: SimpleUiCtx, mut state: ResMut<State>) {
                 })
                 .add(|ui| {
                     let mut resp = ui
-                        .build()
-                        .on_insert_add_bundle(|| {
+                        .child()
+                        .on_spawn_insert(|| {
                             (
                                 Button,
                                 Node {
@@ -79,8 +79,8 @@ fn immediate_ui_demo(ctx: SimpleUiCtx, mut state: ResMut<State>) {
                             )
                         })
                         .add(|ui| {
-                            ui.build()
-                                .on_insert_add_bundle(|| {
+                            ui.child()
+                                .on_spawn_insert(|| {
                                     (
                                         Text::new("Button"),
                                         TextColor(Color::srgb(0.9, 0.9, 0.9)),
@@ -94,18 +94,18 @@ fn immediate_ui_demo(ctx: SimpleUiCtx, mut state: ResMut<State>) {
                         state.clicked_times += 1;
                     }
 
-                    ui.build()
-                        .on_insert_add_bundle(|| {
+                    ui.child()
+                        .on_spawn_insert(|| {
                             (TextColor(Color::srgb(0.9, 0.9, 0.9)), TextShadow::default())
                         })
-                        .on_change_add_bundle(state.is_changed(), || {
+                        .on_change_insert(state.is_changed(), || {
                             Text::new(format!("Clicked: {}", state.clicked_times))
                         })
                         .add_empty();
                 });
 
-            ui.build()
-                .on_insert_add_bundle(|| Node {
+            ui.child()
+                .on_spawn_insert(|| Node {
                     flex_direction: FlexDirection::Row,
                     column_gap: Val::Px(10.),
                     ..default()
@@ -113,8 +113,8 @@ fn immediate_ui_demo(ctx: SimpleUiCtx, mut state: ResMut<State>) {
                 .add(|ui| {
                     for tab in [Tab::Tab1, Tab::Tab2, Tab::Tab3] {
                         let mut resp = ui
-                            .build()
-                            .on_insert_add_bundle(|| {
+                            .child()
+                            .on_spawn_insert(|| {
                                 (
                                     Button,
                                     Node {
@@ -133,8 +133,8 @@ fn immediate_ui_demo(ctx: SimpleUiCtx, mut state: ResMut<State>) {
                                 )
                             })
                             .add(|ui| {
-                                ui.build()
-                                    .on_insert_add_bundle(|| {
+                                ui.child()
+                                    .on_spawn_insert(|| {
                                         (
                                             Text::new(format!("{:?}", tab)),
                                             TextColor(Color::srgb(0.9, 0.9, 0.9)),
@@ -152,8 +152,8 @@ fn immediate_ui_demo(ctx: SimpleUiCtx, mut state: ResMut<State>) {
 
             match state.tab {
                 Tab::Tab1 => {
-                    ui.build_id(sid(state.tab))
-                        .on_insert_add_bundle(|| {
+                    ui.child_with_id(state.tab)
+                        .on_spawn_insert(|| {
                             (
                                 Node {
                                     width: Val::Px(300.0),
@@ -166,8 +166,8 @@ fn immediate_ui_demo(ctx: SimpleUiCtx, mut state: ResMut<State>) {
                             )
                         })
                         .add(|ui| {
-                            ui.build()
-                                .on_insert_add_bundle(|| {
+                            ui.child()
+                                .on_spawn_insert(|| {
                                     (
                                         Text::new("Tab 1"),
                                         TextColor(Color::srgb(0.9, 0.9, 0.9)),
@@ -178,8 +178,8 @@ fn immediate_ui_demo(ctx: SimpleUiCtx, mut state: ResMut<State>) {
                         });
                 }
                 Tab::Tab2 => {
-                    ui.build_id(sid(state.tab))
-                        .on_insert_add_bundle(|| {
+                    ui.child_with_id(state.tab)
+                        .on_spawn_insert(|| {
                             (
                                 Node {
                                     width: Val::Px(150.0),
@@ -191,8 +191,8 @@ fn immediate_ui_demo(ctx: SimpleUiCtx, mut state: ResMut<State>) {
                             )
                         })
                         .add(|ui| {
-                            ui.build()
-                                .on_insert_add_bundle(|| {
+                            ui.child()
+                                .on_spawn_insert(|| {
                                     (
                                         Text::new("Tab 2"),
                                         TextColor(Color::srgb(0.9, 0.9, 0.9)),
@@ -203,8 +203,8 @@ fn immediate_ui_demo(ctx: SimpleUiCtx, mut state: ResMut<State>) {
                         });
                 }
                 Tab::Tab3 => {
-                    ui.build_id(sid(state.tab))
-                        .on_insert_add_bundle(|| {
+                    ui.child_with_id(state.tab)
+                        .on_spawn_insert(|| {
                             (
                                 Node {
                                     width: Val::Px(75.0),
@@ -217,8 +217,8 @@ fn immediate_ui_demo(ctx: SimpleUiCtx, mut state: ResMut<State>) {
                             )
                         })
                         .add(|ui| {
-                            ui.build()
-                                .on_insert_add_bundle(|| {
+                            ui.child()
+                                .on_spawn_insert(|| {
                                     (
                                         Text::new("Tab 3"),
                                         TextColor(Color::srgb(0.9, 0.9, 0.9)),

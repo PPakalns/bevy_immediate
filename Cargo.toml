@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 log = "0.4"
 bevy_ecs = "0.16"
-bevy_ui = "0.16"
+bevy_ui = { version = "0.16", optional = true }
 bevy_app = "0.16"
 bevy_platform = "0.16"
 bevy_picking = { version = "0.16", optional = true }
@@ -16,8 +16,8 @@ ahash = "0.8"
 [features]
 default = ["ui", "picking"]
 
-ui = []
-picking = ["dep:bevy_picking"]
+ui = ["dep:bevy_ui"]
+picking = ["ui", "dep:bevy_picking"]
 
 [dev-dependencies]
 bevy = "0.16"
