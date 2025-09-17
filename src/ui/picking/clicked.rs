@@ -35,7 +35,7 @@ where
     fn clicked(&mut self) -> bool {
         let entity = self.entity();
 
-        let mut query = self.ctx_mut().params.get_query::<Option<&TrackClicked>>();
+        let mut query = self.ctx_mut().query.get_query::<Option<&TrackClicked>>();
 
         match query.query().get(entity) {
             Ok(Some(entity)) => entity.clicked,

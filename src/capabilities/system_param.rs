@@ -1,17 +1,33 @@
+use std::{any::TypeId, marker::PhantomData};
+
 use bevy_ecs::{
     archetype::Archetype,
+    entity::Entity,
     query::{QueryData, ReadOnlyQueryData, With},
-    system::{Query, QueryLens, QueryParamBuilder, SystemMeta, SystemParam, SystemParamBuilder},
+    resource::Resource,
+    system::{
+        DynSystemParam, DynSystemParamState, Query, QueryLens, QueryParamBuilder, Res, ResMut,
+        SystemMeta, SystemParam, SystemParamBuilder,
+    },
     world::World,
 };
+use bevy_platform::collections::HashMap;
 
 use crate::{CapAccessRequestsResource, ImmCap, ImmMarker};
 
 /// [`SystemParam`] for immediate mode capability requests [`ImmCap`]
-pub struct CapSystemParams<'w, 's, Cap: ImmCap> {
-    query: Query<'w, 's, (), With<ImmMarker<Cap>>>,
+pub struct CapQueryParam<'w, 's, Cap: ImmCap> {
+    query:
+        Query<'w, 's, ImmediateModeCapabilityRequestedComponentDynamicQuery, With<ImmMarker<Cap>>>,
 }
-impl<'w, 's, Cap: ImmCap> CapSystemParams<'w, 's, Cap> {
+
+/// Type for better error messages upon incorrectly requesting component access
+#[derive(bevy_ecs::query::QueryData)]
+pub struct ImmediateModeCapabilityRequestedComponentDynamicQuery {
+    entity: Entity,
+}
+
+impl<'w, 's, Cap: ImmCap> CapQueryParam<'w, 's, Cap> {
     /// Get query with given [`ReadOnlyQueryData`]
     pub fn get_query<D>(&self) -> QueryLens<'_, D, With<ImmMarker<Cap>>>
     where
@@ -27,12 +43,32 @@ impl<'w, 's, Cap: ImmCap> CapSystemParams<'w, 's, Cap> {
     {
         self.query.transmute_lens_filtered()
     }
+
+    /// Underlaying query that can be used to access components queried by
+    pub fn query(
+        &self,
+    ) -> &Query<'w, 's, ImmediateModeCapabilityRequestedComponentDynamicQuery, With<ImmMarker<Cap>>>
+    {
+        &self.query
+    }
+
+    /// Underlaying query that can be used to access components queried by
+    pub fn query_mut(
+        &mut self,
+    ) -> &mut Query<
+        'w,
+        's,
+        ImmediateModeCapabilityRequestedComponentDynamicQuery,
+        With<ImmMarker<Cap>>,
+    > {
+        &mut self.query
+    }
 }
 
 #[expect(unsafe_code)]
-unsafe impl<Cap: ImmCap> SystemParam for CapSystemParams<'_, '_, Cap> {
-    type State = ImmCapSystemParamsState<Cap>;
-    type Item<'world, 'state> = CapSystemParams<'world, 'state, Cap>;
+unsafe impl<Cap: ImmCap> SystemParam for CapQueryParam<'_, '_, Cap> {
+    type State = CapQueryState<Cap>;
+    type Item<'world, 'state> = CapQueryParam<'world, 'state, Cap>;
 
     fn init_state(
         world: &mut World,
@@ -43,7 +79,10 @@ unsafe impl<Cap: ImmCap> SystemParam for CapSystemParams<'_, '_, Cap> {
             .expect("bevy_immediate mode plugin not correctly added");
         let requested_access = requested_access.capabilities.clone();
 
-        let params = QueryParamBuilder::new::<(), With<ImmMarker<Cap>>>(|builder| {
+        let params = QueryParamBuilder::new::<
+            ImmediateModeCapabilityRequestedComponentDynamicQuery,
+            With<ImmMarker<Cap>>,
+        >(|builder| {
             for (component_id, mutability) in requested_access.requested_components().iter() {
                 builder.optional(|query_builder| match mutability {
                     true => {
@@ -58,7 +97,7 @@ unsafe impl<Cap: ImmCap> SystemParam for CapSystemParams<'_, '_, Cap> {
 
         let query_state = params.build(world, system_meta);
 
-        ImmCapSystemParamsState { query_state }
+        CapQueryState { query_state }
     }
 
     unsafe fn new_archetype(
@@ -82,6 +121,143 @@ unsafe impl<Cap: ImmCap> SystemParam for CapSystemParams<'_, '_, Cap> {
     }
 }
 
-pub struct ImmCapSystemParamsState<Cap: ImmCap> {
-    query_state: bevy_ecs::query::QueryState<(), With<ImmMarker<Cap>>>,
+pub struct CapQueryState<Cap: ImmCap> {
+    query_state: bevy_ecs::query::QueryState<
+        ImmediateModeCapabilityRequestedComponentDynamicQuery,
+        With<ImmMarker<Cap>>,
+    >,
+}
+
+/// [`SystemParam`] for immediate mode capability requests [`ImmCap`]
+pub struct CapResourcesParam<'w, 's, Cap: ImmCap> {
+    resources: HashMap<TypeId, ResourceAccess<'w, 's>>,
+    _ph: PhantomData<Cap>,
+}
+
+impl<'w, 's, Cap: ImmCap> CapResourcesParam<'w, 's, Cap> {
+    pub fn resource_mut<R: Resource>(&mut self) -> ResMut<'_, R> {
+        let type_id = TypeId::of::<R>();
+        let resource = self
+            .resources
+            .get_mut(&type_id)
+            .expect("Resource not added to capabilities");
+        if !resource.mutable {
+            panic!("Resource not mutably added to capabilities");
+        }
+
+        // All resources should be correctly resolved
+        resource.state.downcast_mut::<ResMut<R>>().unwrap()
+    }
+
+    pub fn with_resource<R: Resource, O>(&mut self, f: impl Fn(&R) -> O) -> O {
+        let type_id = TypeId::of::<R>();
+        let resource = self
+            .resources
+            .get_mut(&type_id)
+            .expect("Resource not added to capabilities");
+
+        // All resources should be correctly resolved
+        if resource.mutable {
+            f(&resource.state.downcast_mut::<ResMut<R>>().unwrap())
+        } else {
+            f(&resource.state.downcast_mut::<Res<R>>().unwrap())
+        }
+    }
+}
+
+#[expect(unsafe_code)]
+unsafe impl<Cap: ImmCap> SystemParam for CapResourcesParam<'_, '_, Cap> {
+    type State = CapResourceState<Cap>;
+    type Item<'world, 'state> = CapResourcesParam<'world, 'state, Cap>;
+
+    fn init_state(
+        world: &mut World,
+        system_meta: &mut bevy_ecs::system::SystemMeta,
+    ) -> Self::State {
+        let requested_access = world
+            .get_resource::<CapAccessRequestsResource<Cap>>()
+            .expect("bevy_immediate mode plugin not correctly added");
+        let requested_access = requested_access.capabilities.clone();
+
+        let resource_states = requested_access
+            .requested_resoruces()
+            .iter()
+            .map(|(id, res)| {
+                let builder = (res.builder)(res.mutable);
+
+                let state = builder.build(world, system_meta);
+
+                (
+                    *id,
+                    RequestedResourceState {
+                        state,
+                        mutable: res.mutable,
+                    },
+                )
+            })
+            .collect();
+
+        CapResourceState {
+            resource_states,
+            _ph: PhantomData,
+        }
+    }
+
+    unsafe fn new_archetype(
+        state: &mut Self::State,
+        archetype: &Archetype,
+        system_meta: &mut SystemMeta,
+    ) {
+        state
+            .resource_states
+            .iter_mut()
+            .for_each(|(_, state)| unsafe {
+                DynSystemParam::new_archetype(&mut state.state, archetype, system_meta)
+            });
+    }
+
+    unsafe fn get_param<'world, 'state>(
+        state: &'state mut Self::State,
+        system_meta: &bevy_ecs::system::SystemMeta,
+        world: bevy_ecs::world::unsafe_world_cell::UnsafeWorldCell<'world>,
+        change_tick: bevy_ecs::component::Tick,
+    ) -> Self::Item<'world, 'state> {
+        let resources = state
+            .resource_states
+            .iter_mut()
+            .map(|(id, state)| unsafe {
+                (
+                    *id,
+                    ResourceAccess {
+                        state: DynSystemParam::get_param(
+                            &mut state.state,
+                            system_meta,
+                            world,
+                            change_tick,
+                        ),
+                        mutable: state.mutable,
+                    },
+                )
+            })
+            .collect();
+
+        Self::Item::<'world, 'state> {
+            resources,
+            _ph: PhantomData,
+        }
+    }
+}
+struct RequestedResourceState {
+    state: DynSystemParamState,
+    mutable: bool,
+}
+
+pub struct CapResourceState<Cap: ImmCap> {
+    resource_states: HashMap<TypeId, RequestedResourceState>,
+    _ph: PhantomData<Cap>,
+}
+
+struct ResourceAccess<'w, 's> {
+    state: DynSystemParam<'w, 's>,
+    mutable: bool,
 }

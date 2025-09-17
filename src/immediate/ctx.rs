@@ -6,7 +6,8 @@ use bevy_ecs::{
 };
 
 use crate::{
-    CapSystemParams, Imm, ImmCap, ImmId,
+    CapQueryParam, Imm, ImmCap, ImmId,
+    capabilities::CapResourcesParam,
     immediate::{
         Current, ImmMarker, entity_mapping::ImmediateModeEntityMapping,
         upkeep::ImmediateModeStateResource,
@@ -18,10 +19,13 @@ use crate::{
 pub struct ImmCtx<'w, 's, Cap: ImmCap> {
     pub(super) state: Res<'w, ImmediateModeStateResource<Cap>>,
     pub(super) mapping: Res<'w, ImmediateModeEntityMapping<Cap>>,
-    pub(super) query: Query<'w, 's, ImmEntityQuery<Cap>, With<ImmMarker<Cap>>>,
+    pub(super) entity_query: Query<'w, 's, ImmEntityQuery<Cap>, With<ImmMarker<Cap>>>,
 
     /// Access data from entities for components that were requested in extensions
-    pub params: CapSystemParams<'w, 's, Cap>,
+    pub query: CapQueryParam<'w, 's, Cap>,
+
+    /// Access requested resources
+    pub resources: CapResourcesParam<'w, 's, Cap>,
 
     /// World commands
     pub commands: Commands<'w, 's>,

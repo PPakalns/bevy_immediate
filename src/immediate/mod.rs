@@ -88,7 +88,7 @@ impl<'w, 's, Cap: ImmCap> Imm<'w, 's, Cap> {
 
         let entity = match self.ctx.mapping.id_to_entity.get(&id).copied() {
             Some(entity) => {
-                if let Ok(mut qentity) = self.ctx.query.get_mut(entity) {
+                if let Ok(mut qentity) = self.ctx.entity_query.get_mut(entity) {
                     qentity.tracker.iteration = self.ctx.state.iteration;
                     if qentity.child_of.map(|ch| ch.parent()) != self.current.entity {
                         let mut entity_commands = self.ctx.commands.entity(entity);

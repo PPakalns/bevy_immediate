@@ -8,7 +8,7 @@ pub use immediate::*;
 /// Exstention support for immediate mode. Logic to implement additional capabilities.
 mod capabilities;
 pub use capabilities::{
-    CapAccessRequests, CapAccessRequestsResource, CapSystemParams, ImmCap, ImmImplCap,
+    CapAccessRequests, CapAccessRequestsResource, CapQueryParam, ImmCap, ImmImplCap,
 };
 
 /// Extensions to provide ergonomic functionality for working with

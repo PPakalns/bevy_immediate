@@ -70,7 +70,7 @@ where
 
         let mut query = self
             .ctx()
-            .params
+            .query
             .get_query::<Option<&bevy_ui::Interaction>>();
 
         match query.query().get(entity) {

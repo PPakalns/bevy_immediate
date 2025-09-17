@@ -50,4 +50,4 @@ pub use access_requests::{CapAccessRequests, CapAccessRequestsResource};
 /// Implements [`bevy_ecs::system::SystemParam`] for [`CapSystemParams`] that
 /// allows to retrieve all requested data by capabilities
 mod system_param;
-pub use system_param::CapSystemParams;
+pub use system_param::{CapQueryParam, CapResourcesParam};
