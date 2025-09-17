@@ -1,12 +1,11 @@
 use bevy_ecs::{
     entity::Entity,
     hierarchy::ChildOf,
-    query::With,
-    system::{Commands, Query, Res},
+    system::{Commands, Res},
 };
 
 use crate::{
-    CapQueryParam, Imm, ImmCap, ImmId,
+    CapQueryParam, Imm, ImmCap, ImmId, ImmQueryInternal,
     capabilities::CapResourcesParam,
     immediate::{
         Current, ImmMarker, entity_mapping::ImmediateModeEntityMapping,
@@ -19,7 +18,7 @@ use crate::{
 pub struct ImmCtx<'w, 's, Cap: ImmCap> {
     pub(super) state: Res<'w, ImmediateModeStateResource<Cap>>,
     pub(super) mapping: Res<'w, ImmediateModeEntityMapping<Cap>>,
-    pub(super) entity_query: Query<'w, 's, ImmEntityQuery<Cap>, With<ImmMarker<Cap>>>,
+    pub(super) entity_query: ImmQueryInternal<'w, 's, Cap, ImmEntityQuery<Cap>>,
 
     /// Access data from entities for components that were requested in extensions
     pub query: CapQueryParam<'w, 's, Cap>,

@@ -1,6 +1,4 @@
-use bevy_ecs::schedule::IntoScheduleConfigs;
-
-use crate::{ImmCap, ImmEntity, ImmImplCap, ImmediateSystemSet, impl_capabilities};
+use crate::{ImmImplCap, impl_capabilities};
 
 /// Defines capability that contains all Ui capabilities from this crate
 pub struct ImmCapUi;
@@ -8,86 +6,35 @@ pub struct ImmCapUi;
 #[cfg(feature = "picking")]
 impl_capabilities!(
     ImmCapUi,
-    (
-        ImmCapUiBase,
-        ImmCapUiInteraction,
-        picking::ImmCapUiPickingAll
-    )
+    (ImmCapUiWithoutFeatures, picking::ImmCapUiPickingAll)
 );
-
 #[cfg(not(feature = "picking"))]
-impl_capabilities!(ImmUiCap, (ImmUiBaseCap, ImmCapUiInteraction));
+impl_capabilities!(ImmUiCap, (ImmCapUiWithoutPicking));
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/// Base capability for UI that sets up correct order of immediate system execution
-pub struct ImmCapUiBase;
+/// Defines all ui capabilities except capabilities provided by "picking" - [`bevy_picking`].
+pub struct ImmCapUiWithoutFeatures;
+impl_capabilities!(
+    ImmCapUiWithoutFeatures,
+    (
+        ui_base::ImmCapUiBase,
+        interaction::ImmCapUiInteraction,
+        text::ImmCapUiText
+    )
+);
 
-impl ImmCap for ImmCapUiBase {
-    fn build<Cap: ImmCap>(app: &mut bevy_app::App, cap_req: &mut crate::CapAccessRequests<Cap>) {
-        app.configure_sets(
-            bevy_app::PostUpdate,
-            ImmediateSystemSet::<Cap>::default().before(bevy_ui::UiSystem::Prepare),
-        );
+////////////////////////////////////////////////////////////////////////////////
 
-        let _ = cap_req;
-    }
-}
+/// Implements capability that correctly set ups immediate mode systems for UI case
+pub mod ui_base;
+
+/// Implements functionality to access [`bevy_ui::Interaction`]
+pub mod interaction;
+
+/// Implements capabilities for working with nodes that contain [`bevy_ui::widget::Text`]
+pub mod text;
 
 /// Contains API extensions for ergonomic API that use [`bevy_picking`]
 #[cfg(feature = "picking")]
 pub mod picking;
-
-////////////////////////////////////////////////////////////////////////////////
-
-/// Capability that makes [`bevy_ui::Interaction`] accessible from immediate UI
-pub struct ImmCapUiInteraction;
-
-impl ImmCap for ImmCapUiInteraction {
-    fn build<Cap: ImmCap>(app: &mut bevy_app::App, cap_req: &mut crate::CapAccessRequests<Cap>) {
-        cap_req.request_optional_component::<bevy_ui::Interaction>(app.world_mut(), false);
-    }
-}
-
-/// Implements methods to access [`bevy_ui::Interaction`] in immediate mode
-pub trait ImmUiInteraction {
-    /// Retrieve current [`bevy_ui::Interaction`] state for entity
-    fn interaction(&mut self) -> bevy_ui::Interaction;
-
-    /// Is [`bevy_ui::Interaction::Pressed`]
-    fn pressed(&mut self) -> bool;
-
-    /// Is [`bevy_ui::Interaction::Hovered`]
-    fn hovered(&mut self) -> bool;
-}
-
-impl<Cap> ImmUiInteraction for ImmEntity<'_, '_, '_, Cap>
-where
-    Cap: ImmImplCap<ImmCapUiInteraction>,
-{
-    fn interaction(&mut self) -> bevy_ui::Interaction {
-        let entity = self.entity();
-
-        let mut query = self
-            .ctx()
-            .query
-            .get_query::<Option<&bevy_ui::Interaction>>();
-
-        match query.query().get(entity) {
-            Ok(Some(entity)) => *entity,
-            Ok(None) | Err(_) => {
-                self.entity_commands()
-                    .insert_if_new(bevy_ui::Interaction::default());
-                bevy_ui::Interaction::None
-            }
-        }
-    }
-
-    fn pressed(&mut self) -> bool {
-        self.interaction() == bevy_ui::Interaction::Pressed
-    }
-
-    fn hovered(&mut self) -> bool {
-        self.interaction() == bevy_ui::Interaction::Hovered
-    }
-}

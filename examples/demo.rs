@@ -2,7 +2,7 @@ use bevy::{color::palettes::basic::*, prelude::*, winit::WinitSettings};
 use bevy_immediate::{
     BevyImmediatePlugin, ImmCtx, ImmImplCap,
     attach::{BevyImmediateAttachPlugin, ImmediateAttachRoot},
-    ui::{ImmCapUi, picking::clicked::ImmUiClicked},
+    ui::{ImmCapUi, picking::clicked::ImmUiClicked, text::ImmUiText},
 };
 
 fn main() {
@@ -159,7 +159,7 @@ fn immediate_ui_demo(ctx: ImmCtx<ImmCapUi>, mut state: ResMut<State>) {
 
             match state.tab {
                 Tab::Tab1 => {
-                    ui.child_with_id(state.tab)
+                    ui.child_id(state.tab)
                         .on_spawn_insert(|| {
                             (
                                 Node {
@@ -183,7 +183,7 @@ fn immediate_ui_demo(ctx: ImmCtx<ImmCapUi>, mut state: ResMut<State>) {
                         });
                 }
                 Tab::Tab2 => {
-                    ui.child_with_id(state.tab)
+                    ui.child_id(state.tab)
                         .on_spawn_insert(|| {
                             (
                                 Node {
@@ -206,7 +206,7 @@ fn immediate_ui_demo(ctx: ImmCtx<ImmCapUi>, mut state: ResMut<State>) {
                         });
                 }
                 Tab::Tab3 => {
-                    ui.child_with_id(state.tab)
+                    ui.child_id(state.tab)
                         .on_spawn_insert(|| (Node::default(), Tab3RootMarker));
                 }
             }
@@ -259,8 +259,9 @@ impl<Cap: ImmImplCap<ImmCapUi>> ImmediateAttachRoot<Cap> for Tab3RootMarker {
             .on_spawn_insert(|| {
                 (
                     Node {
-                        width: Val::Px(75.0),
+                        width: Val::Px(134.0),
                         height: Val::Px(65.0),
+                        column_gap: Val::Px(10.),
                         ..default()
                     },
                     BorderColor(Color::srgb(0., 0., 1.)),
@@ -276,6 +277,10 @@ impl<Cap: ImmImplCap<ImmCapUi>> ImmediateAttachRoot<Cap> for Tab3RootMarker {
                         TextShadow::default(),
                     )
                 });
+
+                for i in 0..4 {
+                    ui.child_id(("ch", i)).text(i.to_string());
+                }
             });
     }
 }

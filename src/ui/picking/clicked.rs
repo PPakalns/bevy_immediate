@@ -5,7 +5,7 @@ use bevy_ecs::{
     world::OnAdd,
 };
 use bevy_picking::events::{Click, Pointer};
-use bevy_platform::collections::HashSet;
+use bevy_platform::collections::HashMap;
 
 use crate::{CapAccessRequests, ImmCap, ImmEntity, ImmImplCap};
 
@@ -28,6 +28,15 @@ impl ImmCap for ImmCapUiClicked {
 pub trait ImmUiClicked {
     /// Entity clicked during last frame
     fn clicked(&mut self) -> bool;
+    /// Pointer button that was used to click this entity
+    fn clicked_by(&mut self) -> Option<bevy_picking::pointer::PointerButton>;
+    /// Underlaying pointer event that was triggered in last frame
+    fn pointer_event(&mut self) -> Option<Pointer<Click>>;
+    /// Access reference to stored pointer click event
+    fn with_pointer_clicked_event<R>(
+        &mut self,
+        f: impl Fn(Option<&Pointer<Click>>) -> R,
+    ) -> Option<R>;
 }
 
 impl<Cap: ImmCap> ImmUiClicked for ImmEntity<'_, '_, '_, Cap>
@@ -35,6 +44,24 @@ where
     Cap: ImmImplCap<ImmCapUiClicked>,
 {
     fn clicked(&mut self) -> bool {
+        self.with_pointer_clicked_event(|event| event.is_some())
+            .unwrap_or(false)
+    }
+
+    fn clicked_by(&mut self) -> Option<bevy_picking::pointer::PointerButton> {
+        self.with_pointer_clicked_event(|event| event.map(|event| event.button))
+            .flatten()
+    }
+
+    fn pointer_event(&mut self) -> Option<Pointer<Click>> {
+        self.with_pointer_clicked_event(|pointer| pointer.cloned())
+            .flatten()
+    }
+
+    fn with_pointer_clicked_event<R>(
+        &mut self,
+        f: impl Fn(Option<&Pointer<Click>>) -> R,
+    ) -> Option<R> {
         let entity = self.entity();
 
         let mut query = self.ctx_mut().query.get_query::<Option<&TrackClicked>>();
@@ -42,12 +69,16 @@ where
         if !query.query().contains(entity) {
             // Auto insert track clicked capability
             self.entity_commands().insert_if_new(TrackClicked);
-            return false;
+            return None;
         }
 
-        self.ctx_mut()
-            .resources
-            .with_resource::<TrackClickedEntitiesResource, _>(|res| res.clicked.contains(&entity))
+        Some(
+            self.ctx_mut()
+                .resources
+                .with_resource::<TrackClickedEntitiesResource, _>(|res| {
+                    f(res.clicked.get(&entity))
+                }),
+        )
     }
 }
 
@@ -77,12 +108,12 @@ pub struct TrackClicked;
 
 fn on_click(trigger: Trigger<Pointer<Click>>, mut resource: ResMut<TrackClickedEntitiesResource>) {
     let entity = trigger.target();
-    resource.clicked.insert(entity);
+    resource.clicked.insert(entity, trigger.event().clone());
 }
 
 #[derive(bevy_ecs::resource::Resource, Default)]
 struct TrackClickedEntitiesResource {
-    pub clicked: HashSet<Entity>,
+    pub clicked: HashMap<Entity, Pointer<Click>>,
 }
 
 fn reset_clicked_tracking(mut res: ResMut<TrackClickedEntitiesResource>) {

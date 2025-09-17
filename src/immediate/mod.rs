@@ -6,8 +6,8 @@ use bevy_ecs::{
     entity::Entity,
     event::Event,
     hierarchy::ChildOf,
-    query::Without,
-    system::{Commands, EntityCommands, IntoObserverSystem},
+    query::{With, Without},
+    system::{Commands, EntityCommands, IntoObserverSystem, Query},
 };
 
 /// Plugin for immediate mode functionality in bevy
@@ -52,6 +52,11 @@ pub use id::{ImmId, ImmIdBuilder, imm_id};
 mod entity_mapping;
 mod upkeep;
 
+/// Helper type to more easily write queries
+pub type ImmQuery<'w, 's, Cap, D, F = ()> = Query<'w, 's, D, (Without<ImmMarker<Cap>>, F)>;
+pub(crate) type ImmQueryInternal<'w, 's, Cap, D, F = ()> =
+    Query<'w, 's, D, (With<ImmMarker<Cap>>, F)>;
+
 /// Immediate mode manager that manages entity [`Self::current`]
 ///
 /// Can be used to build new child entities with [`Self::build`] and similar methods.
@@ -81,7 +86,7 @@ impl<'w, 's, Cap: ImmCap> Imm<'w, 's, Cap> {
     /// make truly unique id.
     ///
     /// Read more [`ImmId`], [`ImmIdBuilder`].
-    pub fn child_with_id<T: std::hash::Hash>(&mut self, id: T) -> ImmEntity<'_, 'w, 's, Cap> {
+    pub fn child_id<T: std::hash::Hash>(&mut self, id: T) -> ImmEntity<'_, 'w, 's, Cap> {
         self.child_with_manual_id(ImmIdBuilder::Hierarchy(ImmId::new(id)))
     }
 
@@ -91,7 +96,7 @@ impl<'w, 's, Cap: ImmCap> Imm<'w, 's, Cap> {
     pub fn child_with_manual_id(&mut self, id: ImmIdBuilder) -> ImmEntity<'_, 'w, 's, Cap> {
         let id = id.resolve(self);
 
-        let mut currently_creating = false;
+        let mut will_be_spawned = false;
 
         let entity = match self.ctx.mapping.id_to_entity.get(&id).copied() {
             Some(entity) => {
@@ -124,7 +129,7 @@ impl<'w, 's, Cap: ImmCap> Imm<'w, 's, Cap> {
                 if let Some(entity) = self.current.entity {
                     commands.insert(ChildOf(entity));
                 }
-                currently_creating = true;
+                will_be_spawned = true;
                 commands.id()
             }
         };
@@ -133,7 +138,7 @@ impl<'w, 's, Cap: ImmCap> Imm<'w, 's, Cap> {
             imm: self,
             id,
             entity,
-            currently_creating,
+            will_be_spawned,
         }
     }
 
@@ -208,7 +213,7 @@ pub struct ImmEntity<'r, 'w, 's, Cap: ImmCap> {
     imm: &'r mut Imm<'w, 's, Cap>,
     id: ImmId,
     entity: Entity,
-    currently_creating: bool,
+    will_be_spawned: bool,
 }
 
 impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
@@ -240,7 +245,7 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
 
     /// Entity will be spawned when [`Commands`] will be processed.
     pub fn will_be_spawned(&self) -> bool {
-        self.currently_creating
+        self.will_be_spawned
     }
 
     /// Issue [`EntityCommands`] at this moment
@@ -271,7 +276,7 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
     where
         F: FnOnce(&mut EntityCommands),
     {
-        if self.currently_creating {
+        if self.will_be_spawned {
             self.at_this_moment_apply_commands(f)
         } else {
             self
@@ -284,7 +289,7 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
     where
         F: FnOnce(&mut EntityCommands),
     {
-        if self.currently_creating {
+        if self.will_be_spawned {
             self.at_this_moment_apply_commands_if(f, condition)
         } else {
             self
@@ -362,7 +367,7 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
         F: FnOnce() -> B,
         B: Bundle,
     {
-        if self.currently_creating || changed {
+        if self.will_be_spawned || changed {
             let mut entity_commands = self.imm.ctx.commands.entity(self.entity);
             entity_commands.insert(f());
             self

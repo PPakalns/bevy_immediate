@@ -29,6 +29,7 @@ pub struct ImmediateModeCapabilityRequestedComponentDynamicQuery {
 
 impl<'w, 's, Cap: ImmCap> CapQueryParam<'w, 's, Cap> {
     /// Get query with given [`ReadOnlyQueryData`]
+    /// You will probably want to call `.query()` on returned value.
     pub fn get_query<D>(&self) -> QueryLens<'_, D, With<ImmMarker<Cap>>>
     where
         D: ReadOnlyQueryData,
@@ -37,6 +38,7 @@ impl<'w, 's, Cap: ImmCap> CapQueryParam<'w, 's, Cap> {
     }
 
     /// Get query with given [`QueryData`]
+    /// You will probably want to call `.query()` on returned value.
     pub fn get_query_mut<D>(&mut self) -> QueryLens<'_, D, With<ImmMarker<Cap>>>
     where
         D: QueryData,
@@ -83,13 +85,13 @@ unsafe impl<Cap: ImmCap> SystemParam for CapQueryParam<'_, '_, Cap> {
             ImmediateModeCapabilityRequestedComponentDynamicQuery,
             With<ImmMarker<Cap>>,
         >(|builder| {
-            for (component_id, mutability) in requested_access.requested_components().iter() {
-                builder.optional(|query_builder| match mutability {
+            for (component_id, mutable) in requested_access.requested_components().iter() {
+                builder.optional(|query_builder| match mutable {
                     true => {
                         query_builder.mut_id(*component_id);
                     }
                     false => {
-                        query_builder.mut_id(*component_id);
+                        query_builder.ref_id(*component_id);
                     }
                 });
             }
