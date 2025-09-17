@@ -4,7 +4,10 @@ use bevy_ecs::{
     system::{Commands, ResMut},
     world::OnAdd,
 };
-use bevy_picking::events::{Click, Pointer};
+use bevy_picking::{
+    events::{Click, Pointer},
+    pointer::PointerButton,
+};
 use bevy_platform::collections::HashMap;
 
 use crate::{CapAccessRequests, ImmCap, ImmEntity, ImmImplCap};
@@ -28,15 +31,16 @@ impl ImmCap for ImmCapUiClicked {
 pub trait ImmUiClicked {
     /// Entity clicked during last frame
     fn clicked(&mut self) -> bool;
+    /// Primary button clicked
+    fn primary_clicked(&mut self) -> bool;
+    /// Secondary button clicked
+    fn secondary_clicked(&mut self) -> bool;
+    /// Middle button clicked
+    fn middle_clicked(&mut self) -> bool;
     /// Pointer button that was used to click this entity
-    fn clicked_by(&mut self) -> Option<bevy_picking::pointer::PointerButton>;
-    /// Underlaying pointer event that was triggered in last frame
-    fn pointer_event(&mut self) -> Option<Pointer<Click>>;
+    fn clicked_by(&mut self) -> Option<PointerButton>;
     /// Access reference to stored pointer click event
-    fn with_pointer_clicked_event<R>(
-        &mut self,
-        f: impl Fn(Option<&Pointer<Click>>) -> R,
-    ) -> Option<R>;
+    fn with_pointer_event<R>(&mut self, f: impl FnOnce(Option<&Pointer<Click>>) -> R) -> R;
 }
 
 impl<Cap: ImmCap> ImmUiClicked for ImmEntity<'_, '_, '_, Cap>
@@ -44,41 +48,48 @@ where
     Cap: ImmImplCap<ImmCapUiClicked>,
 {
     fn clicked(&mut self) -> bool {
-        self.with_pointer_clicked_event(|event| event.is_some())
-            .unwrap_or(false)
+        self.with_pointer_event(|event| event.is_some())
     }
 
-    fn clicked_by(&mut self) -> Option<bevy_picking::pointer::PointerButton> {
-        self.with_pointer_clicked_event(|event| event.map(|event| event.button))
-            .flatten()
+    fn primary_clicked(&mut self) -> bool {
+        self.clicked_by() == Some(PointerButton::Primary)
     }
 
-    fn pointer_event(&mut self) -> Option<Pointer<Click>> {
-        self.with_pointer_clicked_event(|pointer| pointer.cloned())
-            .flatten()
+    fn secondary_clicked(&mut self) -> bool {
+        self.clicked_by() == Some(PointerButton::Secondary)
     }
 
-    fn with_pointer_clicked_event<R>(
-        &mut self,
-        f: impl Fn(Option<&Pointer<Click>>) -> R,
-    ) -> Option<R> {
-        let entity = self.entity();
+    fn middle_clicked(&mut self) -> bool {
+        self.clicked_by() == Some(PointerButton::Middle)
+    }
 
-        let mut query = self.ctx_mut().query.get_query::<Option<&TrackClicked>>();
+    fn clicked_by(&mut self) -> Option<PointerButton> {
+        self.with_pointer_event(|event| event.map(|event| event.button))
+    }
 
-        if !query.query().contains(entity) {
-            // Auto insert track clicked capability
-            self.entity_commands().insert_if_new(TrackClicked);
-            return None;
+    fn with_pointer_event<R>(&mut self, f: impl FnOnce(Option<&Pointer<Click>>) -> R) -> R {
+        'correct: {
+            let Ok(entity) = self.get_entity() else {
+                break 'correct;
+            };
+
+            if !entity.contains::<TrackClicked>() {
+                break 'correct;
+            }
+
+            let entity_id = self.entity();
+
+            let resource = self
+                .ctx()
+                .resources
+                .get::<TrackClickedEntitiesResource>()
+                .expect("Capability available");
+
+            return f(resource.clicked.get(&entity_id));
         }
 
-        Some(
-            self.ctx_mut()
-                .resources
-                .with_resource::<TrackClickedEntitiesResource, _>(|res| {
-                    f(res.clicked.get(&entity))
-                }),
-        )
+        self.entity_commands().insert_if_new(TrackClicked);
+        f(None)
     }
 }
 

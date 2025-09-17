@@ -704,6 +704,7 @@ dependencies = [
  "ahash",
  "bevy",
  "bevy_app",
+ "bevy_derive",
  "bevy_ecs",
  "bevy_picking",
  "bevy_platform",

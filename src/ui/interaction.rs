@@ -26,21 +26,22 @@ where
     Cap: ImmImplCap<ImmCapUiInteraction>,
 {
     fn interaction(&mut self) -> bevy_ui::Interaction {
-        let entity = self.entity();
+        'correct: {
+            let Ok(entity) = self.get_entity() else {
+                break 'correct;
+            };
 
-        let mut query = self
-            .ctx()
-            .query
-            .get_query::<Option<&bevy_ui::Interaction>>();
+            let Some(interaction) = entity.get::<bevy_ui::Interaction>() else {
+                break 'correct;
+            };
 
-        match query.query().get(entity) {
-            Ok(Some(entity)) => *entity,
-            Ok(None) | Err(_) => {
-                self.entity_commands()
-                    .insert_if_new(bevy_ui::Interaction::default());
-                bevy_ui::Interaction::None
-            }
+            return *interaction;
         }
+
+        // Something is missing
+        self.entity_commands()
+            .insert_if_new(bevy_ui::Interaction::default());
+        bevy_ui::Interaction::None
     }
 
     fn pressed(&mut self) -> bool {

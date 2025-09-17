@@ -16,18 +16,18 @@ use crate::{
 /// Immediate mode ctx
 #[derive(bevy_ecs::system::SystemParam)]
 pub struct ImmCtx<'w, 's, Cap: ImmCap> {
-    pub(super) state: Res<'w, ImmediateModeStateResource<Cap>>,
-    pub(super) mapping: Res<'w, ImmediateModeEntityMapping<Cap>>,
-    pub(super) entity_query: ImmQueryInternal<'w, 's, Cap, ImmEntityQuery<Cap>>,
-
     /// Access data from entities for components that were requested in extensions
-    pub query: CapQueryParam<'w, 's, Cap>,
+    pub entities: CapQueryParam<'w, 's, Cap>,
 
     /// Access requested resources
     pub resources: CapResourcesParam<'w, 's, Cap>,
 
     /// World commands
     pub commands: Commands<'w, 's>,
+
+    pub(super) state: Res<'w, ImmediateModeStateResource<Cap>>,
+    pub(super) mapping: Res<'w, ImmediateModeEntityMapping<Cap>>,
+    pub(super) entity_query: ImmQueryInternal<'w, 's, Cap, ImmEntityQuery<Cap>>,
 }
 
 impl<'w, 's, CM> ImmCtx<'w, 's, CM>

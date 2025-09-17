@@ -27,27 +27,27 @@ where
     Cap: ImmImplCap<ImmCapUiText>,
 {
     fn text(mut self, text: impl Deref<Target = str> + Into<String>) -> Self {
-        if self.will_be_spawned() {
-            return self.on_spawn_insert_if_new(|| Text(text.into()));
-        }
+        'text_exists: {
+            let Ok(mut entity) = self.get_entity_mut() else {
+                break 'text_exists;
+            };
 
-        let entity = self.entity();
+            let Some(mut text_comp) = entity.get_mut::<Text>() else {
+                break 'text_exists;
+            };
 
-        let mut query = self.ctx_mut().query.get_query_mut::<Option<&mut Text>>();
-        let mut query = query.query();
+            // No need to update text and trigger state change
+            if text_comp.0 == text.deref() {
+                return self;
+            }
+            *text_comp = Text(text.into());
 
-        let Ok(Some(mut text_comp)) = query.get_mut(entity) else {
-            return self.at_this_moment_apply_commands(|commands| {
-                commands.insert_if_new(Text(text.into()));
-            });
-        };
-
-        // No need to update text and trigger state change
-        if text_comp.0 == text.deref() {
             return self;
         }
-        *text_comp = Text(text.into());
-        self
+
+        self.at_this_moment_apply_commands(|commands| {
+            commands.insert_if_new(Text(text.into()));
+        })
     }
 
     fn on_spawn_text(self, text: impl FnOnce() -> String) -> Self {

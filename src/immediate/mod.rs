@@ -8,6 +8,7 @@ use bevy_ecs::{
     hierarchy::ChildOf,
     query::{With, Without},
     system::{Commands, EntityCommands, IntoObserverSystem, Query},
+    world::FilteredEntityRef,
 };
 
 /// Plugin for immediate mode functionality in bevy
@@ -98,40 +99,50 @@ impl<'w, 's, Cap: ImmCap> Imm<'w, 's, Cap> {
 
         let mut will_be_spawned = false;
 
-        let entity = match self.ctx.mapping.id_to_entity.get(&id).copied() {
-            Some(entity) => {
-                if let Ok(mut qentity) = self.ctx.entity_query.get_mut(entity) {
-                    qentity.tracker.iteration = self.ctx.state.iteration;
-                    if qentity.child_of.map(|ch| ch.parent()) != self.current.entity {
-                        let mut entity_commands = self.ctx.commands.entity(entity);
-                        match self.current.entity {
-                            Some(entity) => {
-                                entity_commands.insert(ChildOf(entity));
-                            }
-                            None => {
-                                entity_commands.remove::<ChildOf>();
-                            }
+        let entity = 'entity_retrieval: {
+            'entity_full_reuse: {
+                let Some(entity) = self.ctx.mapping.id_to_entity.get(&id).copied() else {
+                    break 'entity_full_reuse;
+                };
+
+                let Ok(mut qentity) = self.ctx.entity_query.get_mut(entity) else {
+                    break 'entity_full_reuse;
+                };
+
+                // Update iteration for entity upkeep tracking
+                qentity.tracker.iteration = self.ctx.state.iteration;
+
+                if qentity.child_of.map(|ch| ch.parent()) != self.current.entity {
+                    // Parent changed
+                    let mut entity_commands = self.ctx.commands.entity(entity);
+                    match self.current.entity {
+                        Some(entity) => {
+                            entity_commands.insert(ChildOf(entity));
+                        }
+                        None => {
+                            entity_commands.remove::<ChildOf>();
                         }
                     }
                 }
-                entity
-            }
-            None => {
-                let mut commands = self.ctx.commands.spawn((
-                    // Add marker component that users can use in QueryFilter Without statements
-                    ImmMarker::<Cap> {
-                        id,
-                        iteration: self.ctx.state.iteration,
-                        _ph: PhantomData,
-                    },
-                ));
 
-                if let Some(entity) = self.current.entity {
-                    commands.insert(ChildOf(entity));
-                }
-                will_be_spawned = true;
-                commands.id()
+                break 'entity_retrieval entity;
             }
+
+            // Spawn entity by default if valid entity not found
+            let mut commands = self.ctx.commands.spawn((
+                // Add marker component that users can use in QueryFilter Without statements
+                ImmMarker::<Cap> {
+                    id,
+                    iteration: self.ctx.state.iteration,
+                    _ph: PhantomData,
+                },
+            ));
+
+            if let Some(entity) = self.current.entity {
+                commands.insert(ChildOf(entity));
+            }
+            will_be_spawned = true;
+            commands.id()
         };
 
         ImmEntity {
@@ -225,6 +236,19 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
     /// Retrieve system param ctx for immediate mode
     pub fn ctx_mut(&mut self) -> &mut ImmCtx<'w, 's, Cap> {
         &mut self.imm.ctx
+    }
+
+    /// Helper method to simplify entity retrieval
+    pub fn get_entity(&self) -> Result<FilteredEntityRef<'_>, bevy_ecs::query::QueryEntityError> {
+        self.ctx().entities.get(self.entity())
+    }
+
+    /// Helper method to simplify entity retrieval
+    pub fn get_entity_mut(
+        &mut self,
+    ) -> Result<bevy_ecs::world::FilteredEntityMut<'_>, bevy_ecs::query::QueryEntityError> {
+        let entity = self.entity();
+        self.ctx_mut().entities.get_mut(entity)
     }
 
     /// Retrieve [`Entity`] value for this entity
