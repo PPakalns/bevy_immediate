@@ -6,10 +6,10 @@ use bevy_ecs::{
 };
 
 use crate::{
-    Imm, ImmCap, ImmId, ImmMarker,
+    CapSystemParams, Imm, ImmCap, ImmId,
     immediate::{
-        Current, ImmTrackerComponent, ImmediateModeStateResource, capabilities::ImmCapSystemParams,
-        entity_mapping::ImmediateModeEntityMapping,
+        Current, ImmMarker, entity_mapping::ImmediateModeEntityMapping,
+        upkeep::ImmediateModeStateResource,
     },
 };
 
@@ -21,7 +21,7 @@ pub struct ImmCtx<'w, 's, Cap: ImmCap> {
     pub(super) query: Query<'w, 's, ImmEntityQuery<Cap>, With<ImmMarker<Cap>>>,
 
     /// Access data from entities for components that were requested in extensions
-    pub params: ImmCapSystemParams<'w, 's, Cap>,
+    pub params: CapSystemParams<'w, 's, Cap>,
 
     /// World commands
     pub commands: Commands<'w, 's>,
@@ -68,6 +68,6 @@ where
 #[derive(bevy_ecs::query::QueryData)]
 #[query_data(mutable)]
 pub(super) struct ImmEntityQuery<Marker: Send + Sync + 'static> {
-    pub(super) tracker: &'static mut ImmTrackerComponent<Marker>,
+    pub(super) tracker: &'static mut ImmMarker<Marker>,
     pub(super) child_of: Option<&'static ChildOf>,
 }

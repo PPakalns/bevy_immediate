@@ -8,15 +8,15 @@ use bevy_ecs::{
     world::{OnAdd, OnRemove},
 };
 
-use crate::{ImmId, immediate::ImmTrackerComponent};
+use crate::{ImmId, immediate::ImmMarker};
 
 #[derive(bevy_ecs::resource::Resource)]
-pub struct ImmediateModeEntityMapping<Marker: Send + Sync + 'static> {
+pub struct ImmediateModeEntityMapping<Cap: Send + Sync + 'static> {
     pub(super) id_to_entity: HashMap<ImmId, Entity>,
-    _ph: PhantomData<Marker>,
+    _ph: PhantomData<Cap>,
 }
 
-impl<Marker: Send + Sync + 'static> Default for ImmediateModeEntityMapping<Marker> {
+impl<Cap: Send + Sync + 'static> Default for ImmediateModeEntityMapping<Cap> {
     fn default() -> Self {
         Self {
             id_to_entity: Default::default(),
@@ -25,16 +25,16 @@ impl<Marker: Send + Sync + 'static> Default for ImmediateModeEntityMapping<Marke
     }
 }
 
-pub fn init<Marker: Send + Sync + 'static>(app: &mut bevy_app::App) {
-    app.insert_resource(ImmediateModeEntityMapping::<Marker>::default());
-    app.add_observer(on_sui_marker_added::<Marker>)
-        .add_observer(on_sui_marker_removed::<Marker>);
+pub fn init<Cap: Send + Sync + 'static>(app: &mut bevy_app::App) {
+    app.insert_resource(ImmediateModeEntityMapping::<Cap>::default());
+    app.add_observer(on_sui_marker_added::<Cap>)
+        .add_observer(on_sui_marker_removed::<Cap>);
 }
 
-fn on_sui_marker_added<Marker: Send + Sync + 'static>(
-    trigger: Trigger<OnAdd, ImmTrackerComponent<Marker>>,
-    marker: Query<&ImmTrackerComponent<Marker>>,
-    mut mapping: ResMut<ImmediateModeEntityMapping<Marker>>,
+fn on_sui_marker_added<Cap: Send + Sync + 'static>(
+    trigger: Trigger<OnAdd, ImmMarker<Cap>>,
+    marker: Query<&ImmMarker<Cap>>,
+    mut mapping: ResMut<ImmediateModeEntityMapping<Cap>>,
 ) {
     let entity = trigger.target();
     if let Ok(marker) = marker.get(entity) {
@@ -42,10 +42,10 @@ fn on_sui_marker_added<Marker: Send + Sync + 'static>(
     }
 }
 
-fn on_sui_marker_removed<Marker: Send + Sync + 'static>(
-    trigger: Trigger<OnRemove, ImmTrackerComponent<Marker>>,
-    marker: Query<&ImmTrackerComponent<Marker>>,
-    mut mapping: ResMut<ImmediateModeEntityMapping<Marker>>,
+fn on_sui_marker_removed<Cap: Send + Sync + 'static>(
+    trigger: Trigger<OnRemove, ImmMarker<Cap>>,
+    marker: Query<&ImmMarker<Cap>>,
+    mut mapping: ResMut<ImmediateModeEntityMapping<Cap>>,
 ) {
     let entity = trigger.target();
     if let Ok(marker) = marker.get(entity) {

@@ -1,18 +1,26 @@
 use bevy::{color::palettes::basic::*, prelude::*, winit::WinitSettings};
 use bevy_immediate::{
     BevyImmediatePlugin, ImmCtx,
-    ui::{ImmCapUi, picking::ImmUiClicked},
+    ui::{ImmCapUi, picking::clicked::ImmUiClicked},
 };
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         //
-        // Add immediate mode plugin and ui extensions for ergonomic API
+        // If using immediate plugin with ui capabilities and "picking" feature
+        // Make sure that picking plugin is enabled.
+        // .add_plugins(
+        //     bevy_picking:DefaultPickingPlugins
+        // )
+        //
+        //
+        // Add immediate mode with ui extensions for ergonomic API
         .add_plugins(BevyImmediatePlugin::<ImmCapUi>::default())
         //
         // Only run the app when there is user input. This will significantly reduce CPU/GPU use.
         .insert_resource(WinitSettings::desktop_app())
+        //
         .insert_resource(State::default())
         .add_systems(Startup, setup)
         .add_systems(Update, button_system)
@@ -81,15 +89,13 @@ fn immediate_ui_demo(ctx: ImmCtx<ImmCapUi>, mut state: ResMut<State>) {
                             )
                         })
                         .add(|ui| {
-                            ui.child()
-                                .on_spawn_insert(|| {
-                                    (
-                                        Text::new("Button"),
-                                        TextColor(Color::srgb(0.9, 0.9, 0.9)),
-                                        TextShadow::default(),
-                                    )
-                                })
-                                .add_empty();
+                            ui.child().on_spawn_insert(|| {
+                                (
+                                    Text::new("Button"),
+                                    TextColor(Color::srgb(0.9, 0.9, 0.9)),
+                                    TextShadow::default(),
+                                )
+                            });
                         });
 
                     if resp.clicked() {
@@ -102,8 +108,7 @@ fn immediate_ui_demo(ctx: ImmCtx<ImmCapUi>, mut state: ResMut<State>) {
                         })
                         .on_change_insert(state.is_changed(), || {
                             Text::new(format!("Clicked: {}", state.clicked_times))
-                        })
-                        .add_empty();
+                        });
                 });
 
             ui.child()
@@ -135,15 +140,13 @@ fn immediate_ui_demo(ctx: ImmCtx<ImmCapUi>, mut state: ResMut<State>) {
                                 )
                             })
                             .add(|ui| {
-                                ui.child()
-                                    .on_spawn_insert(|| {
-                                        (
-                                            Text::new(format!("{:?}", tab)),
-                                            TextColor(Color::srgb(0.9, 0.9, 0.9)),
-                                            TextShadow::default(),
-                                        )
-                                    })
-                                    .add_empty();
+                                ui.child().on_spawn_insert(|| {
+                                    (
+                                        Text::new(format!("{:?}", tab)),
+                                        TextColor(Color::srgb(0.9, 0.9, 0.9)),
+                                        TextShadow::default(),
+                                    )
+                                });
                             });
 
                         if resp.clicked() {
@@ -168,15 +171,13 @@ fn immediate_ui_demo(ctx: ImmCtx<ImmCapUi>, mut state: ResMut<State>) {
                             )
                         })
                         .add(|ui| {
-                            ui.child()
-                                .on_spawn_insert(|| {
-                                    (
-                                        Text::new("Tab 1"),
-                                        TextColor(Color::srgb(0.9, 0.9, 0.9)),
-                                        TextShadow::default(),
-                                    )
-                                })
-                                .add_empty();
+                            ui.child().on_spawn_insert(|| {
+                                (
+                                    Text::new("Tab 1"),
+                                    TextColor(Color::srgb(0.9, 0.9, 0.9)),
+                                    TextShadow::default(),
+                                )
+                            });
                         });
                 }
                 Tab::Tab2 => {
@@ -193,15 +194,13 @@ fn immediate_ui_demo(ctx: ImmCtx<ImmCapUi>, mut state: ResMut<State>) {
                             )
                         })
                         .add(|ui| {
-                            ui.child()
-                                .on_spawn_insert(|| {
-                                    (
-                                        Text::new("Tab 2"),
-                                        TextColor(Color::srgb(0.9, 0.9, 0.9)),
-                                        TextShadow::default(),
-                                    )
-                                })
-                                .add_empty();
+                            ui.child().on_spawn_insert(|| {
+                                (
+                                    Text::new("Tab 2"),
+                                    TextColor(Color::srgb(0.9, 0.9, 0.9)),
+                                    TextShadow::default(),
+                                )
+                            });
                         });
                 }
                 Tab::Tab3 => {
@@ -219,15 +218,13 @@ fn immediate_ui_demo(ctx: ImmCtx<ImmCapUi>, mut state: ResMut<State>) {
                             )
                         })
                         .add(|ui| {
-                            ui.child()
-                                .on_spawn_insert(|| {
-                                    (
-                                        Text::new("Tab 3"),
-                                        TextColor(Color::srgb(0.9, 0.9, 0.9)),
-                                        TextShadow::default(),
-                                    )
-                                })
-                                .add_empty();
+                            ui.child().on_spawn_insert(|| {
+                                (
+                                    Text::new("Tab 3"),
+                                    TextColor(Color::srgb(0.9, 0.9, 0.9)),
+                                    TextShadow::default(),
+                                )
+                            });
                         });
                 }
             }
