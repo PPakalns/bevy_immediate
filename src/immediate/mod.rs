@@ -251,16 +251,18 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
     }
 
     /// Helper method to simplify entity retrieval
-    pub fn get_entity(&self) -> Result<FilteredEntityRef<'_>, bevy_ecs::query::QueryEntityError> {
-        self.ctx().entities.get(self.entity())
+    pub fn cap_get_entity(
+        &self,
+    ) -> Result<FilteredEntityRef<'_>, bevy_ecs::query::QueryEntityError> {
+        self.ctx().cap_entities.get(self.entity())
     }
 
     /// Helper method to simplify entity retrieval
-    pub fn get_entity_mut(
+    pub fn cap_get_entity_mut(
         &mut self,
     ) -> Result<bevy_ecs::world::FilteredEntityMut<'_>, bevy_ecs::query::QueryEntityError> {
         let entity = self.entity();
-        self.ctx_mut().entities.get_mut(entity)
+        self.ctx_mut().cap_entities.get_mut(entity)
     }
 
     /// Retrieve [`Entity`] value for this entity
@@ -285,11 +287,11 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
     }
 
     /// Issue [`EntityCommands`] at this moment
-    pub fn at_this_moment_apply_commands<F>(self, f: F) -> Self
+    pub fn at_this_moment_apply_commands<F>(mut self, f: F) -> Self
     where
         F: FnOnce(&mut EntityCommands),
     {
-        let mut entity_commands = self.imm.ctx.commands.entity(self.entity);
+        let mut entity_commands = self.entity_commands();
         f(&mut entity_commands);
         self
     }
@@ -416,7 +418,7 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
     ///
     /// Useful in implementing capabilities [`ImmCap`]
     pub fn cap_entity_contains<T: Component>(&self) -> bool {
-        let Ok(entity) = self.get_entity() else {
+        let Ok(entity) = self.cap_get_entity() else {
             return false;
         };
 
@@ -427,7 +429,7 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
     ///
     /// Useful in implementing capabilities [`ImmCap`]
     pub fn cap_get_component<T: Component>(&self) -> Result<Option<&T>, QueryEntityError> {
-        let entity = self.get_entity()?;
+        let entity = self.cap_get_entity()?;
         Ok(entity.get::<T>())
     }
 
@@ -437,7 +439,7 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
     pub fn cap_get_component_mut<'a, T: Component<Mutability = Mutable>>(
         &'a mut self,
     ) -> Result<Option<bevy_ecs::world::Mut<'a, T>>, QueryEntityError> {
-        let entity = self.get_entity_mut()?;
+        let entity = self.cap_get_entity_mut()?;
         Ok(entity.into_mut::<T>())
     }
 
@@ -447,7 +449,7 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
     pub fn cap_get_resource<R: Resource>(
         &self,
     ) -> Result<bevy_ecs::world::Ref<'_, R>, ResourceFetchError> {
-        self.ctx().resources.get::<R>()
+        self.ctx().cap_resources.get::<R>()
     }
 
     /// Retrieve mutable resource from capabilities
@@ -456,15 +458,14 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
     pub fn cap_get_resource_mut<R: Resource>(
         &mut self,
     ) -> Result<bevy_ecs::world::Mut<'_, R>, ResourceFetchError> {
-        self.ctx_mut().resources.get_mut::<R>()
+        self.ctx_mut().cap_resources.get_mut::<R>()
     }
 }
 
-/// Component that is added to entities that are managed
-/// by immediate mode system
+/// Component that is added to entities that are managed by immediate mode system
 ///
-/// Useful to add query filter [`WithoutImm<Cap>`] or [`bevy_ecs::query::Without<ImmMarker<Cap>>`]
-/// to your queries.
+/// Useful to add query filter [`WithoutImm<()>`] or [`bevy_ecs::query::Without<ImmMarker<()>>`]
+/// to your queries. Replace `()` with `Cap` that you use.
 #[derive(bevy_ecs::component::Component)]
 pub struct ImmMarker<Cap> {
     id: ImmId,
