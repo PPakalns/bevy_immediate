@@ -149,7 +149,7 @@ impl<'w, 's, Cap: ImmCap> CapResourcesParam<'w, 's, Cap> {
         resource.state.downcast_mut::<ResMut<R>>().unwrap()
     }
 
-    pub fn with_resource<R: Resource, O>(&mut self, f: impl Fn(&R) -> O) -> O {
+    pub fn with_resource<R: Resource, O>(&mut self, mut f: impl FnMut(&R) -> O) -> O {
         let type_id = TypeId::of::<R>();
         let resource = self
             .resources

@@ -1,10 +1,11 @@
 use bevy_ecs::{
     entity::Entity,
     observer::Trigger,
-    system::{Commands, Query, ResMut},
+    system::{Commands, ResMut},
     world::OnAdd,
 };
 use bevy_picking::events::{Click, Pointer};
+use bevy_platform::collections::HashSet;
 
 use crate::{CapAccessRequests, ImmCap, ImmEntity, ImmImplCap};
 
@@ -19,6 +20,7 @@ impl ImmCap for ImmCapUiClicked {
         }
 
         cap_req.request_optional_component::<TrackClicked>(app.world_mut(), false);
+        cap_req.request_resource::<TrackClickedEntitiesResource>(false);
     }
 }
 
@@ -37,14 +39,15 @@ where
 
         let mut query = self.ctx_mut().query.get_query::<Option<&TrackClicked>>();
 
-        match query.query().get(entity) {
-            Ok(Some(entity)) => entity.clicked,
-            Ok(None) | Err(_) => {
-                self.entity_commands()
-                    .insert_if_new(TrackClicked::default());
-                false
-            }
+        if !query.query().contains(entity) {
+            // Auto insert track clicked capability
+            self.entity_commands().insert_if_new(TrackClicked);
+            return false;
         }
+
+        self.ctx_mut()
+            .resources
+            .with_resource::<TrackClickedEntitiesResource, _>(|res| res.clicked.contains(&entity))
     }
 }
 
@@ -55,7 +58,7 @@ pub struct TrackClickedPlugin;
 
 impl bevy_app::Plugin for TrackClickedPlugin {
     fn build(&self, app: &mut bevy_app::App) {
-        app.insert_resource(TrackClickedResetResource::default());
+        app.insert_resource(TrackClickedEntitiesResource::default());
         app.add_systems(bevy_app::First, reset_clicked_tracking);
         app.add_observer(track_clicked_insert);
     }
@@ -69,40 +72,19 @@ fn track_clicked_insert(trigger: Trigger<OnAdd, TrackClicked>, mut commands: Com
 
 /// Tracks if entity has been clicked in this frame.
 #[derive(bevy_ecs::component::Component, Default)]
-pub struct TrackClicked {
-    clicked: bool,
-}
-impl TrackClicked {
-    /// Retrieve whether entity has been clicked in this frame
-    pub fn get(&self) -> bool {
-        self.clicked
-    }
-}
+#[component(storage = "SparseSet")]
+pub struct TrackClicked;
 
-fn on_click(
-    trigger: Trigger<Pointer<Click>>,
-    mut query: Query<&mut TrackClicked>,
-    mut resource: ResMut<TrackClickedResetResource>,
-) {
+fn on_click(trigger: Trigger<Pointer<Click>>, mut resource: ResMut<TrackClickedEntitiesResource>) {
     let entity = trigger.target();
-    if let Ok(mut comp) = query.get_mut(entity) {
-        comp.clicked = true;
-        resource.clicked.push(entity);
-    }
+    resource.clicked.insert(entity);
 }
 
 #[derive(bevy_ecs::resource::Resource, Default)]
-struct TrackClickedResetResource {
-    clicked: Vec<Entity>,
+struct TrackClickedEntitiesResource {
+    pub clicked: HashSet<Entity>,
 }
 
-fn reset_clicked_tracking(
-    mut query: Query<&mut TrackClicked>,
-    mut res: ResMut<TrackClickedResetResource>,
-) {
-    for entity in res.clicked.drain(..) {
-        if let Ok(mut comp) = query.get_mut(entity) {
-            comp.clicked = false;
-        }
-    }
+fn reset_clicked_tracking(mut res: ResMut<TrackClickedEntitiesResource>) {
+    res.clicked.clear();
 }
