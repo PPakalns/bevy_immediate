@@ -2,8 +2,12 @@
 #![doc = include_str!("../README.md")]
 
 /// Base logic to provide immediate mode api
-mod immediate;
+pub mod immediate;
 pub use immediate::*;
+
+/// Logic to provide immediate mode api
+/// to attach entity tree to already existing entity
+pub mod attach;
 
 /// Exstention support for immediate mode. Logic to implement additional capabilities.
 mod capabilities;

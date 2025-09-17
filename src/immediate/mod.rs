@@ -13,9 +13,16 @@ use bevy_ecs::{
 /// Plugin for immediate mode functionality in bevy
 pub struct BevyImmediatePlugin<Cap = ()>(PhantomData<Cap>);
 
+impl<Cap> BevyImmediatePlugin<Cap> {
+    /// Construct plugin
+    pub fn new() -> Self {
+        Self(PhantomData)
+    }
+}
+
 impl<Cap> Default for BevyImmediatePlugin<Cap> {
     fn default() -> Self {
-        Self(Default::default())
+        Self::new()
     }
 }
 
@@ -183,6 +190,11 @@ impl<'w, 's, Cap: ImmCap> Imm<'w, 's, Cap> {
     #[inline]
     pub fn ctx_mut(&mut self) -> &mut ImmCtx<'w, 's, Cap> {
         &mut self.ctx
+    }
+
+    /// Retrieve [`ImmCtx`] from which immediate mode entity tree was built
+    pub fn deconstruct(self) -> ImmCtx<'w, 's, Cap> {
+        self.ctx
     }
 }
 

@@ -1,6 +1,7 @@
 use bevy::{color::palettes::basic::*, prelude::*, winit::WinitSettings};
 use bevy_immediate::{
-    BevyImmediatePlugin, ImmCtx,
+    BevyImmediatePlugin, ImmCtx, ImmImplCap,
+    attach::{BevyImmediateAttachPlugin, ImmediateAttachRoot},
     ui::{ImmCapUi, picking::clicked::ImmUiClicked},
 };
 
@@ -17,6 +18,7 @@ fn main() {
         //
         // Add immediate mode with ui extensions for ergonomic API
         .add_plugins(BevyImmediatePlugin::<ImmCapUi>::default())
+        .add_plugins(BevyImmediateAttachPlugin::<ImmCapUi, Tab3RootMarker>::default())
         //
         // Only run the app when there is user input. This will significantly reduce CPU/GPU use.
         .insert_resource(WinitSettings::desktop_app())
@@ -205,27 +207,7 @@ fn immediate_ui_demo(ctx: ImmCtx<ImmCapUi>, mut state: ResMut<State>) {
                 }
                 Tab::Tab3 => {
                     ui.child_with_id(state.tab)
-                        .on_spawn_insert(|| {
-                            (
-                                Node {
-                                    width: Val::Px(75.0),
-                                    height: Val::Px(65.0),
-                                    ..default()
-                                },
-                                BorderColor(Color::srgb(0., 0., 1.)),
-                                BorderRadius::MAX,
-                                BackgroundColor(NORMAL_BUTTON),
-                            )
-                        })
-                        .add(|ui| {
-                            ui.child().on_spawn_insert(|| {
-                                (
-                                    Text::new("Tab 3"),
-                                    TextColor(Color::srgb(0.9, 0.9, 0.9)),
-                                    TextShadow::default(),
-                                )
-                            });
-                        });
+                        .on_spawn_insert(|| (Node::default(), Tab3RootMarker));
                 }
             }
         });
@@ -257,5 +239,43 @@ fn button_system(
                 border_color.0 = Color::BLACK;
             }
         }
+    }
+}
+
+#[derive(Component)]
+#[component(storage = "SparseSet")]
+struct Tab3RootMarker;
+
+impl<Cap: ImmImplCap<ImmCapUi>> ImmediateAttachRoot<Cap> for Tab3RootMarker {
+    type Params = ();
+
+    fn execute(
+        ui: &mut bevy_immediate::Imm<'_, '_, Cap>,
+        params: &mut <Self::Params as bevy_ecs::system::SystemParam>::Item<'_, '_>,
+    ) {
+        let _ = params;
+
+        ui.child()
+            .on_spawn_insert(|| {
+                (
+                    Node {
+                        width: Val::Px(75.0),
+                        height: Val::Px(65.0),
+                        ..default()
+                    },
+                    BorderColor(Color::srgb(0., 0., 1.)),
+                    BorderRadius::MAX,
+                    BackgroundColor(NORMAL_BUTTON),
+                )
+            })
+            .add(|ui| {
+                ui.child().on_spawn_insert(|| {
+                    (
+                        Text::new("Tab 3"),
+                        TextColor(Color::srgb(0.9, 0.9, 0.9)),
+                        TextShadow::default(),
+                    )
+                });
+            });
     }
 }
