@@ -19,7 +19,10 @@ pub trait ImmUiText {
     fn text(self, text: impl Deref<Target = str> + Into<String>) -> Self;
 
     /// On entity spawn insert given text into [`Text`]
-    fn on_spawn_text(self, text: impl FnOnce() -> String) -> Self;
+    fn on_spawn_text_fn(self, text: impl FnOnce() -> String) -> Self;
+
+    /// On entity spawn insert given text into [`Text`]
+    fn on_spawn_text(self, text: &str) -> Self;
 }
 
 impl<Cap> ImmUiText for ImmEntity<'_, '_, '_, Cap>
@@ -46,7 +49,11 @@ where
         self
     }
 
-    fn on_spawn_text(self, text: impl FnOnce() -> String) -> Self {
+    fn on_spawn_text_fn(self, text: impl FnOnce() -> String) -> Self {
         self.on_spawn_insert(|| Text(text()))
+    }
+
+    fn on_spawn_text(self, text: &str) -> Self {
+        self.on_spawn_insert(|| Text(text.to_owned()))
     }
 }

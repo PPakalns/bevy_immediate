@@ -1,36 +1,34 @@
-use bevy::{color::palettes::basic::*, prelude::*, winit::WinitSettings};
+use bevy::prelude::*;
 use bevy_immediate::{
     BevyImmediatePlugin, ImmCtx, ImmImplCap,
     attach::{BevyImmediateAttachPlugin, ImmediateAttachRoot},
     ui::{ImmCapUi, picking::clicked::ImmUiClicked, text::ImmUiText},
 };
 
+use crate::utils::my_text_style;
+
+mod utils;
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        //
-        // If using immediate plugin with ui capabilities and "picking" feature
-        // Make sure that picking plugin is enabled.
-        // .add_plugins(
-        //     bevy_picking:DefaultPickingPlugins
-        // )
+        .add_plugins(utils::DemoUtilsPlugin)
+        .add_systems(Startup, setup_camera)
         //
         //
-        // Add immediate mode with ui extensions for ergonomic API
+        // Add immediate mode support with `ImmCapUi` capabilities
         .add_plugins(BevyImmediatePlugin::<ImmCapUi>::default())
-        .add_plugins(BevyImmediateAttachPlugin::<ImmCapUi, Tab3RootMarker>::default())
         //
-        // Only run the app when there is user input. This will significantly reduce CPU/GPU use.
-        .insert_resource(WinitSettings::desktop_app())
-        //
+        // Create your Ui as a system
+        .add_systems(Update, ui_as_system)
         .insert_resource(State::default())
-        .add_systems(Startup, setup)
-        .add_systems(Update, button_system)
-        .add_systems(Update, immediate_ui_demo)
+        //
+        // Attach your Ui to an entity with given marker
+        .add_plugins(BevyImmediateAttachPlugin::<ImmCapUi, Tab3RootMarker>::default())
         .run();
 }
 
-fn setup(mut commands: Commands) {
+fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera2d);
 }
 
@@ -48,66 +46,26 @@ enum Tab {
     Tab3,
 }
 
-fn immediate_ui_demo(ctx: ImmCtx<ImmCapUi>, mut state: ResMut<State>) {
+fn ui_as_system(ctx: ImmCtx<ImmCapUi>, mut state: ResMut<State>) {
     ctx.build_immediate_root("main_ui")
         .child()
-        .on_spawn_insert(|| Node {
-            flex_direction: FlexDirection::Column,
-            width: Val::Percent(100.0),
-            height: Val::Percent(100.0),
-            align_items: AlignItems::Center,
-            justify_content: JustifyContent::Center,
-            row_gap: Val::Px(10.),
-            ..default()
-        })
+        .on_spawn_insert(utils::node_full_screen_centered)
         .add(|ui| {
             ui.child()
-                .on_spawn_insert(|| Node {
-                    flex_direction: FlexDirection::Row,
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    column_gap: Val::Px(10.),
-                    ..default()
-                })
+                .on_spawn_insert(utils::container_with_background)
                 .add(|ui| {
-                    let mut resp = ui
-                        .child()
-                        .on_spawn_insert(|| {
-                            (
-                                Button,
-                                Node {
-                                    width: Val::Px(150.0),
-                                    height: Val::Px(65.0),
-                                    border: UiRect::all(Val::Px(5.0)),
-                                    // horizontally center child text
-                                    justify_content: JustifyContent::Center,
-                                    // vertically center child text
-                                    align_items: AlignItems::Center,
-                                    ..default()
-                                },
-                                BorderColor(Color::BLACK),
-                                BorderRadius::MAX,
-                                BackgroundColor(NORMAL_BUTTON),
-                            )
-                        })
-                        .add(|ui| {
-                            ui.child().on_spawn_insert(|| {
-                                (
-                                    Text::new("Button"),
-                                    TextColor(Color::srgb(0.9, 0.9, 0.9)),
-                                    TextShadow::default(),
-                                )
-                            });
-                        });
+                    let mut resp = ui.child().on_spawn_insert(utils::button_bundle).add(|ui| {
+                        ui.child()
+                            .on_spawn_insert(utils::my_text_style)
+                            .on_spawn_text("Button");
+                    });
 
                     if resp.clicked() {
                         state.clicked_times += 1;
                     }
 
                     ui.child()
-                        .on_spawn_insert(|| {
-                            (TextColor(Color::srgb(0.9, 0.9, 0.9)), TextShadow::default())
-                        })
+                        .on_spawn_insert(my_text_style)
                         .on_change_insert(state.is_changed(), || {
                             Text::new(format!("Clicked: {}", state.clicked_times))
                         });
@@ -116,42 +74,18 @@ fn immediate_ui_demo(ctx: ImmCtx<ImmCapUi>, mut state: ResMut<State>) {
             ui.child()
                 .on_spawn_insert(|| Node {
                     flex_direction: FlexDirection::Row,
-                    column_gap: Val::Px(10.),
-                    ..default()
+                    ..utils::node_container()
                 })
                 .add(|ui| {
                     for tab in [Tab::Tab1, Tab::Tab2, Tab::Tab3] {
-                        let mut resp = ui
-                            .child()
-                            .on_spawn_insert(|| {
-                                (
-                                    Button,
-                                    Node {
-                                        width: Val::Px(65.0),
-                                        height: Val::Px(65.0),
-                                        border: UiRect::all(Val::Px(5.0)),
-                                        // horizontally center child text
-                                        justify_content: JustifyContent::Center,
-                                        // vertically center child text
-                                        align_items: AlignItems::Center,
-                                        ..default()
-                                    },
-                                    BorderColor(Color::BLACK),
-                                    BorderRadius::MAX,
-                                    BackgroundColor(NORMAL_BUTTON),
-                                )
-                            })
-                            .add(|ui| {
-                                ui.child().on_spawn_insert(|| {
-                                    (
-                                        Text::new(format!("{:?}", tab)),
-                                        TextColor(Color::srgb(0.9, 0.9, 0.9)),
-                                        TextShadow::default(),
-                                    )
-                                });
+                        let mut entity =
+                            ui.child().on_spawn_insert(utils::button_bundle).add(|ui| {
+                                ui.child()
+                                    .on_spawn_insert(utils::my_text_style)
+                                    .on_spawn_text_fn(|| format!("{:?}", tab));
                             });
 
-                        if resp.clicked() {
+                        if entity.clicked() {
                             state.tab = tab;
                         }
                     }
@@ -160,49 +94,20 @@ fn immediate_ui_demo(ctx: ImmCtx<ImmCapUi>, mut state: ResMut<State>) {
             match state.tab {
                 Tab::Tab1 => {
                     ui.child_id(state.tab)
-                        .on_spawn_insert(|| {
-                            (
-                                Node {
-                                    width: Val::Px(300.0),
-                                    height: Val::Px(65.0),
-                                    ..default()
-                                },
-                                BorderColor(Color::srgb(1., 0., 0.)),
-                                BorderRadius::MAX,
-                                BackgroundColor(NORMAL_BUTTON),
-                            )
-                        })
+                        .on_spawn_insert(utils::container_with_background)
                         .add(|ui| {
-                            ui.child().on_spawn_insert(|| {
-                                (
-                                    Text::new("Tab 1"),
-                                    TextColor(Color::srgb(0.9, 0.9, 0.9)),
-                                    TextShadow::default(),
-                                )
-                            });
+                            ui.child()
+                                .on_spawn_insert(utils::my_text_style)
+                                .text("Tab1");
                         });
                 }
                 Tab::Tab2 => {
                     ui.child_id(state.tab)
-                        .on_spawn_insert(|| {
-                            (
-                                Node {
-                                    width: Val::Px(150.0),
-                                    height: Val::Px(65.0),
-                                    ..default()
-                                },
-                                BorderColor(Color::srgb(0., 1., 0.)),
-                                BackgroundColor(NORMAL_BUTTON),
-                            )
-                        })
+                        .on_spawn_insert(utils::container_with_background)
                         .add(|ui| {
-                            ui.child().on_spawn_insert(|| {
-                                (
-                                    Text::new("Tab 2"),
-                                    TextColor(Color::srgb(0.9, 0.9, 0.9)),
-                                    TextShadow::default(),
-                                )
-                            });
+                            ui.child()
+                                .on_spawn_insert(utils::my_text_style)
+                                .text("Tab2");
                         });
                 }
                 Tab::Tab3 => {
@@ -211,35 +116,6 @@ fn immediate_ui_demo(ctx: ImmCtx<ImmCapUi>, mut state: ResMut<State>) {
                 }
             }
         });
-}
-
-const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
-const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
-const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
-
-#[allow(clippy::type_complexity)]
-fn button_system(
-    mut interaction_query: Query<
-        (&Interaction, &mut BackgroundColor, &mut BorderColor),
-        (Changed<Interaction>, With<Button>),
-    >,
-) {
-    for (interaction, mut color, mut border_color) in &mut interaction_query {
-        match *interaction {
-            Interaction::Pressed => {
-                *color = PRESSED_BUTTON.into();
-                border_color.0 = RED.into();
-            }
-            Interaction::Hovered => {
-                *color = HOVERED_BUTTON.into();
-                border_color.0 = Color::WHITE;
-            }
-            Interaction::None => {
-                *color = NORMAL_BUTTON.into();
-                border_color.0 = Color::BLACK;
-            }
-        }
-    }
 }
 
 #[derive(Component)]
@@ -255,32 +131,14 @@ impl<Cap: ImmImplCap<ImmCapUi>> ImmediateAttachRoot<Cap> for Tab3RootMarker {
     ) {
         let _ = params;
 
-        ui.child()
-            .on_spawn_insert(|| {
-                (
-                    Node {
-                        width: Val::Px(134.0),
-                        height: Val::Px(65.0),
-                        column_gap: Val::Px(10.),
-                        ..default()
-                    },
-                    BorderColor(Color::srgb(0., 0., 1.)),
-                    BorderRadius::MAX,
-                    BackgroundColor(NORMAL_BUTTON),
-                )
-            })
-            .add(|ui| {
-                ui.child().on_spawn_insert(|| {
-                    (
-                        Text::new("Tab 3"),
-                        TextColor(Color::srgb(0.9, 0.9, 0.9)),
-                        TextShadow::default(),
-                    )
-                });
+        ui.child().on_spawn_insert(utils::button_bundle).add(|ui| {
+            ui.child()
+                .on_spawn_insert(utils::my_text_style)
+                .on_spawn_text("Tab 3");
 
-                for i in 0..4 {
-                    ui.child_id(("ch", i)).text(i.to_string());
-                }
-            });
+            for i in 0..4 {
+                ui.child_id(("ch", i)).text(i.to_string());
+            }
+        });
     }
 }

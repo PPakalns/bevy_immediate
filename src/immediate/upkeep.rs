@@ -13,7 +13,7 @@ pub fn init<Cap: Send + Sync + 'static>(app: &mut bevy_app::App) {
     app.add_systems(
         bevy_app::PostUpdate,
         immediate_mode_tracked_entity_upkeep_system::<Cap>
-            .in_set(ImmediateSystemSet::<()>::default()),
+            .in_set(ImmediateSystemSet::<Cap>::default()),
     );
     app.insert_resource(ImmediateModeStateResource::<Cap>::default());
 }

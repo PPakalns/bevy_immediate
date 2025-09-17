@@ -399,7 +399,7 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
         })
     }
 
-    /// If changed, insert [`Bundle`] into entity
+    /// If entity spawned or changed value is `true`, insert [`Bundle`] into entity
     pub fn on_change_insert<F, B>(self, changed: bool, f: F) -> Self
     where
         F: FnOnce() -> B,
