@@ -7,7 +7,7 @@ pub struct ImmCapUiInteraction;
 
 impl ImmCap for ImmCapUiInteraction {
     fn build<Cap: ImmCap>(app: &mut bevy_app::App, cap_req: &mut crate::CapAccessRequests<Cap>) {
-        cap_req.request_optional_component::<Interaction>(app.world_mut(), false);
+        cap_req.request_component_read::<Interaction>(app.world_mut());
     }
 }
 

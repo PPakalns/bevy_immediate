@@ -1,14 +1,13 @@
-use std::{any::TypeId, sync::Arc};
+use std::{marker::PhantomData, sync::Arc};
 
 use bevy_ecs::{
     component::{Component, ComponentId, Mutable},
-    query::{QueryBuilder, With},
     resource::Resource,
-    world::{FilteredEntityMut, FilteredResourcesMutBuilder, World},
+    world::World,
 };
 use bevy_platform::collections::HashMap;
 
-use crate::{ImmCap, ImmMarker};
+use crate::ImmCap;
 
 /// Stores requested capabilities for given immediate mode request
 #[derive(bevy_ecs::resource::Resource)]
@@ -28,90 +27,84 @@ impl<Cap: ImmCap> CapAccessRequestsResource<Cap> {
 /// Tracks what kind of query accesses capability has requested
 pub struct CapAccessRequests<Cap: ImmCap> {
     // type_id_map: HashMap<TypeId, ComponentId>,
-    components: HashMap<ComponentId, ComponentRequests<Cap>>,
-    resources: HashMap<TypeId, ResourceRequest>,
-}
-
-pub struct ResourceRequest {
-    pub mutable: bool,
-    #[allow(clippy::type_complexity)]
-    pub builder: Box<dyn Fn(&mut FilteredResourcesMutBuilder, bool) + 'static + Send + Sync>,
+    components: HashMap<ComponentId, ComponentRequests>,
+    resources: HashMap<ComponentId, ResourceRequest>,
+    _ph: PhantomData<Cap>,
 }
 
 impl<Cap: ImmCap> Default for CapAccessRequests<Cap> {
     fn default() -> Self {
         Self {
-            // type_id_map: Default::default(),
             components: Default::default(),
             resources: Default::default(),
+            _ph: PhantomData,
         }
     }
 }
 
 impl<Cap: ImmCap> CapAccessRequests<Cap> {
-    /// Mark component for retrieval during immediate mode execution through context [`crate::ImmCtx`]
-    /// method by querying `Option<&Component>` or `Option<&mut Component>` based on `mutable` argument value.
-    pub fn request_optional_component<C: Component<Mutability = Mutable>>(
+    /// Mark that component will be immutably accessed
+    pub fn request_component_read<C: Component<Mutability = Mutable>>(
         &mut self,
         world: &mut World,
-        mutable: bool,
     ) {
+        self.request_component_inner::<C>(world, false)
+    }
+
+    /// Mark that component will be mutably accessed
+    pub fn request_component_write<C: Component<Mutability = Mutable>>(
+        &mut self,
+        world: &mut World,
+    ) {
+        self.request_component_inner::<C>(world, true)
+    }
+
+    /// Mark that resource will be read during immediate mode
+    pub fn request_resource_read<R: Resource>(&mut self, world: &mut World) {
+        self.request_resource_inner::<R>(world, false)
+    }
+
+    /// Mark that resource will be written during immediate mode
+    pub fn request_resource_write<R: Resource>(&mut self, world: &mut World) {
+        self.request_resource_inner::<R>(world, true)
+    }
+
+    fn request_component_inner<C: Component>(&mut self, world: &mut World, mutable: bool) {
         let component_id = world.register_component::<C>();
         // self.type_id_map.insert(TypeId::of::<C>(), component_id);
         let value = self
             .components
             .entry(component_id)
-            .or_insert_with(|| ComponentRequests {
-                mutable,
-                builder: Box::new(|builder, mutable| match mutable {
-                    true => {
-                        builder.data::<Option<&mut C>>();
-                    }
-                    false => {
-                        builder.data::<Option<&C>>();
-                    }
-                }),
-            });
+            .or_insert_with(|| ComponentRequests { mutable });
         value.mutable |= mutable;
     }
 
-    /// Mark resource for retrieval during immediate mode execution through context [`crate::ImmCtx`].
-    pub fn request_resource<R: Resource>(&mut self, mutable: bool) {
+    fn request_resource_inner<R: Resource>(&mut self, world: &mut World, mutable: bool) {
+        let component_id = world.register_resource::<R>();
         let value = self
             .resources
-            .entry(TypeId::of::<R>())
-            .or_insert_with(|| ResourceRequest {
-                mutable,
-                builder: Box::new(|builder, mutable| {
-                    if mutable {
-                        builder.add_write::<R>();
-                    } else {
-                        builder.add_read::<R>();
-                    }
-                }),
-            });
+            .entry(component_id)
+            .or_insert_with(|| ResourceRequest { mutable });
         value.mutable |= mutable;
     }
 
     /// Returns requested component id and their mutability
-    pub fn requested_components(&self) -> &HashMap<ComponentId, ComponentRequests<Cap>> {
+    pub fn requested_components(&self) -> &HashMap<ComponentId, ComponentRequests> {
         &self.components
     }
 
     /// Returns component_ids for requested resources and their mutability
-    pub fn requested_resources(&self) -> &HashMap<TypeId, ResourceRequest> {
+    pub fn requested_resources(&self) -> &HashMap<ComponentId, ResourceRequest> {
         &self.resources
     }
 }
 
-pub type ComponentRequestBuilderFn<Cap> = dyn Fn(&mut QueryBuilder<FilteredEntityMut, With<ImmMarker<Cap>>>, bool)
-    + 'static
-    + Send
-    + Sync;
-
-pub struct ComponentRequests<Cap: ImmCap> {
+pub struct ComponentRequests {
     /// Need mutable access for this component
     pub mutable: bool,
-    /// Logic to register this component to tracking
-    pub builder: Box<ComponentRequestBuilderFn<Cap>>,
+}
+
+pub struct ResourceRequest {
+    /// Need mutable access for this resource
+    pub mutable: bool,
 }

@@ -22,8 +22,8 @@ impl ImmCap for ImmCapUiClicked {
             app.add_plugins(TrackClickedPlugin);
         }
 
-        cap_req.request_optional_component::<TrackClicked>(app.world_mut(), false);
-        cap_req.request_resource::<TrackClickedEntitiesResource>(false);
+        cap_req.request_component_read::<TrackClicked>(app.world_mut());
+        cap_req.request_resource_read::<TrackClickedEntitiesResource>(app.world_mut());
     }
 }
 

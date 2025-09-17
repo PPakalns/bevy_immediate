@@ -60,9 +60,7 @@ pub type ImmQuery<'w, 's, Cap, D, F = ()> = Query<'w, 's, D, (Without<ImmMarker<
 pub(crate) type ImmQueryInternal<'w, 's, Cap, D, F = ()> =
     Query<'w, 's, D, (With<ImmMarker<Cap>>, F)>;
 
-/// Immediate mode manager that manages entity [`Self::current`]
-///
-/// Can be used to build new child entities with [`Self::build`] and similar methods.
+/// Immediate mode in a state where child components can be added
 pub struct Imm<'w, 's, Cap: ImmCap> {
     ctx: ImmCtx<'w, 's, Cap>,
     current: Current,
@@ -155,39 +153,6 @@ impl<'w, 's, Cap: ImmCap> Imm<'w, 's, Cap> {
         }
     }
 
-    /// Manage entity with provided [`ImmId`] and [`Entity`] attributes with following logic
-    fn add<R>(
-        &mut self,
-        id: ImmId,
-        entity: Entity,
-        f: impl FnOnce(&mut Imm<'w, 's, Cap>) -> R,
-    ) -> R {
-        self.add_dyn(id, entity, Box::new(f))
-    }
-
-    /// Manage entity with provided [`ImmId`] and [`Entity`] attributes with following logic
-    #[allow(clippy::type_complexity)]
-    fn add_dyn<R>(
-        &mut self,
-        id: ImmId,
-        entity: Entity,
-        f: Box<dyn FnOnce(&mut Imm<'w, 's, Cap>) -> R + '_>,
-    ) -> R {
-        let stored_current = self.current;
-
-        self.current = Current {
-            id,
-            entity: Some(entity),
-            idx: 0,
-        };
-
-        let resp = f(self);
-
-        self.current = stored_current;
-
-        resp
-    }
-
     /// Entity that is currently being managed
     ///
     /// If building root of entity tree, this value may be [`None`]
@@ -214,14 +179,44 @@ impl<'w, 's, Cap: ImmCap> Imm<'w, 's, Cap> {
     pub fn deconstruct(self) -> ImmCtx<'w, 's, Cap> {
         self.ctx
     }
+
+    /// Manage entity with provided [`ImmId`] and [`Entity`] attributes with provided closure
+    fn add<R>(
+        &mut self,
+        id: ImmId,
+        entity: Entity,
+        f: impl FnOnce(&mut Imm<'w, 's, Cap>) -> R,
+    ) -> R {
+        self.add_dyn(id, entity, Box::new(f))
+    }
+
+    /// Manage entity with provided [`ImmId`] and [`Entity`] attributes with provided closure
+    #[allow(clippy::type_complexity)]
+    fn add_dyn<R>(
+        &mut self,
+        id: ImmId,
+        entity: Entity,
+        f: Box<dyn FnOnce(&mut Imm<'w, 's, Cap>) -> R + '_>,
+    ) -> R {
+        let stored_current = self.current;
+
+        self.current = Current {
+            id,
+            entity: Some(entity),
+            idx: 0,
+        };
+
+        let resp = f(self);
+
+        self.current = stored_current;
+
+        resp
+    }
 }
 
-/// Immediate mode response from entity that was built.
+/// Entity during construction in immediate mode approach
 ///
-/// Can be used to look up relevant information:
-/// * If entity was clicked,
-/// * If entity was spawned,
-/// * etc.
+/// Can be used to issue commands and check such conditions as `.clicked()`.
 pub struct ImmEntity<'r, 'w, 's, Cap: ImmCap> {
     imm: &'r mut Imm<'w, 's, Cap>,
     id: ImmId,
@@ -231,6 +226,8 @@ pub struct ImmEntity<'r, 'w, 's, Cap: ImmCap> {
 
 impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
     /// Build descendants of this entity
+    ///
+    /// If closure return value is needed, use `[Self::add_with_return]``
     #[allow(clippy::should_implement_trait)]
     pub fn add(self, f: impl FnOnce(&mut Imm<'w, 's, Cap>)) -> Self {
         self.imm.add(self.id, self.entity, f);
@@ -238,10 +235,8 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
     }
 
     /// Build descendants of this entity and retrieve return value of inner closure.
-    #[allow(clippy::should_implement_trait)]
     pub fn add_with_return<R>(self, f: impl FnOnce(&mut Imm<'w, 's, Cap>) -> R) -> (Self, R) {
         let value = self.imm.add(self.id, self.entity, f);
-
         (self, value)
     }
 

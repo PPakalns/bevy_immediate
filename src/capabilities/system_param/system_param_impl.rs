@@ -31,8 +31,15 @@ unsafe impl<Cap: ImmCap> SystemParam for CapQueryParam<'_, '_, Cap> {
         let params = QueryParamBuilder::new::<FilteredEntityMut, With<ImmMarker<Cap>>>(|builder| {
             builder.with::<ImmMarker<Cap>>();
 
-            for (_component_id, request) in requested_access.requested_components().iter() {
-                (request.builder)(builder, request.mutable);
+            for (&component_id, request) in requested_access.requested_components().iter() {
+                builder.optional(|builder| match request.mutable {
+                    true => {
+                        builder.mut_id(component_id);
+                    }
+                    false => {
+                        builder.ref_id(component_id);
+                    }
+                });
             }
         });
 
@@ -100,8 +107,15 @@ unsafe impl<Cap: ImmCap> SystemParam for CapResourcesParam<'_, '_, Cap> {
         let requested_access = requested_access.capabilities.clone();
 
         let builder = FilteredResourcesMutParamBuilder::new(|builder| {
-            for res in requested_access.requested_resources().values() {
-                (res.builder)(builder, res.mutable);
+            for (&component_id, res) in requested_access.requested_resources().iter() {
+                match res.mutable {
+                    true => {
+                        builder.add_write_by_id(component_id);
+                    }
+                    false => {
+                        builder.add_read_by_id(component_id);
+                    }
+                }
             }
         });
         let state = builder.build(world, system_meta);

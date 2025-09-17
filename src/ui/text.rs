@@ -9,7 +9,7 @@ pub struct ImmCapUiText;
 
 impl ImmCap for ImmCapUiText {
     fn build<Cap: ImmCap>(app: &mut bevy_app::App, cap_req: &mut crate::CapAccessRequests<Cap>) {
-        cap_req.request_optional_component::<Text>(app.world_mut(), true);
+        cap_req.request_component_write::<Text>(app.world_mut());
     }
 }
 
