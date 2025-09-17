@@ -40,7 +40,7 @@ pub trait ImmUiClicked {
     /// Pointer button that was used to click this entity
     fn clicked_by(&mut self) -> Option<PointerButton>;
     /// Access reference to stored pointer click event
-    fn with_pointer_event<R>(&mut self, f: impl FnOnce(Option<&Pointer<Click>>) -> R) -> R;
+    fn pointer_click(&mut self) -> Option<&Pointer<Click>>;
 }
 
 impl<Cap: ImmCap> ImmUiClicked for ImmEntity<'_, '_, '_, Cap>
@@ -48,7 +48,7 @@ where
     Cap: ImmImplCap<ImmCapUiClicked>,
 {
     fn clicked(&mut self) -> bool {
-        self.with_pointer_event(|event| event.is_some())
+        self.pointer_click().is_some()
     }
 
     fn primary_clicked(&mut self) -> bool {
@@ -64,32 +64,27 @@ where
     }
 
     fn clicked_by(&mut self) -> Option<PointerButton> {
-        self.with_pointer_event(|event| event.map(|event| event.button))
+        self.pointer_click().map(|event| event.button)
     }
 
-    fn with_pointer_event<R>(&mut self, f: impl FnOnce(Option<&Pointer<Click>>) -> R) -> R {
+    fn pointer_click(&mut self) -> Option<&Pointer<Click>> {
         'correct: {
-            let Ok(entity) = self.get_entity() else {
-                break 'correct;
-            };
-
-            if !entity.contains::<TrackClicked>() {
+            if !self.cap_entity_contains::<TrackClicked>() {
                 break 'correct;
             }
 
-            let entity_id = self.entity();
-
-            let resource = self
-                .ctx()
-                .resources
-                .get::<TrackClickedEntitiesResource>()
-                .expect("Capability available");
-
-            return f(resource.clicked.get(&entity_id));
+            let click = self
+                .cap_get_resource::<TrackClickedEntitiesResource>()
+                .expect("Capability should be available")
+                .into_inner()
+                .clicked
+                .get(&self.entity());
+            return click;
         }
 
+        // Fallback
         self.entity_commands().insert_if_new(TrackClicked);
-        f(None)
+        None
     }
 }
 

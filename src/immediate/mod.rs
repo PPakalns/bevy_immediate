@@ -3,12 +3,14 @@ use std::marker::PhantomData;
 use crate::{CapAccessRequests, CapAccessRequestsResource, ImmCap};
 use bevy_ecs::{
     bundle::Bundle,
+    component::{Component, Mutable},
     entity::Entity,
     event::Event,
     hierarchy::ChildOf,
-    query::{With, Without},
+    query::{QueryEntityError, With, Without},
+    resource::Resource,
     system::{Commands, EntityCommands, IntoObserverSystem, Query},
-    world::FilteredEntityRef,
+    world::{FilteredEntityRef, error::ResourceFetchError},
 };
 
 /// Plugin for immediate mode functionality in bevy
@@ -228,6 +230,21 @@ pub struct ImmEntity<'r, 'w, 's, Cap: ImmCap> {
 }
 
 impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
+    /// Build descendants of this entity
+    #[allow(clippy::should_implement_trait)]
+    pub fn add(self, f: impl FnOnce(&mut Imm<'w, 's, Cap>)) -> Self {
+        self.imm.add(self.id, self.entity, f);
+        self
+    }
+
+    /// Build descendants of this entity and retrieve return value of inner closure.
+    #[allow(clippy::should_implement_trait)]
+    pub fn add_with_return<R>(self, f: impl FnOnce(&mut Imm<'w, 's, Cap>) -> R) -> (Self, R) {
+        let value = self.imm.add(self.id, self.entity, f);
+
+        (self, value)
+    }
+
     /// Retrieve system param ctx for immediate mode
     pub fn ctx(&self) -> &ImmCtx<'w, 's, Cap> {
         &self.imm.ctx
@@ -400,23 +417,51 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
         }
     }
 
-    /// Finalize building of entity and provide immediate mode function to build descendants of this entity
+    /// Check if current entity contains component in capability requirements
     ///
-    /// Function will return [`ImmReturn`] that can be used to check events
-    #[allow(clippy::should_implement_trait)]
-    pub fn add(self, f: impl FnOnce(&mut Imm<'w, 's, Cap>)) -> Self {
-        self.imm.add(self.id, self.entity, f);
-        self
+    /// Useful in implementing capabilities [`ImmCap`]
+    pub fn cap_entity_contains<T: Component>(&self) -> bool {
+        let Ok(entity) = self.get_entity() else {
+            return false;
+        };
+
+        entity.contains::<T>()
     }
 
-    /// Finalize building of entity and provide immediate mode function to build descendants of this entity
+    /// Retrieve component for entity that was requested by capabilities
     ///
-    /// Function will return [`ImmReturn`] that can be used to check events
-    #[allow(clippy::should_implement_trait)]
-    pub fn add_with_return<R>(self, f: impl FnOnce(&mut Imm<'w, 's, Cap>) -> R) -> (Self, R) {
-        let value = self.imm.add(self.id, self.entity, f);
+    /// Useful in implementing capabilities [`ImmCap`]
+    pub fn cap_get_component<T: Component>(&self) -> Result<Option<&T>, QueryEntityError> {
+        let entity = self.get_entity()?;
+        Ok(entity.get::<T>())
+    }
 
-        (self, value)
+    /// Retrieve component for entity that was requested by capabilities
+    ///
+    /// Useful in implementing capabilities [`ImmCap`]
+    pub fn cap_get_component_mut<'a, T: Component<Mutability = Mutable>>(
+        &'a mut self,
+    ) -> Result<Option<bevy_ecs::world::Mut<'a, T>>, QueryEntityError> {
+        let entity = self.get_entity_mut()?;
+        Ok(entity.into_mut::<T>())
+    }
+
+    /// Retrieve resource from capabilities
+    ///
+    /// Useful in implementing capabilities [`ImmCap`]
+    pub fn cap_get_resource<R: Resource>(
+        &self,
+    ) -> Result<bevy_ecs::world::Ref<'_, R>, ResourceFetchError> {
+        self.ctx().resources.get::<R>()
+    }
+
+    /// Retrieve mutable resource from capabilities
+    ///
+    /// Useful in implementing capabilities [`ImmCap`]
+    pub fn cap_get_resource_mut<R: Resource>(
+        &mut self,
+    ) -> Result<bevy_ecs::world::Mut<'_, R>, ResourceFetchError> {
+        self.ctx_mut().resources.get_mut::<R>()
     }
 }
 

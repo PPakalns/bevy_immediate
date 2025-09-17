@@ -15,7 +15,7 @@ impl ImmCap for ImmCapUiText {
 
 /// Implements methods to access [`bevy_ui::Interaction`] in immediate mode
 pub trait ImmUiText {
-    /// Insert [`Text`] on entity spawn and update to given text upon change
+    /// Insert [`Text`] on entity spawn and update it to given text upon change
     fn text(self, text: impl Deref<Target = str> + Into<String>) -> Self;
 
     /// On entity spawn insert given text into [`Text`]
@@ -28,11 +28,7 @@ where
 {
     fn text(mut self, text: impl Deref<Target = str> + Into<String>) -> Self {
         'text_exists: {
-            let Ok(mut entity) = self.get_entity_mut() else {
-                break 'text_exists;
-            };
-
-            let Some(mut text_comp) = entity.get_mut::<Text>() else {
+            let Ok(Some(mut text_comp)) = self.cap_get_component_mut::<Text>() else {
                 break 'text_exists;
             };
 
@@ -45,9 +41,9 @@ where
             return self;
         }
 
-        self.at_this_moment_apply_commands(|commands| {
-            commands.insert_if_new(Text(text.into()));
-        })
+        // Fallback
+        self.entity_commands().insert_if_new(Text(text.into()));
+        self
     }
 
     fn on_spawn_text(self, text: impl FnOnce() -> String) -> Self {
