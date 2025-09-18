@@ -2,7 +2,7 @@ use bevy_ecs::{component::Component, system::SystemParam};
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
-    impl_capabilities,
+    merge_capabilities,
     ui::CapUi,
 };
 

@@ -1,9 +1,7 @@
-use crate::{ImplCap, impl_capabilities};
+use crate::merge_capabilities;
 
 /// Defines capability that contains all Ui capabilities from this crate
-pub struct CapUiPickingAll;
-
-impl_capabilities!(CapUiPickingAll, (clicked::ImmCapUiClicked));
+merge_capabilities!(CapUiPickingAll, (clicked::ImmCapUiClicked));
 
 /// Module implments `.clicked()`
 pub mod clicked;

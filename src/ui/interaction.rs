@@ -5,6 +5,7 @@ use crate::{ImmCap, ImmEntity, ImplCap};
 /// Capability that makes [`bevy_ui::Interaction`] accessible from immediate UI
 pub struct CapUiInteraction;
 
+impl ImplCap<CapUiInteraction> for CapUiInteraction {}
 impl ImmCap for CapUiInteraction {
     fn build<Cap: ImmCap>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
         cap_req.request_component_read::<Interaction>(app.world_mut());
