@@ -3,10 +3,10 @@ use bevy_immediate::{BevyImmediatePlugin, ImmCtx, ui::CapUi};
 use bevy_ui::Node;
 
 use crate::{
-    basic::BasicExampleRoot,
     hello_world::HelloWorldRoot,
     menu::{CurrentExample, MenuUiRoot},
     utils,
+    widget_use_preview::WidgetUseExampleRoot,
 };
 
 /// Example showcases how to create
@@ -48,8 +48,8 @@ fn ui(ctx: ImmCtx<CapUi>, example: ResMut<CurrentExample>) {
                 });
 
             match *example {
-                CurrentExample::Basic => {
-                    content.on_spawn_insert(|| BasicExampleRoot);
+                CurrentExample::WidgetPreview => {
+                    content.on_spawn_insert(|| WidgetUseExampleRoot);
                 }
                 CurrentExample::HelloWorld => {
                     content.on_spawn_insert(|| HelloWorldRoot);
