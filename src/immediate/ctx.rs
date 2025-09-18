@@ -1,7 +1,7 @@
 use bevy_ecs::{
     entity::Entity,
     hierarchy::ChildOf,
-    system::{Commands, Res},
+    system::{Commands, Res, SystemChangeTick},
 };
 
 use crate::{
@@ -27,6 +27,11 @@ pub struct ImmCtx<'w, 's, Cap: ImmCap> {
 
     /// World commands
     pub commands: Commands<'w, 's>,
+
+    /// System execution ticks
+    ///
+    /// Useful for state change detection
+    pub system_change_tick: SystemChangeTick,
 
     pub(super) state: Res<'w, ImmediateModeStateResource<Cap>>,
     pub(super) mapping: Res<'w, ImmediateModeEntityMapping<Cap>>,

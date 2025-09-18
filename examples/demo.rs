@@ -4,8 +4,6 @@ mod utils;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        // Update only on user input
-        .insert_resource(WinitSettings::desktop_app())
         // Reusable code for demo examples and effects
         .add_plugins(utils::DemoUtilsPlugin)
         // Setup camera

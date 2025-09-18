@@ -46,20 +46,20 @@ impl ImmediateAttach<CapUi> for WidgetUseExampleRoot {
 
         ui.ch()
             .on_spawn_insert(utils::text_style)
-            .on_spawn_text("Include native widgets");
+            .on_spawn_text("Embed native widgets");
 
         for i in 0..2 {
             ui.ch_id(("native", i))
                 .on_spawn_insert(|| Node::DEFAULT)
                 .on_spawn_insert(|| NativeWidgetComp {
                     title: "Count".into(),
-                    counter: 10 + i * 2,
+                    counter: 45 + i * 14,
                 });
         }
 
         ui.ch()
             .on_spawn_insert(utils::text_style)
-            .on_spawn_text("Include functional widgets");
+            .on_spawn_text("Embed functional widgets");
 
         for (idx, counter) in params.functional_counter.values.iter_mut().enumerate() {
             ui.ch_id(("functional", idx))

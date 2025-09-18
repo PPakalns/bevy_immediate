@@ -1,8 +1,12 @@
-use bevy::{color::Color, text::TextColor};
+use bevy::{
+    color::Color,
+    text::TextColor,
+    winit::{EventLoopProxy, EventLoopProxyWrapper, WakeUp},
+};
 use bevy_ecs::{
     change_detection::DetectChanges,
     component::Component,
-    system::{Query, SystemParam},
+    system::{Query, Res, SystemChangeTick, SystemParam},
     world::Mut,
 };
 use bevy_immediate::{
@@ -50,6 +54,15 @@ impl ImmediateAttach<CapUi> for NativeWidgetComp {
                 ..utils::node_container()
             })
             .add(|ui| {
+                let change_detector = ui.change_detector();
+
+                ui.ch()
+                    .on_spawn_insert(utils::text_style)
+                    // Change detection can be used to optimize UI
+                    .on_change_text_fn(change_detector.has_changed(&value), || {
+                        format!("{}: {}", value.title, value.counter)
+                    });
+
                 let mut button = ui.ch().on_spawn_insert(utils::button_bundle).add(|ui| {
                     ui.ch()
                         .on_spawn_insert(utils::text_style)
@@ -67,13 +80,6 @@ impl ImmediateAttach<CapUi> for NativeWidgetComp {
                 if button.clicked() {
                     value.counter = value.counter.saturating_add(1);
                 }
-
-                ui.ch()
-                    .on_spawn_insert(utils::text_style)
-                    // Change detection can be used to optimize UI
-                    .on_change_text_fn(value.is_changed(), || {
-                        format!("{}: {}", value.title, value.counter)
-                    });
             });
     }
 }

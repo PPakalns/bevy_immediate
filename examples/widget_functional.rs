@@ -35,6 +35,10 @@ pub fn my_functional_widget_generic<Cap: ImplCap<CapUi>>(ui: &mut Imm<Cap>, valu
             ..utils::node_container()
         })
         .add(|ui| {
+            ui.ch()
+                .on_spawn_insert(utils::text_style)
+                .text(format!("{}: {}", value.title, value.counter));
+
             let mut button = ui.ch().on_spawn_insert(utils::button_bundle).add(|ui| {
                 ui.ch()
                     .on_spawn_insert(utils::text_style)
@@ -52,9 +56,5 @@ pub fn my_functional_widget_generic<Cap: ImplCap<CapUi>>(ui: &mut Imm<Cap>, valu
             if button.clicked() {
                 *value.counter = value.counter.saturating_add(1);
             }
-
-            ui.ch()
-                .on_spawn_insert(utils::text_style)
-                .text(format!("{}: {}", value.title, value.counter));
         });
 }

@@ -3,14 +3,15 @@ use std::marker::PhantomData;
 use crate::{ImmCap, ImmCapAccessRequests, ImmCapAccessRequestsResource};
 use bevy_ecs::{
     bundle::Bundle,
+    change_detection::DetectChanges,
     component::{Component, Mutable},
     entity::Entity,
     event::Event,
     hierarchy::ChildOf,
     query::{QueryEntityError, With, Without},
     resource::Resource,
-    system::{Commands, EntityCommands, IntoObserverSystem, Query},
-    world::{FilteredEntityRef, error::ResourceFetchError},
+    system::{Commands, EntityCommands, IntoObserverSystem, Query, SystemChangeTick},
+    world::{FilteredEntityRef, Mut, error::ResourceFetchError},
 };
 
 /// Plugin for immediate mode functionality in bevy
@@ -261,6 +262,18 @@ impl<'w, 's, Cap: ImmCap> Imm<'w, 's, Cap> {
             Some(ImmEntity { imm: self, e })
         } else {
             None
+        }
+    }
+
+    /// Helper function to correctly detect changes that could have happened even in this system
+    pub fn has_changed<T>(&self, value: &Mut<'_, T>) -> bool {
+        self.change_detector().has_changed(value)
+    }
+
+    /// Helper object for state change detection
+    pub fn change_detector(&self) -> ChangeDetector {
+        ChangeDetector {
+            last_run: self.ctx.system_change_tick.last_run(),
         }
     }
 }
@@ -515,6 +528,16 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
     ) -> Result<bevy_ecs::world::Mut<'_, R>, ResourceFetchError> {
         self.ctx_mut().cap_resources.get_mut::<R>()
     }
+
+    /// Helper function to correctly detect changes that could have happened even in this system
+    pub fn changed_for<T>(&self, value: &Mut<'_, T>) -> bool {
+        value.is_changed() || value.last_changed() == self.ctx().system_change_tick.last_run()
+    }
+
+    /// Helper function to correctly detect changes that could have happened even in this system
+    pub fn has_changed<T>(&self, value: &Mut<'_, T>) -> bool {
+        self.imm.has_changed(value)
+    }
 }
 
 /// Component that is added to entities that are managed by immediate mode system
@@ -530,3 +553,15 @@ pub struct ImmMarker<Cap> {
 
 /// Type to use in QueryFilter to avoid query collisions
 pub type WithoutImm<Cap = ()> = Without<ImmMarker<Cap>>;
+
+/// Helper structure for immediate mode compatbile state change detection
+pub struct ChangeDetector {
+    last_run: bevy_ecs::component::Tick,
+}
+
+impl<'s> ChangeDetector {
+    /// Has state changed since and including last time system was executed
+    pub fn has_changed<T>(&self, value: &Mut<'_, T>) -> bool {
+        value.is_changed() || value.last_changed() == self.last_run
+    }
+}
