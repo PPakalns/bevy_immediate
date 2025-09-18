@@ -19,3 +19,6 @@ pub use capabilities::{
 /// creating UI ([`bevy_ui`]) in immediate mode
 #[cfg(feature = "ui")]
 pub mod ui;
+
+/// Utility types to simplify implementation
+pub mod utils;

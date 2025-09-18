@@ -18,9 +18,9 @@ use bevy_ui::{AlignItems, FlexDirection, Node, TextShadow, UiRect};
 
 use crate::utils;
 
-pub struct WidgetNativePlugin;
+pub struct WidgetNativeExamplePlugin;
 
-impl bevy_app::Plugin for WidgetNativePlugin {
+impl bevy_app::Plugin for WidgetNativeExamplePlugin {
     fn build(&self, app: &mut bevy_app::App) {
         app.add_plugins(BevyImmediateAttachPlugin::<CapUi, NativeWidgetComp>::new());
     }

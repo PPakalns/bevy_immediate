@@ -6,9 +6,9 @@ use bevy_ui::{AlignItems, FlexDirection, Node, UiRect};
 
 use crate::utils;
 
-pub struct WidgetFunctionalPlugin;
+pub struct WidgetFunctionalExamplePlugin;
 
-impl bevy_app::Plugin for WidgetFunctionalPlugin {
+impl bevy_app::Plugin for WidgetFunctionalExamplePlugin {
     fn build(&self, _app: &mut bevy_app::App) {
         // No need to even create a plugin
     }

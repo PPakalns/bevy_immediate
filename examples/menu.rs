@@ -9,15 +9,15 @@ use bevy_immediate::{
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
     ui::{CapUi, picking::clicked::ImmUiClicked, text::ImmUiText},
 };
-use bevy_ui::{FlexDirection, Node, UiDebugOptions, UiRect, Val};
+use bevy_ui::{FlexDirection, Node, UiDebugOptions, Val};
 
 use crate::utils::{self, button_bundle, fill_parent_node, text_style};
 
-pub struct ExampleMenuPlugin;
+pub struct MenuExamplePlugin;
 
-impl bevy_app::Plugin for ExampleMenuPlugin {
+impl bevy_app::Plugin for MenuExamplePlugin {
     fn build(&self, app: &mut bevy_app::App) {
-        app.insert_resource(CurrentExample::WidgetPreview);
+        app.insert_resource(CurrentExample::WidgetUse);
 
         app.add_plugins(BevyImmediateAttachPlugin::<CapUi, MenuUiRoot>::new());
     }
@@ -82,13 +82,15 @@ impl ImmediateAttach<CapUi> for MenuUiRoot {
     }
 }
 
-pub const MENU_VARIANTS: [(CurrentExample, &str); 2] = [
+pub const MENU_VARIANTS: [(CurrentExample, &str); 3] = [
     (CurrentExample::HelloWorld, "Hello World"),
-    (CurrentExample::WidgetPreview, "Widget preview"),
+    (CurrentExample::WidgetUse, "Widget usage"),
+    (CurrentExample::ExtensionUse, "Extension usage"),
 ];
 
 #[derive(Resource, Hash, Clone, Copy)]
 pub enum CurrentExample {
-    WidgetPreview,
+    WidgetUse,
     HelloWorld,
+    ExtensionUse,
 }

@@ -14,7 +14,6 @@ exclude = ["/.github", "./examples/web/"]
 autoexamples = false
 
 [dependencies]
-log = "0.4"
 bevy_ecs = "0.16"
 bevy_ui = { version = "0.16", optional = true }
 bevy_app = "0.16"
@@ -23,7 +22,9 @@ bevy_picking = { version = "0.16", optional = true }
 bevy_derive = "0.16"
 bevy_internal = { version = "0.16", default-features = false }
 
+log = "0.4"
 ahash = "0.8"
+type-map = "0.5"
 
 [features]
 default = ["ui", "picking"]

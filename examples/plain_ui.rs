@@ -3,17 +3,18 @@ use bevy_immediate::{BevyImmediatePlugin, ImmCtx, ui::CapUi};
 use bevy_ui::Node;
 
 use crate::{
+    extension_use::ExtensionUseExampleRoot,
     hello_world::HelloWorldRoot,
     menu::{CurrentExample, MenuUiRoot},
     utils,
-    widget_use_preview::WidgetUseExampleRoot,
+    widget_use::WidgetUseExampleRoot,
 };
 
 /// Example showcases how to create
 /// UI that is not attached to anything
-pub struct IndependentRootPlugin;
+pub struct PlainUiExamplePlugin;
 
-impl bevy_app::Plugin for IndependentRootPlugin {
+impl bevy_app::Plugin for PlainUiExamplePlugin {
     fn build(&self, app: &mut bevy_app::App) {
         // Initialize plugin (it can be initialized multiple times)
         app.add_plugins(BevyImmediatePlugin::<CapUi>::new());
@@ -48,11 +49,14 @@ fn ui(ctx: ImmCtx<CapUi>, example: ResMut<CurrentExample>) {
                 });
 
             match *example {
-                CurrentExample::WidgetPreview => {
+                CurrentExample::WidgetUse => {
                     content.on_spawn_insert(|| WidgetUseExampleRoot);
                 }
                 CurrentExample::HelloWorld => {
                     content.on_spawn_insert(|| HelloWorldRoot);
+                }
+                CurrentExample::ExtensionUse => {
+                    content.on_spawn_insert(|| ExtensionUseExampleRoot);
                 }
             }
         });

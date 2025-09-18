@@ -10,7 +10,7 @@ use bevy_ecs::{
     hierarchy::ChildOf,
     query::{QueryEntityError, With, Without},
     resource::Resource,
-    system::{Commands, EntityCommands, IntoObserverSystem, Query, SystemChangeTick},
+    system::{Commands, EntityCommands, IntoObserverSystem, Query},
     world::{FilteredEntityRef, Mut, error::ResourceFetchError},
 };
 
@@ -63,6 +63,7 @@ mod ctx;
 pub use ctx::ImmCtx;
 
 mod id;
+use crate::utils::ImmTypeMap;
 pub use id::{ImmId, ImmIdBuilder, imm_id};
 
 mod entity_mapping;
@@ -181,6 +182,7 @@ impl<'w, 's, Cap: ImmCap> Imm<'w, 's, Cap> {
                 entity,
                 will_be_spawned,
             },
+            tmp_store: ImmTypeMap::new(),
         }
     }
 
@@ -190,6 +192,12 @@ impl<'w, 's, Cap: ImmCap> Imm<'w, 's, Cap> {
     #[inline]
     pub fn current_entity(&self) -> Option<Entity> {
         self.current.entity.map(|e| e.entity)
+    }
+
+    /// Immediate mode unique id
+    #[inline]
+    pub fn current_imm_id(&self) -> ImmId {
+        self.current.id
     }
 
     /// Retrieve access to commands
@@ -252,6 +260,7 @@ impl<'w, 's, Cap: ImmCap> Imm<'w, 's, Cap> {
     /// Useful in rare cases where access to parent entity is needed.
     /// If parent entity is not managed by Immediate mode, may result in panic
     /// when capabilities try to access data from queries that query only immediate mode entities.
+    /// Capabilities will have access to empty temporary store.
     pub fn reinterpret_as_entity(&mut self) -> Option<ImmEntity<'_, 'w, 's, Cap>> {
         if let Some(current_entity) = self.current.entity {
             let e = EntityParams {
@@ -259,7 +268,11 @@ impl<'w, 's, Cap: ImmCap> Imm<'w, 's, Cap> {
                 entity: current_entity.entity,
                 will_be_spawned: current_entity.will_be_spawned,
             };
-            Some(ImmEntity { imm: self, e })
+            Some(ImmEntity {
+                imm: self,
+                e,
+                tmp_store: ImmTypeMap::new(),
+            })
         } else {
             None
         }
@@ -285,6 +298,7 @@ pub struct ImmEntity<'r, 'w, 's, Cap: ImmCap> {
     imm: &'r mut Imm<'w, 's, Cap>,
     /// Entity managed by this instance
     e: EntityParams,
+    tmp_store: ImmTypeMap,
 }
 
 #[derive(Clone, Copy)]
@@ -338,6 +352,12 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
     /// Retrieve [`Entity`] value for this entity
     pub fn entity(&self) -> Entity {
         self.e.entity
+    }
+
+    /// Immediate mode unique id for this entity
+    #[inline]
+    pub fn imm_id(&self) -> ImmId {
+        self.e.id
     }
 
     /// Gain access to [`Commands`]
@@ -537,6 +557,20 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
     /// Helper function to correctly detect changes that could have happened even in this system
     pub fn has_changed<T>(&self, value: &Mut<'_, T>) -> bool {
         self.imm.has_changed(value)
+    }
+
+    /// Access data store for current entity.
+    ///
+    /// It exists only during entity construction
+    pub fn cap_entity_tmp_store(&self) -> &ImmTypeMap {
+        &self.tmp_store
+    }
+
+    /// Access data store for current entity.
+    ///
+    /// It exists only during entity construction
+    pub fn cap_entity_tmp_store_mut(&mut self) -> &mut ImmTypeMap {
+        &mut self.tmp_store
     }
 }
 
