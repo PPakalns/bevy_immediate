@@ -593,7 +593,7 @@ pub struct ChangeDetector {
     last_run: bevy_ecs::component::Tick,
 }
 
-impl<'s> ChangeDetector {
+impl ChangeDetector {
     /// Has state changed since and including last time system was executed
     pub fn has_changed<T>(&self, value: &Mut<'_, T>) -> bool {
         value.is_changed() || value.last_changed() == self.last_run

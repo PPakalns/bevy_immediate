@@ -4,7 +4,13 @@ use crate::impl_capabilities;
 pub struct CapUi;
 
 #[cfg(feature = "picking")]
-impl_capabilities!(CapUi, (CapUiWithoutFeatures, picking::CapUiPickingAll));
+impl_capabilities!(
+    CapUi,
+    (
+        (CapUiWithoutFeatures, ImplCapUiWithoutFeatures),
+        (picking::CapUiPickingAll, picking::ImplCapUiPickingAll)
+    )
+);
 #[cfg(not(feature = "picking"))]
 impl_capabilities!(ImmUiCap, (ImmCapUiWithoutPicking));
 
@@ -15,9 +21,12 @@ pub struct CapUiWithoutFeatures;
 impl_capabilities!(
     CapUiWithoutFeatures,
     (
-        ui_base::CapUiBase,
-        interaction::CapUiInteraction,
-        text::CapUiText
+        (ui_base::CapUiBase, ui_base::ImplCapUiBase),
+        (
+            interaction::CapUiInteraction,
+            interaction::ImplCapUiInteraction
+        ),
+        (text::CapUiText, text::ImplCapUiText)
     )
 );
 

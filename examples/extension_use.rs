@@ -3,10 +3,10 @@ use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
     impl_capabilities,
-    ui::CapUi,
+    ui::{CapUi, ImplCapUi},
 };
 
-use crate::extension::CapUiToggle;
+use crate::extension::{CapUiToggle, ImplCapUiToggle};
 
 pub struct ExtensionUseExamplePlugin;
 
@@ -22,18 +22,10 @@ impl bevy_app::Plugin for ExtensionUseExamplePlugin {
 // Create new type
 pub struct CapMyUi;
 
-impl bevy_immediate::ImmCap for CapMyUi {
-    fn build<Cap: bevy_immediate::ImmCap>(
-        app: &mut bevy_app::App,
-        cap_req: &mut bevy_immediate::ImmCapAccessRequests<Cap>,
-    ) {
-        <CapUiToggle as bevy_immediate::ImmCap>::build(app, cap_req);
-        <CapUi as bevy_immediate::ImmCap>::build(app, cap_req);
-    }
-}
-impl<T: bevy_immediate::ImplCap<CapMyUi>> bevy_immediate::ImplCap<CapUiToggle> for T {}
-
-impl<T: bevy_immediate::ImplCap<CapMyUi>> bevy_immediate::ImplCap<CapUi> for T {}
+impl_capabilities!(
+    CapMyUi,
+    ((CapUiToggle, ImplCapUiToggle), (CapUi, ImplCapUi),)
+);
 
 #[derive(Component)]
 pub struct ExtensionUseExampleRoot;
