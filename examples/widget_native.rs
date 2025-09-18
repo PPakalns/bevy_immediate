@@ -1,0 +1,79 @@
+use bevy::{color::Color, text::TextColor};
+use bevy_ecs::{
+    change_detection::DetectChanges,
+    component::Component,
+    system::{Query, SystemParam},
+    world::Mut,
+};
+use bevy_immediate::{
+    Imm,
+    attach::{BevyImmediateAttachPlugin, ImmediateAttach},
+    ui::{CapUi, picking::clicked::ImmUiClicked, text::ImmUiText},
+};
+use bevy_ui::{AlignItems, FlexDirection, Node, TextShadow, UiRect};
+
+use crate::utils;
+
+pub struct WidgetNativePlugin;
+
+impl bevy_app::Plugin for WidgetNativePlugin {
+    fn build(&self, app: &mut bevy_app::App) {
+        app.add_plugins(BevyImmediateAttachPlugin::<CapUi, NativeWidgetComp>::new());
+    }
+}
+
+#[derive(Component)]
+pub struct NativeWidgetComp {
+    pub title: String,
+    pub counter: usize,
+}
+
+#[derive(SystemParam)]
+pub struct Params<'w, 's> {
+    query: Query<'w, 's, &'static mut NativeWidgetComp>,
+}
+
+impl ImmediateAttach<CapUi> for NativeWidgetComp {
+    type Params = Params<'static, 'static>;
+
+    fn construct(ui: &mut Imm<CapUi>, params: &mut Params) {
+        let entity = ui.current_entity().unwrap();
+
+        // Value can be stored inside component
+        let mut value = params.query.get_mut(entity).unwrap();
+
+        ui.ch()
+            .on_spawn_insert(|| Node {
+                flex_direction: FlexDirection::Row,
+                align_items: AlignItems::Center,
+                padding: UiRect::ZERO,
+                ..utils::node_container()
+            })
+            .add(|ui| {
+                let mut button = ui.ch().on_spawn_insert(utils::button_bundle).add(|ui| {
+                    ui.ch()
+                        .on_spawn_insert(utils::text_style)
+                        .on_spawn_text("-");
+                });
+                if button.clicked() {
+                    value.counter = value.counter.saturating_sub(1);
+                }
+
+                let mut button = ui.ch().on_spawn_insert(utils::button_bundle).add(|ui| {
+                    ui.ch()
+                        .on_spawn_insert(utils::text_style)
+                        .on_spawn_text("+");
+                });
+                if button.clicked() {
+                    value.counter = value.counter.saturating_add(1);
+                }
+
+                ui.ch()
+                    .on_spawn_insert(utils::text_style)
+                    // Change detection can be used to optimize UI
+                    .on_change_text_fn(value.is_changed(), || {
+                        format!("{}: {}", value.title, value.counter)
+                    });
+            });
+    }
+}

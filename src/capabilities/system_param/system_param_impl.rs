@@ -11,20 +11,21 @@ use bevy_ecs::{
 };
 
 use crate::{
-    CapAccessRequestsResource, CapQueryParam, ImmCap, ImmMarker, capabilities::CapResourcesParam,
+    ImmCap, ImmCapAccessRequestsResource, ImmCapQueryParam, ImmMarker,
+    capabilities::ImmCapResourcesParam,
 };
 
 #[expect(unsafe_code)]
-unsafe impl<Cap: ImmCap> SystemParam for CapQueryParam<'_, '_, Cap> {
+unsafe impl<Cap: ImmCap> SystemParam for ImmCapQueryParam<'_, '_, Cap> {
     type State = CapQueryState<Cap>;
-    type Item<'world, 'state> = CapQueryParam<'world, 'state, Cap>;
+    type Item<'world, 'state> = ImmCapQueryParam<'world, 'state, Cap>;
 
     fn init_state(
         world: &mut World,
         system_meta: &mut bevy_ecs::system::SystemMeta,
     ) -> Self::State {
         let requested_access = world
-            .get_resource::<CapAccessRequestsResource<Cap>>()
+            .get_resource::<ImmCapAccessRequestsResource<Cap>>()
             .expect("bevy_immediate mode plugin not correctly added");
         let requested_access = requested_access.capabilities.clone();
 
@@ -93,16 +94,16 @@ pub struct CapQueryState<Cap: ImmCap> {
 }
 
 #[expect(unsafe_code)]
-unsafe impl<Cap: ImmCap> SystemParam for CapResourcesParam<'_, '_, Cap> {
+unsafe impl<Cap: ImmCap> SystemParam for ImmCapResourcesParam<'_, '_, Cap> {
     type State = CapResourceState<Cap>;
-    type Item<'world, 'state> = CapResourcesParam<'world, 'state, Cap>;
+    type Item<'world, 'state> = ImmCapResourcesParam<'world, 'state, Cap>;
 
     fn init_state(
         world: &mut World,
         system_meta: &mut bevy_ecs::system::SystemMeta,
     ) -> Self::State {
         let requested_access = world
-            .get_resource::<CapAccessRequestsResource<Cap>>()
+            .get_resource::<ImmCapAccessRequestsResource<Cap>>()
             .expect("bevy_immediate mode plugin not correctly added");
         let requested_access = requested_access.capabilities.clone();
 

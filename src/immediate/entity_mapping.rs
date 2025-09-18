@@ -38,7 +38,14 @@ fn on_sui_marker_added<Cap: Send + Sync + 'static>(
 ) {
     let entity = trigger.target();
     if let Ok(marker) = marker.get(entity) {
-        mapping.id_to_entity.insert(marker.id, entity);
+        let old = mapping.id_to_entity.insert(marker.id, entity);
+        if let Some(old) = old {
+            log::warn!(
+                "Immediate mode entity id collision for entities {} and {}",
+                entity,
+                old
+            );
+        }
     }
 }
 

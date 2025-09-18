@@ -1,12 +1,10 @@
 use bevy::color::Color;
-use bevy::{color::palettes::basic::*, prelude::*, winit::WinitSettings};
+use bevy::{color::palettes::basic::*, prelude::*};
 
 pub struct DemoUtilsPlugin;
 
 impl bevy_app::Plugin for DemoUtilsPlugin {
     fn build(&self, app: &mut bevy_app::App) {
-        app.insert_resource(WinitSettings::desktop_app());
-
         app.add_systems(Update, button_system);
     }
 }
@@ -41,16 +39,20 @@ pub const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
 pub const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
 pub const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
 
-pub fn node_full_screen_centered() -> Node {
+pub fn fill_parent_node() -> Node {
     Node {
         flex_direction: FlexDirection::Column,
         width: Val::Percent(100.0),
         height: Val::Percent(100.0),
-        align_items: AlignItems::Center,
-        justify_content: JustifyContent::Center,
         row_gap: Val::Px(10.),
         ..default()
     }
+}
+
+pub fn center_content(mut node: Node) -> Node {
+    node.align_items = AlignItems::Center;
+    node.justify_content = JustifyContent::Center;
+    node
 }
 
 pub fn node_container() -> Node {
@@ -63,8 +65,19 @@ pub fn node_container() -> Node {
     }
 }
 
-pub fn my_text_style() -> impl Bundle + use<> {
+pub fn text_style() -> impl Bundle + use<> {
     (TextColor(Color::srgb(0.9, 0.9, 0.9)), TextShadow::default())
+}
+
+pub fn title_text_style() -> impl Bundle + use<> {
+    let mut text = TextFont::default();
+    text.font_size *= 2.0;
+
+    (
+        text,
+        TextColor(Color::srgb(0.9, 0.9, 0.9)),
+        TextShadow::default(),
+    )
 }
 
 pub fn container_with_background() -> MyStyleBundle {
@@ -102,15 +115,15 @@ pub fn button_bundle() -> MyButtonBundle {
 
 #[derive(Bundle)]
 pub struct MyStyleBundle {
-    node: Node,
-    border_color: BorderColor,
-    border_radius: BorderRadius,
-    background_color: BackgroundColor,
+    pub node: Node,
+    pub border_color: BorderColor,
+    pub border_radius: BorderRadius,
+    pub background_color: BackgroundColor,
 }
 
 #[derive(Bundle)]
 pub struct MyButtonBundle {
-    button: Button,
-    style: MyStyleBundle,
-    interact: Interaction,
+    pub button: Button,
+    pub style: MyStyleBundle,
+    pub interact: Interaction,
 }

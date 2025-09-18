@@ -39,6 +39,7 @@ picking = [
 [dev-dependencies]
 bevy = { version = "0.16", default-features = false, features = [
   "bevy_ui",
+  "bevy_log",
   "bevy_window",
   "bevy_winit",
   "webgl2",

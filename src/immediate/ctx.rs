@@ -5,10 +5,10 @@ use bevy_ecs::{
 };
 
 use crate::{
-    CapQueryParam, Imm, ImmCap, ImmId, ImmQueryInternal,
-    capabilities::CapResourcesParam,
+    Imm, ImmCap, ImmCapQueryParam, ImmId, ImmQueryInternal,
+    capabilities::ImmCapResourcesParam,
     immediate::{
-        Current, ImmMarker, entity_mapping::ImmediateModeEntityMapping,
+        Current, CurrentEntity, ImmMarker, entity_mapping::ImmediateModeEntityMapping,
         upkeep::ImmediateModeStateResource,
     },
 };
@@ -20,10 +20,10 @@ pub struct ImmCtx<'w, 's, Cap: ImmCap> {
     ///
     /// In case of collision. Use [`super::ImmQuery`] or
     /// [`bevy_ecs::prelude::Without<ImmMarker<()>>`] (replace () with your used `Cap``)
-    pub cap_entities: CapQueryParam<'w, 's, Cap>,
+    pub cap_entities: ImmCapQueryParam<'w, 's, Cap>,
 
     /// Access requested resources that were requested by capabilities
-    pub cap_resources: CapResourcesParam<'w, 's, Cap>,
+    pub cap_resources: ImmCapResourcesParam<'w, 's, Cap>,
 
     /// World commands
     pub commands: Commands<'w, 's>,
@@ -49,7 +49,7 @@ where
         }
     }
 
-    /// Initialize entity hierarchy managed by immediate mode starting from given entity
+    /// Initialize entity hierarchy managed by immediate mode starting from given **existing** entity
     pub fn build_immediate_from<T: std::hash::Hash>(
         self,
         root_id: T,
@@ -59,7 +59,10 @@ where
             ctx: self,
             current: Current {
                 id: ImmId::new(root_id),
-                entity: Some(entity),
+                entity: Some(CurrentEntity {
+                    entity,
+                    will_be_spawned: false,
+                }),
                 idx: 0,
             },
         }

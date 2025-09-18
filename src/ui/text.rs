@@ -2,13 +2,13 @@ use std::ops::Deref;
 
 use bevy_ui::widget::Text;
 
-use crate::{ImmCap, ImmEntity, ImmImplCap};
+use crate::{ImmCap, ImmEntity, ImplCap};
 
 /// Capability that makes [`bevy_ui::Interaction`] accessible from immediate UI
-pub struct ImmCapUiText;
+pub struct CapUiText;
 
-impl ImmCap for ImmCapUiText {
-    fn build<Cap: ImmCap>(app: &mut bevy_app::App, cap_req: &mut crate::CapAccessRequests<Cap>) {
+impl ImmCap for CapUiText {
+    fn build<Cap: ImmCap>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
         cap_req.request_component_write::<Text>(app.world_mut());
     }
 }
@@ -23,11 +23,14 @@ pub trait ImmUiText {
 
     /// On entity spawn insert given text into [`Text`]
     fn on_spawn_text(self, text: &str) -> Self;
+
+    /// Insert text if something changed
+    fn on_change_text_fn(self, changed: bool, text: impl FnOnce() -> String) -> Self;
 }
 
 impl<Cap> ImmUiText for ImmEntity<'_, '_, '_, Cap>
 where
-    Cap: ImmImplCap<ImmCapUiText>,
+    Cap: ImplCap<CapUiText>,
 {
     fn text(mut self, text: impl Deref<Target = str> + Into<String>) -> Self {
         'text_exists: {
@@ -55,5 +58,9 @@ where
 
     fn on_spawn_text(self, text: &str) -> Self {
         self.on_spawn_insert(|| Text(text.to_owned()))
+    }
+
+    fn on_change_text_fn(self, changed: bool, text: impl FnOnce() -> String) -> Self {
+        self.on_change_insert(changed, || Text(text()))
     }
 }

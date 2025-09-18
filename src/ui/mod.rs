@@ -1,26 +1,23 @@
-use crate::{ImmImplCap, impl_capabilities};
+use crate::impl_capabilities;
 
 /// Defines capability that contains all Ui capabilities from this crate
-pub struct ImmCapUi;
+pub struct CapUi;
 
 #[cfg(feature = "picking")]
-impl_capabilities!(
-    ImmCapUi,
-    (ImmCapUiWithoutFeatures, picking::ImmCapUiPickingAll)
-);
+impl_capabilities!(CapUi, (CapUiWithoutFeatures, picking::CapUiPickingAll));
 #[cfg(not(feature = "picking"))]
 impl_capabilities!(ImmUiCap, (ImmCapUiWithoutPicking));
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Defines all ui capabilities except capabilities provided by "picking" - [`bevy_picking`].
-pub struct ImmCapUiWithoutFeatures;
+pub struct CapUiWithoutFeatures;
 impl_capabilities!(
-    ImmCapUiWithoutFeatures,
+    CapUiWithoutFeatures,
     (
-        ui_base::ImmCapUiBase,
-        interaction::ImmCapUiInteraction,
-        text::ImmCapUiText
+        ui_base::CapUiBase,
+        interaction::CapUiInteraction,
+        text::CapUiText
     )
 );
 

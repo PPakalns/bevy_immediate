@@ -9,20 +9,20 @@ use bevy_ecs::{
     world::OnAdd,
 };
 
-use crate::{Imm, ImmCap, ImmCtx, ImmId};
+use crate::{BevyImmediatePlugin, Imm, ImmCap, ImmCtx, ImmId};
 
 /// Implement trait to be able to attach immediate tree in arbitrary place
 ///
 /// Remember to add [`BevyImmediateAttachPlugin`]
-pub trait ImmediateAttachRoot<Cap: ImmCap>: Component {
+pub trait ImmediateAttach<Cap: ImmCap>: Component {
     /// Use 'static lifetimes where lifetimes are needed.
     type Params: SystemParam;
 
     /// Executes construction of immediate mode tree
     ///
-    /// Function will be cared during update or some time after `Self`
+    /// Function will be called during update or some time after `Self`
     /// has been added to entity.
-    fn execute(
+    fn construct(
         imm: &mut Imm<'_, '_, Cap>,
         params: &mut <Self::Params as SystemParam>::Item<'_, '_>,
     );
@@ -34,11 +34,11 @@ pub trait ImmediateAttachRoot<Cap: ImmCap>: Component {
 /// after `RootComponent` is added to entity to avoid 1 frame delay.
 ///
 /// For `RootComponent` trait [`ImmediateAttachRoot`] must be implemented.
-pub struct BevyImmediateAttachPlugin<Cap: ImmCap, RootComponent: ImmediateAttachRoot<Cap>> {
+pub struct BevyImmediateAttachPlugin<Cap: ImmCap, RootComponent: ImmediateAttach<Cap>> {
     _ph: PhantomData<(Cap, RootComponent)>,
 }
 
-impl<Cap: ImmCap, RootComponent: ImmediateAttachRoot<Cap>>
+impl<Cap: ImmCap, RootComponent: ImmediateAttach<Cap>>
     BevyImmediateAttachPlugin<Cap, RootComponent>
 {
     /// Construct plugin
@@ -47,7 +47,7 @@ impl<Cap: ImmCap, RootComponent: ImmediateAttachRoot<Cap>>
     }
 }
 
-impl<Cap: ImmCap, RootComponent: ImmediateAttachRoot<Cap>> Default
+impl<Cap: ImmCap, RootComponent: ImmediateAttach<Cap>> Default
     for BevyImmediateAttachPlugin<Cap, RootComponent>
 {
     fn default() -> Self {
@@ -55,10 +55,14 @@ impl<Cap: ImmCap, RootComponent: ImmediateAttachRoot<Cap>> Default
     }
 }
 
-impl<Cap: ImmCap, RootComponent: ImmediateAttachRoot<Cap>> bevy_app::Plugin
+impl<Cap: ImmCap, RootComponent: ImmediateAttach<Cap>> bevy_app::Plugin
     for BevyImmediateAttachPlugin<Cap, RootComponent>
 {
     fn build(&self, app: &mut bevy_app::App) {
+        if !app.is_plugin_added::<BevyImmediatePlugin<Cap>>() {
+            app.add_plugins(BevyImmediatePlugin::<Cap>::new());
+        }
+
         app.add_systems(
             bevy_app::Update,
             run_system_each_frame::<Cap, RootComponent>,
@@ -75,7 +79,7 @@ fn const_type_id<Cap: 'static, RootComponent: 'static>() -> ImmId {
     ImmId::new((root_type_id, cap_type_id))
 }
 
-fn run_system_each_frame<Cap: ImmCap, RootComponent: ImmediateAttachRoot<Cap>>(
+fn run_system_each_frame<Cap: ImmCap, RootComponent: ImmediateAttach<Cap>>(
     query: Query<Entity, With<RootComponent>>,
     mut ctx: ImmCtx<Cap>,
     params: StaticSystemParam<RootComponent::Params>,
@@ -85,13 +89,13 @@ fn run_system_each_frame<Cap: ImmCap, RootComponent: ImmediateAttachRoot<Cap>>(
 
     for entity in query.iter() {
         let mut imm = ctx.build_immediate_from(id.with(entity), entity);
-        RootComponent::execute(&mut imm, &mut params);
+        RootComponent::construct(&mut imm, &mut params);
         ctx = imm.deconstruct();
     }
 }
 
 #[allow(clippy::type_complexity)]
-fn run_system_on_insert<Cap: ImmCap, RootComponent: ImmediateAttachRoot<Cap>>(
+fn run_system_on_insert<Cap: ImmCap, RootComponent: ImmediateAttach<Cap>>(
     In(entity): In<Entity>,
     query: Query<Option<&RootComponentBuilt<(Cap, RootComponent)>>, With<RootComponent>>,
     ctx: ImmCtx<Cap>,
@@ -111,10 +115,10 @@ fn run_system_on_insert<Cap: ImmCap, RootComponent: ImmediateAttachRoot<Cap>>(
     }
 
     let mut imm = ctx.build_immediate_from(id.with(entity), entity);
-    RootComponent::execute(&mut imm, &mut params);
+    RootComponent::construct(&mut imm, &mut params);
 }
 
-fn on_insert<Cap: ImmCap, RootComponent: ImmediateAttachRoot<Cap>>(
+fn on_insert<Cap: ImmCap, RootComponent: ImmediateAttach<Cap>>(
     trigger: Trigger<OnAdd, RootComponent>,
     query: Query<(), With<RootComponentBuilt<(Cap, RootComponent)>>>,
     mut commands: Commands,

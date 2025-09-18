@@ -638,6 +638,7 @@ dependencies = [
  "bevy_gizmos",
  "bevy_image",
  "bevy_input",
+ "bevy_log",
  "bevy_math",
  "bevy_pbr",
  "bevy_picking",

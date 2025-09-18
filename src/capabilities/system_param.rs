@@ -12,7 +12,7 @@ use crate::{ImmCap, ImmMarker};
 ///
 /// [`SystemParam`] for immediate mode capability requests [`ImmCap`]
 #[derive(bevy_derive::Deref, bevy_derive::DerefMut)]
-pub struct CapQueryParam<'w, 's, Cap: ImmCap> {
+pub struct ImmCapQueryParam<'w, 's, Cap: ImmCap> {
     /// Query for accessing entities being built by immediate mode system
     ///
     /// This query makes available requested components registered by capabilities
@@ -27,7 +27,7 @@ pub struct CapQueryParam<'w, 's, Cap: ImmCap> {
 ///
 /// [`SystemParam`] for immediate mode capability requests [`ImmCap`]
 #[derive(bevy_derive::Deref, bevy_derive::DerefMut)]
-pub struct CapResourcesParam<'w, 's, Cap: ImmCap> {
+pub struct ImmCapResourcesParam<'w, 's, Cap: ImmCap> {
     /// Can be used to access resources requested by capabilities
     #[deref]
     pub resources: FilteredResourcesMut<'w, 's>,
