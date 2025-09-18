@@ -1,11 +1,9 @@
 use bevy_ecs::schedule::IntoScheduleConfigs;
 
-use crate::{ImmCap, ImmediateSystemSet, impl_capability};
+use crate::{ImmCap, ImmediateSystemSet};
 
 /// Base capability for UI that sets up correct order of immediate system execution
 pub struct CapUiBase;
-
-impl_capability!(CapUiBase);
 
 impl ImmCap for CapUiBase {
     fn build<Cap: ImmCap>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {

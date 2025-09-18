@@ -1,11 +1,9 @@
 use bevy_ui::Interaction;
 
-use crate::{ImmCap, ImmEntity, impl_capability};
+use crate::{ImmCap, ImmEntity, ImplCap};
 
 /// Capability that makes [`bevy_ui::Interaction`] accessible from immediate UI
 pub struct CapUiInteraction;
-
-impl_capability!(CapUiInteraction);
 
 impl ImmCap for CapUiInteraction {
     fn build<Cap: ImmCap>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
@@ -27,7 +25,7 @@ pub trait ImmUiInteraction {
 
 impl<Cap> ImmUiInteraction for ImmEntity<'_, '_, '_, Cap>
 where
-    Cap: ImmCap + ImplCapUiInteraction,
+    Cap: ImplCap<CapUiInteraction>,
 {
     fn interaction(&mut self) -> Interaction {
         'correct: {

@@ -1,5 +1,5 @@
 use bevy_ecs::component::Component;
-use bevy_immediate::{ImmCap, ImmEntity, impl_capability};
+use bevy_immediate::{ImmCap, ImmEntity, ImplCap};
 
 pub struct ExtensionExamplePlugin;
 
@@ -11,8 +11,6 @@ impl bevy_app::Plugin for ExtensionExamplePlugin {
 
 /// Create your own capability
 pub struct CapUiToggle;
-
-impl_capability!(CapUiToggle);
 
 impl ImmCap for CapUiToggle {
     fn build<Cap: ImmCap>(
@@ -47,7 +45,7 @@ pub trait ImmCapUiCollapse {
 
 impl<Cap> ImmCapUiCollapse for ImmEntity<'_, '_, '_, Cap>
 where
-    Cap: ImmCap + ImplCapUiToggle,
+    Cap: ImplCap<CapUiToggle>,
 {
     fn get_toggle(&mut self) -> bool {
         let mut ret = false;
