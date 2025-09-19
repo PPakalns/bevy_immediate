@@ -7,16 +7,16 @@ use bevy_ecs::{
 };
 use bevy_platform::collections::HashMap;
 
-use crate::ImmCap;
+use crate::CapSet;
 
 /// Stores requested capabilities for given immediate mode request
 #[derive(bevy_ecs::resource::Resource)]
-pub struct ImmCapAccessRequestsResource<Cap: ImmCap> {
+pub struct ImmCapAccessRequestsResource<Cap: CapSet> {
     /// Information about access requests issued by provided `Cap`
     pub capabilities: Arc<ImmCapAccessRequests<Cap>>,
 }
 
-impl<Cap: ImmCap> ImmCapAccessRequestsResource<Cap> {
+impl<Cap: CapSet> ImmCapAccessRequestsResource<Cap> {
     pub(crate) fn new(capabilities: ImmCapAccessRequests<Cap>) -> Self {
         Self {
             capabilities: Arc::new(capabilities),
@@ -25,14 +25,14 @@ impl<Cap: ImmCap> ImmCapAccessRequestsResource<Cap> {
 }
 
 /// Tracks what kind of query accesses capability has requested
-pub struct ImmCapAccessRequests<Cap: ImmCap> {
+pub struct ImmCapAccessRequests<Cap: CapSet> {
     // type_id_map: HashMap<TypeId, ComponentId>,
     components: HashMap<ComponentId, ComponentRequests>,
     resources: HashMap<ComponentId, ResourceRequest>,
     _ph: PhantomData<Cap>,
 }
 
-impl<Cap: ImmCap> Default for ImmCapAccessRequests<Cap> {
+impl<Cap: CapSet> Default for ImmCapAccessRequests<Cap> {
     fn default() -> Self {
         Self {
             components: Default::default(),
@@ -42,7 +42,7 @@ impl<Cap: ImmCap> Default for ImmCapAccessRequests<Cap> {
     }
 }
 
-impl<Cap: ImmCap> ImmCapAccessRequests<Cap> {
+impl<Cap: CapSet> ImmCapAccessRequests<Cap> {
     /// Mark that component will be immutably accessed
     pub fn request_component_read<C: Component<Mutability = Mutable>>(
         &mut self,

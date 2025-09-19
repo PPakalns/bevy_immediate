@@ -2,13 +2,13 @@ use std::ops::Deref;
 
 use bevy_ui::widget::Text;
 
-use crate::{ImmCap, ImmEntity, ImplCap};
+use crate::{CapSet, ImmCapability, ImmEntity, ImplCap};
 
 /// Capability that makes [`bevy_ui::Interaction`] accessible from immediate UI
-pub struct CapUiText;
+pub struct CapabilityUiText;
 
-impl ImmCap for CapUiText {
-    fn build<Cap: ImmCap>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
+impl ImmCapability for CapabilityUiText {
+    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
         cap_req.request_component_write::<Text>(app.world_mut());
     }
 }
@@ -30,7 +30,7 @@ pub trait ImmUiText {
 
 impl<Cap> ImmUiText for ImmEntity<'_, '_, '_, Cap>
 where
-    Cap: ImplCap<CapUiText>,
+    Cap: ImplCap<CapabilityUiText>,
 {
     fn text(mut self, text: impl Deref<Target = str> + Into<String>) -> Self {
         'text_exists: {

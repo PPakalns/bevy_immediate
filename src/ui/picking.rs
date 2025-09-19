@@ -1,9 +1,3 @@
-use crate::{ImplCap, impl_capabilities};
-
-/// Defines capability that contains all Ui capabilities from this crate
-pub struct CapUiPickingAll;
-
-impl_capabilities!(CapUiPickingAll, (clicked::ImmCapUiClicked));
-
-/// Module implments `.clicked()`
+/// Module implments `Pointer<Click>` related
+/// functionality like `.clicked()`
 pub mod clicked;

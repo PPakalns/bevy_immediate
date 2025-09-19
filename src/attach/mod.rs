@@ -9,12 +9,12 @@ use bevy_ecs::{
     world::OnAdd,
 };
 
-use crate::{BevyImmediatePlugin, Imm, ImmCap, ImmCtx, ImmId};
+use crate::{BevyImmediatePlugin, CapSet, Imm, ImmCtx, ImmId};
 
 /// Implement trait to be able to attach immediate tree in arbitrary place
 ///
 /// Remember to add [`BevyImmediateAttachPlugin`]
-pub trait ImmediateAttach<Cap: ImmCap>: Component {
+pub trait ImmediateAttach<Cap: CapSet>: Component {
     /// Use 'static lifetimes where lifetimes are needed.
     type Params: SystemParam;
 
@@ -34,11 +34,11 @@ pub trait ImmediateAttach<Cap: ImmCap>: Component {
 /// after `RootComponent` is added to entity to avoid 1 frame delay.
 ///
 /// For `RootComponent` trait [`ImmediateAttachRoot`] must be implemented.
-pub struct BevyImmediateAttachPlugin<Cap: ImmCap, RootComponent: ImmediateAttach<Cap>> {
+pub struct BevyImmediateAttachPlugin<Cap: CapSet, RootComponent: ImmediateAttach<Cap>> {
     _ph: PhantomData<(Cap, RootComponent)>,
 }
 
-impl<Cap: ImmCap, RootComponent: ImmediateAttach<Cap>>
+impl<Cap: CapSet, RootComponent: ImmediateAttach<Cap>>
     BevyImmediateAttachPlugin<Cap, RootComponent>
 {
     /// Construct plugin
@@ -47,7 +47,7 @@ impl<Cap: ImmCap, RootComponent: ImmediateAttach<Cap>>
     }
 }
 
-impl<Cap: ImmCap, RootComponent: ImmediateAttach<Cap>> Default
+impl<Cap: CapSet, RootComponent: ImmediateAttach<Cap>> Default
     for BevyImmediateAttachPlugin<Cap, RootComponent>
 {
     fn default() -> Self {
@@ -55,7 +55,7 @@ impl<Cap: ImmCap, RootComponent: ImmediateAttach<Cap>> Default
     }
 }
 
-impl<Cap: ImmCap, RootComponent: ImmediateAttach<Cap>> bevy_app::Plugin
+impl<Cap: CapSet, RootComponent: ImmediateAttach<Cap>> bevy_app::Plugin
     for BevyImmediateAttachPlugin<Cap, RootComponent>
 {
     fn build(&self, app: &mut bevy_app::App) {
@@ -79,7 +79,7 @@ fn const_type_id<Cap: 'static, RootComponent: 'static>() -> ImmId {
     ImmId::new((root_type_id, cap_type_id))
 }
 
-fn run_system_each_frame<Cap: ImmCap, RootComponent: ImmediateAttach<Cap>>(
+fn run_system_each_frame<Cap: CapSet, RootComponent: ImmediateAttach<Cap>>(
     query: Query<Entity, With<RootComponent>>,
     mut ctx: ImmCtx<Cap>,
     params: StaticSystemParam<RootComponent::Params>,
@@ -95,7 +95,7 @@ fn run_system_each_frame<Cap: ImmCap, RootComponent: ImmediateAttach<Cap>>(
 }
 
 #[allow(clippy::type_complexity)]
-fn run_system_on_insert<Cap: ImmCap, RootComponent: ImmediateAttach<Cap>>(
+fn run_system_on_insert<Cap: CapSet, RootComponent: ImmediateAttach<Cap>>(
     In(entity): In<Entity>,
     query: Query<Option<&RootComponentBuilt<(Cap, RootComponent)>>, With<RootComponent>>,
     ctx: ImmCtx<Cap>,
@@ -118,7 +118,7 @@ fn run_system_on_insert<Cap: ImmCap, RootComponent: ImmediateAttach<Cap>>(
     RootComponent::construct(&mut imm, &mut params);
 }
 
-fn on_insert<Cap: ImmCap, RootComponent: ImmediateAttach<Cap>>(
+fn on_insert<Cap: CapSet, RootComponent: ImmediateAttach<Cap>>(
     trigger: Trigger<OnAdd, RootComponent>,
     query: Query<(), With<RootComponentBuilt<(Cap, RootComponent)>>>,
     mut commands: Commands,

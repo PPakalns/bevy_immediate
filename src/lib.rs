@@ -12,7 +12,8 @@ pub mod attach;
 /// Exstention support for immediate mode. Logic to implement additional capabilities.
 mod capabilities;
 pub use capabilities::{
-    ImmCap, ImmCapAccessRequests, ImmCapAccessRequestsResource, ImmCapQueryParam, ImplCap,
+    CapSet, ImmCapAccessRequests, ImmCapAccessRequestsResource, ImmCapQueryParam, ImmCapability,
+    ImplCap,
 };
 
 /// Extensions to provide ergonomic functionality for working with

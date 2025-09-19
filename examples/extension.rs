@@ -1,5 +1,5 @@
 use bevy_ecs::component::Component;
-use bevy_immediate::{ImmCap, ImmEntity, ImplCap};
+use bevy_immediate::{CapSet, ImmCapability, ImmEntity, ImplCap};
 
 pub struct ExtensionExamplePlugin;
 
@@ -12,8 +12,8 @@ impl bevy_app::Plugin for ExtensionExamplePlugin {
 /// Create your own capability
 pub struct CapUiToggle;
 
-impl ImmCap for CapUiToggle {
-    fn build<Cap: ImmCap>(
+impl ImmCapability for CapUiToggle {
+    fn build<Cap: CapSet>(
         app: &mut bevy_app::App,
         cap_req: &mut bevy_immediate::ImmCapAccessRequests<Cap>,
     ) {

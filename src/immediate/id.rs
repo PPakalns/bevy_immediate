@@ -1,4 +1,4 @@
-use crate::{Imm, ImmCap};
+use crate::{CapSet, Imm};
 
 /// Unique id for immediate mode entities.
 ///
@@ -49,7 +49,7 @@ pub enum ImmIdBuilder {
 }
 
 impl ImmIdBuilder {
-    pub(super) fn resolve<Cap: ImmCap>(self, sui: &mut Imm<Cap>) -> ImmId {
+    pub(super) fn resolve<Cap: CapSet>(self, sui: &mut Imm<Cap>) -> ImmId {
         match self {
             ImmIdBuilder::Auto => {
                 // Auto increment id only when adding entity with auto generated id

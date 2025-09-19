@@ -1,20 +1,13 @@
-use bevy::{
-    color::Color,
-    text::TextColor,
-    winit::{EventLoopProxy, EventLoopProxyWrapper, WakeUp},
-};
 use bevy_ecs::{
-    change_detection::DetectChanges,
     component::Component,
-    system::{Query, Res, SystemChangeTick, SystemParam},
-    world::Mut,
+    system::{Query, SystemParam},
 };
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
     ui::{CapUi, picking::clicked::ImmUiClicked, text::ImmUiText},
 };
-use bevy_ui::{AlignItems, FlexDirection, Node, TextShadow, UiRect};
+use bevy_ui::{AlignItems, FlexDirection, Node, UiRect};
 
 use crate::utils;
 

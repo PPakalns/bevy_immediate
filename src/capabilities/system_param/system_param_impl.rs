@@ -11,12 +11,12 @@ use bevy_ecs::{
 };
 
 use crate::{
-    ImmCap, ImmCapAccessRequestsResource, ImmCapQueryParam, ImmMarker,
+    CapSet, ImmCapAccessRequestsResource, ImmCapQueryParam, ImmMarker,
     capabilities::ImmCapResourcesParam,
 };
 
 #[expect(unsafe_code)]
-unsafe impl<Cap: ImmCap> SystemParam for ImmCapQueryParam<'_, '_, Cap> {
+unsafe impl<Cap: CapSet> SystemParam for ImmCapQueryParam<'_, '_, Cap> {
     type State = CapQueryState<Cap>;
     type Item<'world, 'state> = ImmCapQueryParam<'world, 'state, Cap>;
 
@@ -89,12 +89,12 @@ unsafe impl<Cap: ImmCap> SystemParam for ImmCapQueryParam<'_, '_, Cap> {
     }
 }
 
-pub struct CapQueryState<Cap: ImmCap> {
+pub struct CapQueryState<Cap: CapSet> {
     state: bevy_ecs::query::QueryState<FilteredEntityMut<'static>, With<ImmMarker<Cap>>>,
 }
 
 #[expect(unsafe_code)]
-unsafe impl<Cap: ImmCap> SystemParam for ImmCapResourcesParam<'_, '_, Cap> {
+unsafe impl<Cap: CapSet> SystemParam for ImmCapResourcesParam<'_, '_, Cap> {
     type State = CapResourceState<Cap>;
     type Item<'world, 'state> = ImmCapResourcesParam<'world, 'state, Cap>;
 
@@ -172,7 +172,7 @@ unsafe impl<Cap: ImmCap> SystemParam for ImmCapResourcesParam<'_, '_, Cap> {
     }
 }
 
-pub struct CapResourceState<Cap: ImmCap> {
+pub struct CapResourceState<Cap: CapSet> {
     _ph: PhantomData<Cap>,
     access: bevy_ecs::query::Access<bevy_ecs::component::ComponentId>,
 }

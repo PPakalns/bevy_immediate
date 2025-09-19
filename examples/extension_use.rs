@@ -3,10 +3,8 @@ use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
     impl_capabilities,
-    ui::CapUi,
+    ui::{CapUi, ImplCapUi},
 };
-
-use crate::extension::CapUiToggle;
 
 pub struct ExtensionUseExamplePlugin;
 
@@ -22,18 +20,26 @@ impl bevy_app::Plugin for ExtensionUseExamplePlugin {
 // Create new type
 pub struct CapMyUi;
 
-impl bevy_immediate::ImmCap for CapMyUi {
-    fn build<Cap: bevy_immediate::ImmCap>(
-        app: &mut bevy_app::App,
-        cap_req: &mut bevy_immediate::ImmCapAccessRequests<Cap>,
-    ) {
-        <CapUiToggle as bevy_immediate::ImmCap>::build(app, cap_req);
-        <CapUi as bevy_immediate::ImmCap>::build(app, cap_req);
-    }
-}
-impl<T: bevy_immediate::ImplCap<CapMyUi>> bevy_immediate::ImplCap<CapUiToggle> for T {}
-
-impl<T: bevy_immediate::ImplCap<CapMyUi>> bevy_immediate::ImplCap<CapUi> for T {}
+impl_capabilities!(
+    CapMyUi,
+    ImplCapMyUi > ImplCapUi,
+    (
+        // You need to list all capabilities
+        //
+        // Macro will add compile time check to check that
+        // you correctly listed them
+        //
+        // Sadly rust type system has restrictions :(
+        // See TODO about future improvements
+        bevy_immediate::ui::ui_base::CapabilityUiBase,
+        bevy_immediate::ui::interaction::CapabilityUiInteraction,
+        bevy_immediate::ui::text::CapabilityUiText,
+        bevy_immediate::ui::picking::clicked::CapabilityUiClicked,
+        //
+        // Add your own capabilities
+        crate::extension::CapUiToggle
+    )
+);
 
 #[derive(Component)]
 pub struct ExtensionUseExampleRoot;

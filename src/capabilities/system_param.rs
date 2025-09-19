@@ -6,13 +6,13 @@ use bevy_ecs::{
     world::{FilteredEntityMut, FilteredResourcesMut},
 };
 
-use crate::{ImmCap, ImmMarker};
+use crate::{CapSet, ImmMarker};
 
 /// You can retrieve components that were requested by capabilities. See [`FilteredEntityMut`]
 ///
-/// [`SystemParam`] for immediate mode capability requests [`ImmCap`]
+/// [`SystemParam`] for immediate mode capability requests [`CapSet`]
 #[derive(bevy_derive::Deref, bevy_derive::DerefMut)]
-pub struct ImmCapQueryParam<'w, 's, Cap: ImmCap> {
+pub struct ImmCapQueryParam<'w, 's, Cap: CapSet> {
     /// Query for accessing entities being built by immediate mode system
     ///
     /// This query makes available requested components registered by capabilities
@@ -25,9 +25,9 @@ pub struct ImmCapQueryParam<'w, 's, Cap: ImmCap> {
 
 /// You can retrieve resources that were registered by capability. See [`FilteredResourcesMut`]
 ///
-/// [`SystemParam`] for immediate mode capability requests [`ImmCap`]
+/// [`SystemParam`] for immediate mode capability requests [`CapSet`]
 #[derive(bevy_derive::Deref, bevy_derive::DerefMut)]
-pub struct ImmCapResourcesParam<'w, 's, Cap: ImmCap> {
+pub struct ImmCapResourcesParam<'w, 's, Cap: CapSet> {
     /// Can be used to access resources requested by capabilities
     #[deref]
     pub resources: FilteredResourcesMut<'w, 's>,

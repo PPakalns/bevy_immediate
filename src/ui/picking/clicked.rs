@@ -10,14 +10,14 @@ use bevy_picking::{
 };
 use bevy_platform::collections::HashMap;
 
-use crate::{ImmCap, ImmCapAccessRequests, ImmEntity, ImplCap};
+use crate::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap};
 
 /// Immediate mode capability for `.clicked()`
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ImmCapUiClicked;
+pub struct CapabilityUiClicked;
 
-impl ImmCap for ImmCapUiClicked {
-    fn build<CM: ImmCap>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<CM>) {
+impl ImmCapability for CapabilityUiClicked {
+    fn build<CM: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<CM>) {
         if !app.is_plugin_added::<TrackClickedPlugin>() {
             app.add_plugins(TrackClickedPlugin);
         }
@@ -43,9 +43,9 @@ pub trait ImmUiClicked {
     fn pointer_click(&mut self) -> Option<&Pointer<Click>>;
 }
 
-impl<Cap: ImmCap> ImmUiClicked for ImmEntity<'_, '_, '_, Cap>
+impl<Cap: CapSet> ImmUiClicked for ImmEntity<'_, '_, '_, Cap>
 where
-    Cap: ImplCap<ImmCapUiClicked>,
+    Cap: ImplCap<CapabilityUiClicked>,
 {
     fn clicked(&mut self) -> bool {
         self.pointer_click().is_some()

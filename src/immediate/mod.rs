@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{ImmCap, ImmCapAccessRequests, ImmCapAccessRequestsResource};
+use crate::{CapSet, ImmCapAccessRequests, ImmCapAccessRequestsResource};
 use bevy_ecs::{
     bundle::Bundle,
     change_detection::DetectChanges,
@@ -34,7 +34,7 @@ impl<Cap> Default for BevyImmediatePlugin<Cap> {
 
 impl<Cap> bevy_app::Plugin for BevyImmediatePlugin<Cap>
 where
-    Cap: ImmCap,
+    Cap: CapSet,
 {
     fn build(&self, app: &mut bevy_app::App) {
         if app.is_plugin_added::<Self>() {
@@ -45,7 +45,7 @@ where
         upkeep::init::<Cap>(app);
 
         let mut capabilities = ImmCapAccessRequests::<Cap>::default();
-        Cap::build(app, &mut capabilities);
+        Cap::initialize(app, &mut capabilities);
         app.insert_resource(ImmCapAccessRequestsResource::new(capabilities));
     }
 
@@ -83,7 +83,7 @@ pub(crate) type ImmQueryInternal<'w, 's, Cap, D, F = ()> =
 ///
 /// Use [`Self::reinterpret_as_entity`] if you are sure about
 /// what kind of data can be accessed about parent entity.
-pub struct Imm<'w, 's, Cap: ImmCap> {
+pub struct Imm<'w, 's, Cap: CapSet> {
     ctx: ImmCtx<'w, 's, Cap>,
     current: Current,
 }
@@ -101,7 +101,7 @@ struct CurrentEntity {
     will_be_spawned: bool,
 }
 
-impl<'w, 's, Cap: ImmCap> Imm<'w, 's, Cap> {
+impl<'w, 's, Cap: CapSet> Imm<'w, 's, Cap> {
     /// Build new entity with auto generated id.
     ///
     /// Use [`Self::ch_id`] if building entities that may not always exist when parent entity exists.
@@ -208,7 +208,7 @@ impl<'w, 's, Cap: ImmCap> Imm<'w, 's, Cap> {
 
     /// Access underlaying context
     ///
-    /// Useful for implementing additional [ImmCap]
+    /// Useful for implementing additional [crate::ImmCapability]
     #[inline]
     pub fn ctx_mut(&mut self) -> &mut ImmCtx<'w, 's, Cap> {
         &mut self.ctx
@@ -294,7 +294,7 @@ impl<'w, 's, Cap: ImmCap> Imm<'w, 's, Cap> {
 /// Entity during construction in immediate mode approach
 ///
 /// Can be used to issue commands and check such conditions as `.clicked()`.
-pub struct ImmEntity<'r, 'w, 's, Cap: ImmCap> {
+pub struct ImmEntity<'r, 'w, 's, Cap: CapSet> {
     imm: &'r mut Imm<'w, 's, Cap>,
     /// Entity managed by this instance
     e: EntityParams,
@@ -308,7 +308,7 @@ struct EntityParams {
     will_be_spawned: bool,
 }
 
-impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
+impl<'r, 'w, 's, Cap: CapSet> ImmEntity<'r, 'w, 's, Cap> {
     /// Build descendants of this entity
     ///
     /// If closure return value is needed, use `[Self::add_with_return]``
@@ -504,7 +504,7 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
 
     /// Check if current entity contains component in capability requirements
     ///
-    /// Useful in implementing capabilities [`ImmCap`]
+    /// Useful in implementing capabilities [`crate::ImmCapabiility`]
     pub fn cap_entity_contains<T: Component>(&self) -> bool {
         let Ok(entity) = self.cap_get_entity() else {
             return false;
@@ -515,7 +515,7 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
 
     /// Retrieve component for entity that was requested by capabilities
     ///
-    /// Useful in implementing capabilities [`ImmCap`]
+    /// Useful in implementing capabilities [`crate::ImmCapabiility`]
     pub fn cap_get_component<T: Component>(&self) -> Result<Option<&T>, QueryEntityError> {
         let entity = self.cap_get_entity()?;
         Ok(entity.get::<T>())
@@ -523,7 +523,7 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
 
     /// Retrieve component for entity that was requested by capabilities
     ///
-    /// Useful in implementing capabilities [`ImmCap`]
+    /// Useful in implementing capabilities [`crate::ImmCapabiility`]
     pub fn cap_get_component_mut<'a, T: Component<Mutability = Mutable>>(
         &'a mut self,
     ) -> Result<Option<bevy_ecs::world::Mut<'a, T>>, QueryEntityError> {
@@ -533,7 +533,7 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
 
     /// Retrieve resource from capabilities
     ///
-    /// Useful in implementing capabilities [`ImmCap`]
+    /// Useful in implementing capabilities [`crate::ImmCapabiility`]
     pub fn cap_get_resource<R: Resource>(
         &self,
     ) -> Result<bevy_ecs::world::Ref<'_, R>, ResourceFetchError> {
@@ -542,7 +542,7 @@ impl<'r, 'w, 's, Cap: ImmCap> ImmEntity<'r, 'w, 's, Cap> {
 
     /// Retrieve mutable resource from capabilities
     ///
-    /// Useful in implementing capabilities [`ImmCap`]
+    /// Useful in implementing capabilities [`crate::ImmCapabiility`]
     pub fn cap_get_resource_mut<R: Resource>(
         &mut self,
     ) -> Result<bevy_ecs::world::Mut<'_, R>, ResourceFetchError> {
@@ -593,7 +593,7 @@ pub struct ChangeDetector {
     last_run: bevy_ecs::component::Tick,
 }
 
-impl<'s> ChangeDetector {
+impl ChangeDetector {
     /// Has state changed since and including last time system was executed
     pub fn has_changed<T>(&self, value: &Mut<'_, T>) -> bool {
         value.is_changed() || value.last_changed() == self.last_run

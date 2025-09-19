@@ -5,7 +5,7 @@ use bevy_ecs::{
 };
 
 use crate::{
-    Imm, ImmCap, ImmCapQueryParam, ImmId, ImmQueryInternal,
+    CapSet, Imm, ImmCapQueryParam, ImmId, ImmQueryInternal,
     capabilities::ImmCapResourcesParam,
     immediate::{
         Current, CurrentEntity, ImmMarker, entity_mapping::ImmediateModeEntityMapping,
@@ -15,7 +15,7 @@ use crate::{
 
 /// Immediate mode ctx
 #[derive(bevy_ecs::system::SystemParam)]
-pub struct ImmCtx<'w, 's, Cap: ImmCap> {
+pub struct ImmCtx<'w, 's, Cap: CapSet> {
     /// Access data from entities for components that were requested by capabilities
     ///
     /// In case of collision. Use [`super::ImmQuery`] or
@@ -40,7 +40,7 @@ pub struct ImmCtx<'w, 's, Cap: ImmCap> {
 
 impl<'w, 's, CM> ImmCtx<'w, 's, CM>
 where
-    CM: ImmCap,
+    CM: CapSet,
 {
     /// Initialize entity hierarchy managed by immediate mode
     pub fn build_immediate_root<T: std::hash::Hash>(self, root_id: T) -> Imm<'w, 's, CM> {
