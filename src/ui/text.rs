@@ -7,7 +7,6 @@ use crate::{ImmCap, ImmEntity, ImplCap};
 /// Capability that makes [`bevy_ui::Interaction`] accessible from immediate UI
 pub struct CapUiText;
 
-impl ImplCap<CapUiText> for CapUiText {}
 impl ImmCap for CapUiText {
     fn build<Cap: ImmCap>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
         cap_req.request_component_write::<Text>(app.world_mut());

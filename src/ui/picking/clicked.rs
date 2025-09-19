@@ -16,7 +16,6 @@ use crate::{ImmCap, ImmCapAccessRequests, ImmEntity, ImplCap};
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ImmCapUiClicked;
 
-impl ImplCap<ImmCapUiClicked> for ImmCapUiClicked {}
 impl ImmCap for ImmCapUiClicked {
     fn build<CM: ImmCap>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<CM>) {
         if !app.is_plugin_added::<TrackClickedPlugin>() {

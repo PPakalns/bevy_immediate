@@ -1,16 +1,18 @@
-use crate::merge_capabilities;
+use crate::impl_capabilities;
 
 /// Defines capability that contains all Ui capabilities from this crate
-#[cfg(feature = "picking")]
-merge_capabilities!(CapUi, (CapUiWithoutFeatures, picking::CapUiPickingAll));
+pub struct CapUi;
 
+#[cfg(feature = "picking")]
+impl_capabilities!(CapUi, (CapUiWithoutFeatures, picking::CapUiPickingAll));
 #[cfg(not(feature = "picking"))]
-merge_capabilities!(ImmUiCap, (ImmCapUiWithoutPicking));
+impl_capabilities!(ImmUiCap, (ImmCapUiWithoutPicking));
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Defines all ui capabilities except capabilities provided by "picking" - [`bevy_picking`].
-merge_capabilities!(
+pub struct CapUiWithoutFeatures;
+impl_capabilities!(
     CapUiWithoutFeatures,
     (
         ui_base::CapUiBase,
