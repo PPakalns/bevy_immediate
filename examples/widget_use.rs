@@ -6,7 +6,7 @@ use bevy_ecs::{
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
-    ui::{CapUi, text::ImmUiText},
+    ui::{CapsUi, text::ImmUiText},
 };
 use bevy_ui::Node;
 
@@ -21,7 +21,7 @@ pub struct WidgetUseExamplePlugin;
 impl bevy_app::Plugin for WidgetUseExamplePlugin {
     fn build(&self, app: &mut bevy_app::App) {
         // Initialize plugin with your root component
-        app.add_plugins(BevyImmediateAttachPlugin::<CapUi, WidgetUseExampleRoot>::new());
+        app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, WidgetUseExampleRoot>::new());
 
         // Used inside ui
         app.insert_resource(FunctionalCounterValues::default());
@@ -36,10 +36,10 @@ pub struct Params<'w> {
     functional_counter: ResMut<'w, FunctionalCounterValues>,
 }
 
-impl ImmediateAttach<CapUi> for WidgetUseExampleRoot {
+impl ImmediateAttach<CapsUi> for WidgetUseExampleRoot {
     type Params = Params<'static>;
 
-    fn construct(ui: &mut Imm<CapUi>, params: &mut Params) {
+    fn construct(ui: &mut Imm<CapsUi>, params: &mut Params) {
         ui.ch()
             .on_spawn_insert(utils::title_text_style)
             .on_spawn_text("Widget preview");

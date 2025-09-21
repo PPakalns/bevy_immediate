@@ -49,7 +49,7 @@ pub enum ImmIdBuilder {
 }
 
 impl ImmIdBuilder {
-    pub(super) fn resolve<Cap: CapSet>(self, sui: &mut Imm<Cap>) -> ImmId {
+    pub(super) fn resolve<Caps: CapSet>(self, sui: &mut Imm<Caps>) -> ImmId {
         match self {
             ImmIdBuilder::Auto => {
                 // Auto increment id only when adding entity with auto generated id

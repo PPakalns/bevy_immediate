@@ -3,7 +3,7 @@ use bevy_ecs::component::Component;
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
-    ui::{CapUi, text::ImmUiText},
+    ui::{CapsUi, text::ImmUiText},
 };
 use bevy_ui::{
     BackgroundColor, BorderColor, BorderRadius, FlexDirection, Node, TextShadow, UiRect, Val,
@@ -16,17 +16,17 @@ pub struct HelloWorldPlugin;
 impl bevy_app::Plugin for HelloWorldPlugin {
     fn build(&self, app: &mut bevy_app::App) {
         // Add plugin
-        app.add_plugins(BevyImmediateAttachPlugin::<CapUi, HelloWorldRoot>::new());
+        app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, HelloWorldRoot>::new());
     }
 }
 
 #[derive(Component)]
 pub struct HelloWorldRoot;
 
-impl ImmediateAttach<CapUi> for HelloWorldRoot {
+impl ImmediateAttach<CapsUi> for HelloWorldRoot {
     type Params = ();
 
-    fn construct(ui: &mut Imm<CapUi>, _: &mut ()) {
+    fn construct(ui: &mut Imm<CapsUi>, _: &mut ()) {
         // Construct entity hierarchies
         // and attach necessary components
         ui.ch()

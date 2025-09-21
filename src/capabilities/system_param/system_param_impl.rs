@@ -16,33 +16,34 @@ use crate::{
 };
 
 #[expect(unsafe_code)]
-unsafe impl<Cap: CapSet> SystemParam for ImmCapQueryParam<'_, '_, Cap> {
-    type State = CapQueryState<Cap>;
-    type Item<'world, 'state> = ImmCapQueryParam<'world, 'state, Cap>;
+unsafe impl<Caps: CapSet> SystemParam for ImmCapQueryParam<'_, '_, Caps> {
+    type State = CapQueryState<Caps>;
+    type Item<'world, 'state> = ImmCapQueryParam<'world, 'state, Caps>;
 
     fn init_state(
         world: &mut World,
         system_meta: &mut bevy_ecs::system::SystemMeta,
     ) -> Self::State {
         let requested_access = world
-            .get_resource::<ImmCapAccessRequestsResource<Cap>>()
+            .get_resource::<ImmCapAccessRequestsResource<Caps>>()
             .expect("bevy_immediate mode plugin not correctly added");
         let requested_access = requested_access.capabilities.clone();
 
-        let params = QueryParamBuilder::new::<FilteredEntityMut, With<ImmMarker<Cap>>>(|builder| {
-            builder.with::<ImmMarker<Cap>>();
+        let params =
+            QueryParamBuilder::new::<FilteredEntityMut, With<ImmMarker<Caps>>>(|builder| {
+                builder.with::<ImmMarker<Caps>>();
 
-            for (&component_id, request) in requested_access.requested_components().iter() {
-                builder.optional(|builder| match request.mutable {
-                    true => {
-                        builder.mut_id(component_id);
-                    }
-                    false => {
-                        builder.ref_id(component_id);
-                    }
-                });
-            }
-        });
+                for (&component_id, request) in requested_access.requested_components().iter() {
+                    builder.optional(|builder| match request.mutable {
+                        true => {
+                            builder.mut_id(component_id);
+                        }
+                        false => {
+                            builder.ref_id(component_id);
+                        }
+                    });
+                }
+            });
 
         let query_state = params.build(world, system_meta);
 
@@ -89,21 +90,21 @@ unsafe impl<Cap: CapSet> SystemParam for ImmCapQueryParam<'_, '_, Cap> {
     }
 }
 
-pub struct CapQueryState<Cap: CapSet> {
-    state: bevy_ecs::query::QueryState<FilteredEntityMut<'static>, With<ImmMarker<Cap>>>,
+pub struct CapQueryState<Caps: CapSet> {
+    state: bevy_ecs::query::QueryState<FilteredEntityMut<'static>, With<ImmMarker<Caps>>>,
 }
 
 #[expect(unsafe_code)]
-unsafe impl<Cap: CapSet> SystemParam for ImmCapResourcesParam<'_, '_, Cap> {
-    type State = CapResourceState<Cap>;
-    type Item<'world, 'state> = ImmCapResourcesParam<'world, 'state, Cap>;
+unsafe impl<Caps: CapSet> SystemParam for ImmCapResourcesParam<'_, '_, Caps> {
+    type State = CapResourceState<Caps>;
+    type Item<'world, 'state> = ImmCapResourcesParam<'world, 'state, Caps>;
 
     fn init_state(
         world: &mut World,
         system_meta: &mut bevy_ecs::system::SystemMeta,
     ) -> Self::State {
         let requested_access = world
-            .get_resource::<ImmCapAccessRequestsResource<Cap>>()
+            .get_resource::<ImmCapAccessRequestsResource<Caps>>()
             .expect("bevy_immediate mode plugin not correctly added");
         let requested_access = requested_access.capabilities.clone();
 
@@ -172,7 +173,7 @@ unsafe impl<Cap: CapSet> SystemParam for ImmCapResourcesParam<'_, '_, Cap> {
     }
 }
 
-pub struct CapResourceState<Cap: CapSet> {
-    _ph: PhantomData<Cap>,
+pub struct CapResourceState<Caps: CapSet> {
+    _ph: PhantomData<Caps>,
     access: bevy_ecs::query::Access<bevy_ecs::component::ComponentId>,
 }

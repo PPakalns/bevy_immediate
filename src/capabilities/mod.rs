@@ -3,13 +3,13 @@
 /// Marks types that can be used inside [`crate::ImmCtx`]
 pub trait CapSet: Send + Sync + 'static {
     /// Logic to initialize all capabilities
-    fn initialize<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<Cap>);
+    fn initialize<Caps: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<Caps>);
 }
 
 /// Marks types that are used to implement immediate mode capabilities
 pub trait ImmCapability: Send + Sync + 'static {
     /// Function used to initialize necessary resources for capability to fully function
-    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<Cap>);
+    fn build<Caps: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<Caps>);
 }
 
 /// Trait that marks that CapSet implements given capability implementation
@@ -22,7 +22,7 @@ pub trait ImplCap<T>: CapSet {}
 /// ```no_run
 /// pub struct CapMy;
 ///
-/// impl_capabilities!(CapMy, ImplCapMy > ImplChildSet, (Cap1, Cap2, Cap3));
+/// impl_capability_set!(CapMy, ImplCapMy > ImplChildSet, (Cap1, Cap2, Cap3));
 /// ````
 ///
 /// Defines trait `ImplCapMy` that can be used to easily check that CapSet has
@@ -32,12 +32,12 @@ pub trait ImplCap<T>: CapSet {}
 ///
 /// See examples for correct use!
 #[macro_export]
-macro_rules! impl_capabilities {
+macro_rules! impl_capability_set {
     ($name:ty, $set_trait:ident > $subset_check:ident, ($($t:ty),+ $(,)?)) => {
         impl $crate::CapSet for $name {
-            fn initialize<Cap: $crate::CapSet>(
+            fn initialize<Caps: $crate::CapSet>(
                 app: &mut bevy_app::App,
-                cap_req: &mut $crate::ImmCapAccessRequests<Cap>,
+                cap_req: &mut $crate::ImmCapAccessRequests<Caps>,
             ) {
                 $(<$t as $crate::ImmCapability>::build(app, cap_req);)+
             }
@@ -64,17 +64,20 @@ macro_rules! impl_capabilities {
 
 /// Manualy implement empty capability set
 impl CapSet for () {
-    fn initialize<Cap: CapSet>(_app: &mut bevy_app::App, _cap_req: &mut ImmCapAccessRequests<Cap>) {
+    fn initialize<Caps: CapSet>(
+        _app: &mut bevy_app::App,
+        _cap_req: &mut ImmCapAccessRequests<Caps>,
+    ) {
     }
 }
 
 /// All capability sets implement that they implement support for empty capability set
-pub trait ImplEmpty: CapSet {}
-impl<T: CapSet> ImplEmpty for T {}
+pub trait ImplCapsEmpty: CapSet {}
+impl<T: CapSet> ImplCapsEmpty for T {}
 impl<T: CapSet> ImplCap<()> for T {}
 
 impl ImmCapability for () {
-    fn build<Cap: CapSet>(_app: &mut bevy_app::App, _cap_req: &mut ImmCapAccessRequests<Cap>) {}
+    fn build<Caps: CapSet>(_app: &mut bevy_app::App, _cap_req: &mut ImmCapAccessRequests<Caps>) {}
 }
 
 /// Implements logic for collecting requested components and resources
@@ -85,5 +88,3 @@ pub use access_requests::{ImmCapAccessRequests, ImmCapAccessRequestsResource};
 /// allows to retrieve all requested data by capabilities
 mod system_param;
 pub use system_param::{ImmCapQueryParam, ImmCapResourcesParam};
-
-use crate::ImmEntity;

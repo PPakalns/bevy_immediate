@@ -7,7 +7,7 @@ use bevy_ecs::{
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
-    ui::{CapUi, picking::clicked::ImmUiClicked, text::ImmUiText},
+    ui::{CapsUi, picking::clicked::ImmUiClicked, text::ImmUiText},
 };
 use bevy_ui::{FlexDirection, Node, UiDebugOptions, Val};
 
@@ -19,7 +19,7 @@ impl bevy_app::Plugin for MenuExamplePlugin {
     fn build(&self, app: &mut bevy_app::App) {
         app.insert_resource(CurrentExample::WidgetUse);
 
-        app.add_plugins(BevyImmediateAttachPlugin::<CapUi, MenuUiRoot>::new());
+        app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, MenuUiRoot>::new());
     }
 }
 
@@ -32,10 +32,10 @@ pub struct Params<'w> {
     debug_options: ResMut<'w, UiDebugOptions>,
 }
 
-impl ImmediateAttach<CapUi> for MenuUiRoot {
+impl ImmediateAttach<CapsUi> for MenuUiRoot {
     type Params = Params<'static>;
 
-    fn construct(ui: &mut Imm<CapUi>, params: &mut Params) {
+    fn construct(ui: &mut Imm<CapsUi>, params: &mut Params) {
         ui.ch()
             .on_spawn_insert(|| Node {
                 flex_direction: FlexDirection::Column,

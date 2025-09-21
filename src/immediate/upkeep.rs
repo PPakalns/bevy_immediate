@@ -9,24 +9,24 @@ use bevy_ecs::{
 
 use crate::{ImmMarker, ImmediateSystemSet};
 
-pub fn init<Cap: Send + Sync + 'static>(app: &mut bevy_app::App) {
+pub fn init<Caps: Send + Sync + 'static>(app: &mut bevy_app::App) {
     app.add_systems(
         bevy_app::PostUpdate,
-        immediate_mode_tracked_entity_upkeep_system::<Cap>
-            .in_set(ImmediateSystemSet::<Cap>::default()),
+        immediate_mode_tracked_entity_upkeep_system::<Caps>
+            .in_set(ImmediateSystemSet::<Caps>::default()),
     );
-    app.insert_resource(ImmediateModeStateResource::<Cap>::default());
+    app.insert_resource(ImmediateModeStateResource::<Caps>::default());
 }
 
 #[derive(bevy_ecs::resource::Resource)]
-pub(super) struct ImmediateModeStateResource<Cap: Send + Sync + 'static> {
+pub(super) struct ImmediateModeStateResource<Caps: Send + Sync + 'static> {
     // Current iteration for unused entity removal
     pub(super) iteration: u32,
 
-    _ph: PhantomData<Cap>,
+    _ph: PhantomData<Caps>,
 }
 
-impl<Cap: Send + Sync + 'static> Default for ImmediateModeStateResource<Cap> {
+impl<Caps: Send + Sync + 'static> Default for ImmediateModeStateResource<Caps> {
     fn default() -> Self {
         Self {
             iteration: Default::default(),
@@ -35,9 +35,9 @@ impl<Cap: Send + Sync + 'static> Default for ImmediateModeStateResource<Cap> {
     }
 }
 
-fn immediate_mode_tracked_entity_upkeep_system<Cap: Send + Sync + 'static>(
-    query: Query<(Entity, &ImmMarker<Cap>), With<ImmMarker<Cap>>>,
-    mut state: ResMut<ImmediateModeStateResource<Cap>>,
+fn immediate_mode_tracked_entity_upkeep_system<Caps: Send + Sync + 'static>(
+    query: Query<(Entity, &ImmMarker<Caps>), With<ImmMarker<Caps>>>,
+    mut state: ResMut<ImmediateModeStateResource<Caps>>,
     mut commands: Commands,
 ) {
     for (entity, marker) in query {

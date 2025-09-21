@@ -14,7 +14,7 @@ use crate::{BevyImmediatePlugin, CapSet, Imm, ImmCtx, ImmId};
 /// Implement trait to be able to attach immediate tree in arbitrary place
 ///
 /// Remember to add [`BevyImmediateAttachPlugin`]
-pub trait ImmediateAttach<Cap: CapSet>: Component {
+pub trait ImmediateAttach<Caps: CapSet>: Component {
     /// Use 'static lifetimes where lifetimes are needed.
     type Params: SystemParam;
 
@@ -23,7 +23,7 @@ pub trait ImmediateAttach<Cap: CapSet>: Component {
     /// Function will be called during update or some time after `Self`
     /// has been added to entity.
     fn construct(
-        imm: &mut Imm<'_, '_, Cap>,
+        imm: &mut Imm<'_, '_, Caps>,
         params: &mut <Self::Params as SystemParam>::Item<'_, '_>,
     );
 }
@@ -34,12 +34,12 @@ pub trait ImmediateAttach<Cap: CapSet>: Component {
 /// after `RootComponent` is added to entity to avoid 1 frame delay.
 ///
 /// For `RootComponent` trait [`ImmediateAttachRoot`] must be implemented.
-pub struct BevyImmediateAttachPlugin<Cap: CapSet, RootComponent: ImmediateAttach<Cap>> {
-    _ph: PhantomData<(Cap, RootComponent)>,
+pub struct BevyImmediateAttachPlugin<Caps: CapSet, RootComponent: ImmediateAttach<Caps>> {
+    _ph: PhantomData<(Caps, RootComponent)>,
 }
 
-impl<Cap: CapSet, RootComponent: ImmediateAttach<Cap>>
-    BevyImmediateAttachPlugin<Cap, RootComponent>
+impl<Caps: CapSet, RootComponent: ImmediateAttach<Caps>>
+    BevyImmediateAttachPlugin<Caps, RootComponent>
 {
     /// Construct plugin
     pub fn new() -> Self {
@@ -47,44 +47,44 @@ impl<Cap: CapSet, RootComponent: ImmediateAttach<Cap>>
     }
 }
 
-impl<Cap: CapSet, RootComponent: ImmediateAttach<Cap>> Default
-    for BevyImmediateAttachPlugin<Cap, RootComponent>
+impl<Caps: CapSet, RootComponent: ImmediateAttach<Caps>> Default
+    for BevyImmediateAttachPlugin<Caps, RootComponent>
 {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<Cap: CapSet, RootComponent: ImmediateAttach<Cap>> bevy_app::Plugin
-    for BevyImmediateAttachPlugin<Cap, RootComponent>
+impl<Caps: CapSet, RootComponent: ImmediateAttach<Caps>> bevy_app::Plugin
+    for BevyImmediateAttachPlugin<Caps, RootComponent>
 {
     fn build(&self, app: &mut bevy_app::App) {
-        if !app.is_plugin_added::<BevyImmediatePlugin<Cap>>() {
-            app.add_plugins(BevyImmediatePlugin::<Cap>::new());
+        if !app.is_plugin_added::<BevyImmediatePlugin<Caps>>() {
+            app.add_plugins(BevyImmediatePlugin::<Caps>::new());
         }
 
         app.add_systems(
             bevy_app::Update,
-            run_system_each_frame::<Cap, RootComponent>,
+            run_system_each_frame::<Caps, RootComponent>,
         );
-        app.add_observer(on_insert::<Cap, RootComponent>);
+        app.add_observer(on_insert::<Caps, RootComponent>);
     }
 }
 
 /// Retrieve marker type id. In rare cases multiple immediate mode trees could be built from the
 /// same root node. We need to provide unique id for each of them.
-fn const_type_id<Cap: 'static, RootComponent: 'static>() -> ImmId {
+fn const_type_id<Caps: 'static, RootComponent: 'static>() -> ImmId {
     let root_type_id = TypeId::of::<RootComponent>();
-    let cap_type_id = TypeId::of::<Cap>();
+    let cap_type_id = TypeId::of::<Caps>();
     ImmId::new((root_type_id, cap_type_id))
 }
 
-fn run_system_each_frame<Cap: CapSet, RootComponent: ImmediateAttach<Cap>>(
+fn run_system_each_frame<Caps: CapSet, RootComponent: ImmediateAttach<Caps>>(
     query: Query<Entity, With<RootComponent>>,
-    mut ctx: ImmCtx<Cap>,
+    mut ctx: ImmCtx<Caps>,
     params: StaticSystemParam<RootComponent::Params>,
 ) {
-    let id = const_type_id::<Cap, RootComponent>();
+    let id = const_type_id::<Caps, RootComponent>();
     let mut params = params.into_inner();
 
     for entity in query.iter() {
@@ -95,13 +95,13 @@ fn run_system_each_frame<Cap: CapSet, RootComponent: ImmediateAttach<Cap>>(
 }
 
 #[allow(clippy::type_complexity)]
-fn run_system_on_insert<Cap: CapSet, RootComponent: ImmediateAttach<Cap>>(
+fn run_system_on_insert<Caps: CapSet, RootComponent: ImmediateAttach<Caps>>(
     In(entity): In<Entity>,
-    query: Query<Option<&RootComponentBuilt<(Cap, RootComponent)>>, With<RootComponent>>,
-    ctx: ImmCtx<Cap>,
+    query: Query<Option<&RootComponentBuilt<(Caps, RootComponent)>>, With<RootComponent>>,
+    ctx: ImmCtx<Caps>,
     params: StaticSystemParam<RootComponent::Params>,
 ) {
-    let id = const_type_id::<Cap, RootComponent>();
+    let id = const_type_id::<Caps, RootComponent>();
     let mut params = params.into_inner();
 
     let Ok(built) = query.get(entity) else {
@@ -118,9 +118,9 @@ fn run_system_on_insert<Cap: CapSet, RootComponent: ImmediateAttach<Cap>>(
     RootComponent::construct(&mut imm, &mut params);
 }
 
-fn on_insert<Cap: CapSet, RootComponent: ImmediateAttach<Cap>>(
+fn on_insert<Caps: CapSet, RootComponent: ImmediateAttach<Caps>>(
     trigger: Trigger<OnAdd, RootComponent>,
-    query: Query<(), With<RootComponentBuilt<(Cap, RootComponent)>>>,
+    query: Query<(), With<RootComponentBuilt<(Caps, RootComponent)>>>,
     mut commands: Commands,
 ) {
     let entity = trigger.target();
@@ -129,7 +129,7 @@ fn on_insert<Cap: CapSet, RootComponent: ImmediateAttach<Cap>>(
             "On insert system scheduled to build immediate tree for {}",
             entity
         );
-        commands.run_system_cached_with(run_system_on_insert::<Cap, RootComponent>, entity);
+        commands.run_system_cached_with(run_system_on_insert::<Caps, RootComponent>, entity);
     }
 }
 

@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, ops::Deref, sync::Arc};
 
 use crate::{CapSet, ImmCapAccessRequests, ImmCapAccessRequestsResource};
 use bevy_ecs::{
@@ -8,7 +8,7 @@ use bevy_ecs::{
     entity::Entity,
     event::Event,
     hierarchy::ChildOf,
-    query::{QueryEntityError, With, Without},
+    query::{QueryEntityError, Without},
     resource::Resource,
     system::{Commands, EntityCommands, IntoObserverSystem, Query},
     world::{FilteredEntityRef, Mut, error::ResourceFetchError},
@@ -17,35 +17,35 @@ use bevy_ecs::{
 /// Plugin for immediate mode functionality in bevy
 ///
 /// Can be initialized multiple times without problems
-pub struct BevyImmediatePlugin<Cap = ()>(PhantomData<Cap>);
+pub struct BevyImmediatePlugin<Caps = ()>(PhantomData<Caps>);
 
-impl<Cap> BevyImmediatePlugin<Cap> {
+impl<Caps> BevyImmediatePlugin<Caps> {
     /// Construct plugin
     pub fn new() -> Self {
         Self(PhantomData)
     }
 }
 
-impl<Cap> Default for BevyImmediatePlugin<Cap> {
+impl<Caps> Default for BevyImmediatePlugin<Caps> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<Cap> bevy_app::Plugin for BevyImmediatePlugin<Cap>
+impl<Caps> bevy_app::Plugin for BevyImmediatePlugin<Caps>
 where
-    Cap: CapSet,
+    Caps: CapSet,
 {
     fn build(&self, app: &mut bevy_app::App) {
         if app.is_plugin_added::<Self>() {
             return;
         }
 
-        entity_mapping::init::<Cap>(app);
-        upkeep::init::<Cap>(app);
+        entity_mapping::init::<Caps>(app);
+        upkeep::init::<Caps>(app);
 
-        let mut capabilities = ImmCapAccessRequests::<Cap>::default();
-        Cap::initialize(app, &mut capabilities);
+        let mut capabilities = ImmCapAccessRequests::<Caps>::default();
+        Caps::initialize(app, &mut capabilities);
         app.insert_resource(ImmCapAccessRequestsResource::new(capabilities));
     }
 
@@ -70,9 +70,7 @@ mod entity_mapping;
 mod upkeep;
 
 /// Helper type to more easily write queries
-pub type ImmQuery<'w, 's, Cap, D, F = ()> = Query<'w, 's, D, (Without<ImmMarker<Cap>>, F)>;
-pub(crate) type ImmQueryInternal<'w, 's, Cap, D, F = ()> =
-    Query<'w, 's, D, (With<ImmMarker<Cap>>, F)>;
+pub type ImmQuery<'w, 's, Caps, D, F = ()> = Query<'w, 's, D, (Without<ImmMarker<Caps>>, F)>;
 
 /// Immediate mode in a state where child components can be added
 ///
@@ -83,8 +81,8 @@ pub(crate) type ImmQueryInternal<'w, 's, Cap, D, F = ()> =
 ///
 /// Use [`Self::reinterpret_as_entity`] if you are sure about
 /// what kind of data can be accessed about parent entity.
-pub struct Imm<'w, 's, Cap: CapSet> {
-    ctx: ImmCtx<'w, 's, Cap>,
+pub struct Imm<'w, 's, Caps: CapSet> {
+    ctx: ImmCtx<'w, 's, Caps>,
     current: Current,
 }
 
@@ -101,13 +99,13 @@ struct CurrentEntity {
     will_be_spawned: bool,
 }
 
-impl<'w, 's, Cap: CapSet> Imm<'w, 's, Cap> {
+impl<'w, 's, Caps: CapSet> Imm<'w, 's, Caps> {
     /// Build new entity with auto generated id.
     ///
     /// Use [`Self::ch_id`] if building entities that may not always exist when parent entity exists.
     ///
     /// Read more [`ImmId`], [`ImmIdBuilder`].
-    pub fn ch(&mut self) -> ImmEntity<'_, 'w, 's, Cap> {
+    pub fn ch(&mut self) -> ImmEntity<'_, 'w, 's, Caps> {
         self.ch_with_manual_id(ImmIdBuilder::Auto)
     }
 
@@ -117,14 +115,14 @@ impl<'w, 's, Cap: CapSet> Imm<'w, 's, Cap> {
     /// Ids shouldn't conflict inside function
     ///
     /// Read more [`ImmId`], [`ImmIdBuilder`].
-    pub fn ch_id<T: std::hash::Hash>(&mut self, id: T) -> ImmEntity<'_, 'w, 's, Cap> {
+    pub fn ch_id<T: std::hash::Hash>(&mut self, id: T) -> ImmEntity<'_, 'w, 's, Caps> {
         self.ch_with_manual_id(ImmIdBuilder::Hierarchy(ImmId::new(id)))
     }
 
     /// Build new entity with provided id.
     ///
     /// Read more [`ImmId`], [`ImmIdBuilder`].
-    pub fn ch_with_manual_id(&mut self, id: ImmIdBuilder) -> ImmEntity<'_, 'w, 's, Cap> {
+    pub fn ch_with_manual_id(&mut self, id: ImmIdBuilder) -> ImmEntity<'_, 'w, 's, Caps> {
         let id = id.resolve(self);
 
         let mut will_be_spawned = false;
@@ -161,7 +159,7 @@ impl<'w, 's, Cap: CapSet> Imm<'w, 's, Cap> {
             // Spawn entity by default if valid entity not found
             let mut commands = self.ctx.commands.spawn((
                 // Add marker component that users can use in QueryFilter Without statements
-                ImmMarker::<Cap> {
+                ImmMarker::<Caps> {
                     id,
                     iteration: self.ctx.state.iteration,
                     _ph: PhantomData,
@@ -175,7 +173,10 @@ impl<'w, 's, Cap: CapSet> Imm<'w, 's, Cap> {
             commands.id()
         };
 
-        ImmEntity {
+        // TODO: Avoid clone
+        let access_requests: Arc<_> = self.ctx.access_requests.capabilities.clone();
+
+        let mut entity = ImmEntity {
             imm: self,
             e: EntityParams {
                 id,
@@ -183,7 +184,13 @@ impl<'w, 's, Cap: CapSet> Imm<'w, 's, Cap> {
                 will_be_spawned,
             },
             tmp_store: ImmTypeMap::new(),
+        };
+
+        for on_children in access_requests.on_children.iter() {
+            (on_children)(&mut entity);
         }
+
+        entity
     }
 
     /// Entity that is currently being managed
@@ -210,17 +217,17 @@ impl<'w, 's, Cap: CapSet> Imm<'w, 's, Cap> {
     ///
     /// Useful for implementing additional [crate::ImmCapability]
     #[inline]
-    pub fn ctx_mut(&mut self) -> &mut ImmCtx<'w, 's, Cap> {
+    pub fn ctx_mut(&mut self) -> &mut ImmCtx<'w, 's, Caps> {
         &mut self.ctx
     }
 
     /// Retrieve [`ImmCtx`] from which immediate mode entity tree was built
-    pub fn deconstruct(self) -> ImmCtx<'w, 's, Cap> {
+    pub fn deconstruct(self) -> ImmCtx<'w, 's, Caps> {
         self.ctx
     }
 
     /// Manage entity with provided [`ImmId`] and [`Entity`] attributes with provided closure
-    fn add<R>(&mut self, params: EntityParams, f: impl FnOnce(&mut Imm<'w, 's, Cap>) -> R) -> R {
+    fn add<R>(&mut self, params: EntityParams, f: impl FnOnce(&mut Imm<'w, 's, Caps>) -> R) -> R {
         self.add_dyn(params, Box::new(f))
     }
 
@@ -233,7 +240,7 @@ impl<'w, 's, Cap: CapSet> Imm<'w, 's, Cap> {
             entity,
             will_be_spawned,
         }: EntityParams,
-        f: Box<dyn FnOnce(&mut Imm<'w, 's, Cap>) -> R + '_>,
+        f: Box<dyn FnOnce(&mut Imm<'w, 's, Caps>) -> R + '_>,
     ) -> R {
         let stored_current = self.current;
 
@@ -261,7 +268,7 @@ impl<'w, 's, Cap: CapSet> Imm<'w, 's, Cap> {
     /// If parent entity is not managed by Immediate mode, may result in panic
     /// when capabilities try to access data from queries that query only immediate mode entities.
     /// Capabilities will have access to empty temporary store.
-    pub fn reinterpret_as_entity(&mut self) -> Option<ImmEntity<'_, 'w, 's, Cap>> {
+    pub fn reinterpret_as_entity(&mut self) -> Option<ImmEntity<'_, 'w, 's, Caps>> {
         if let Some(current_entity) = self.current.entity {
             let e = EntityParams {
                 id: self.current.id,
@@ -294,8 +301,8 @@ impl<'w, 's, Cap: CapSet> Imm<'w, 's, Cap> {
 /// Entity during construction in immediate mode approach
 ///
 /// Can be used to issue commands and check such conditions as `.clicked()`.
-pub struct ImmEntity<'r, 'w, 's, Cap: CapSet> {
-    imm: &'r mut Imm<'w, 's, Cap>,
+pub struct ImmEntity<'r, 'w, 's, Caps: CapSet> {
+    imm: &'r mut Imm<'w, 's, Caps>,
     /// Entity managed by this instance
     e: EntityParams,
     tmp_store: ImmTypeMap,
@@ -308,29 +315,29 @@ struct EntityParams {
     will_be_spawned: bool,
 }
 
-impl<'r, 'w, 's, Cap: CapSet> ImmEntity<'r, 'w, 's, Cap> {
+impl<'r, 'w, 's, Caps: CapSet> ImmEntity<'r, 'w, 's, Caps> {
     /// Build descendants of this entity
     ///
     /// If closure return value is needed, use `[Self::add_with_return]``
     #[allow(clippy::should_implement_trait)]
-    pub fn add(self, f: impl FnOnce(&mut Imm<'w, 's, Cap>)) -> Self {
+    pub fn add(self, f: impl FnOnce(&mut Imm<'w, 's, Caps>)) -> Self {
         self.imm.add(self.e, f);
         self
     }
 
     /// Build descendants of this entity and retrieve return value of inner closure.
-    pub fn add_with_return<R>(self, f: impl FnOnce(&mut Imm<'w, 's, Cap>) -> R) -> (Self, R) {
+    pub fn add_with_return<R>(self, f: impl FnOnce(&mut Imm<'w, 's, Caps>) -> R) -> (Self, R) {
         let value = self.imm.add(self.e, f);
         (self, value)
     }
 
     /// Retrieve system param ctx for immediate mode
-    pub fn ctx(&self) -> &ImmCtx<'w, 's, Cap> {
+    pub fn ctx(&self) -> &ImmCtx<'w, 's, Caps> {
         &self.imm.ctx
     }
 
     /// Retrieve system param ctx for immediate mode
-    pub fn ctx_mut(&mut self) -> &mut ImmCtx<'w, 's, Cap> {
+    pub fn ctx_mut(&mut self) -> &mut ImmCtx<'w, 's, Caps> {
         &mut self.imm.ctx
     }
 
@@ -584,14 +591,14 @@ impl<'r, 'w, 's, Cap: CapSet> ImmEntity<'r, 'w, 's, Cap> {
 /// Useful to add query filter [`WithoutImm<()>`] or [`bevy_ecs::query::Without<ImmMarker<()>>`]
 /// to your queries. Replace `()` with `Cap` that you use.
 #[derive(bevy_ecs::component::Component)]
-pub struct ImmMarker<Cap> {
+pub struct ImmMarker<Caps> {
     id: ImmId,
     iteration: u32,
-    _ph: PhantomData<Cap>,
+    _ph: PhantomData<Caps>,
 }
 
 /// Type to use in QueryFilter to avoid query collisions
-pub type WithoutImm<Cap = ()> = Without<ImmMarker<Cap>>;
+pub type WithoutImm<Caps = ()> = Without<ImmMarker<Caps>>;
 
 /// Helper structure for immediate mode compatbile state change detection
 pub struct ChangeDetector {

@@ -2,8 +2,8 @@ use bevy_ecs::{component::Component, system::SystemParam};
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
-    impl_capabilities,
-    ui::{CapUi, ImplCapUi},
+    impl_capability_set,
+    ui::{CapsUi, ImplCapsUi},
 };
 
 pub struct ExtensionUseExamplePlugin;
@@ -11,7 +11,7 @@ pub struct ExtensionUseExamplePlugin;
 impl bevy_app::Plugin for ExtensionUseExamplePlugin {
     fn build(&self, app: &mut bevy_app::App) {
         // Initialize plugin with your root component
-        app.add_plugins(BevyImmediateAttachPlugin::<CapUi, ExtensionUseExampleRoot>::new());
+        app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, ExtensionUseExampleRoot>::new());
     }
 }
 
@@ -20,9 +20,9 @@ impl bevy_app::Plugin for ExtensionUseExamplePlugin {
 // Create new type
 pub struct CapMyUi;
 
-impl_capabilities!(
+impl_capability_set!(
     CapMyUi,
-    ImplCapMyUi > ImplCapUi,
+    ImplCapMyUi > ImplCapsUi,
     (
         // You need to list all capabilities
         //
@@ -32,7 +32,7 @@ impl_capabilities!(
         // Sadly rust type system has restrictions :( and transitive extensions are not possible
         // About future improvements: TODO
         bevy_immediate::ui::ui_base::CapabilityUiBase,
-        bevy_immediate::ui::ui_children_order::CapabilityUiChildrenOrder,
+        bevy_immediate::ui::ui_layout_order::CapabilityUiLayoutOrder,
         bevy_immediate::ui::interaction::CapabilityUiInteraction,
         bevy_immediate::ui::text::CapabilityUiText,
         bevy_immediate::ui::picking::clicked::CapabilityUiClicked,
@@ -48,8 +48,8 @@ pub struct ExtensionUseExampleRoot;
 #[derive(SystemParam)]
 pub struct Params {}
 
-impl ImmediateAttach<CapUi> for ExtensionUseExampleRoot {
+impl ImmediateAttach<CapsUi> for ExtensionUseExampleRoot {
     type Params = Params;
 
-    fn construct(ui: &mut Imm<CapUi>, params: &mut Params) {}
+    fn construct(ui: &mut Imm<CapsUi>, params: &mut Params) {}
 }

@@ -49,12 +49,6 @@ pub fn fill_parent_node() -> Node {
     }
 }
 
-pub fn center_content(mut node: Node) -> Node {
-    node.align_items = AlignItems::Center;
-    node.justify_content = JustifyContent::Center;
-    node
-}
-
 pub fn node_container() -> Node {
     Node {
         flex_direction: FlexDirection::Column,
@@ -99,9 +93,7 @@ pub fn button_bundle() -> MyButtonBundle {
         style: MyStyleBundle {
             node: Node {
                 border: UiRect::all(Val::Px(5.0)),
-                // horizontally center child text
                 justify_content: JustifyContent::Center,
-                // vertically center child text
                 align_items: AlignItems::Center,
                 padding: UiRect::all(Val::Px(5.)),
                 ..default()

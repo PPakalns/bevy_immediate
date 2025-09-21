@@ -5,7 +5,7 @@ use bevy_ecs::{
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
-    ui::{CapUi, picking::clicked::ImmUiClicked, text::ImmUiText},
+    ui::{CapsUi, picking::clicked::ImmUiClicked, text::ImmUiText},
 };
 use bevy_ui::{AlignItems, FlexDirection, Node, UiRect};
 
@@ -15,7 +15,7 @@ pub struct WidgetNativeExamplePlugin;
 
 impl bevy_app::Plugin for WidgetNativeExamplePlugin {
     fn build(&self, app: &mut bevy_app::App) {
-        app.add_plugins(BevyImmediateAttachPlugin::<CapUi, NativeWidgetComp>::new());
+        app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, NativeWidgetComp>::new());
     }
 }
 
@@ -30,10 +30,10 @@ pub struct Params<'w, 's> {
     query: Query<'w, 's, &'static mut NativeWidgetComp>,
 }
 
-impl ImmediateAttach<CapUi> for NativeWidgetComp {
+impl ImmediateAttach<CapsUi> for NativeWidgetComp {
     type Params = Params<'static, 'static>;
 
-    fn construct(ui: &mut Imm<CapUi>, params: &mut Params) {
+    fn construct(ui: &mut Imm<CapsUi>, params: &mut Params) {
         let entity = ui.current_entity().unwrap();
 
         // Value can be stored inside component

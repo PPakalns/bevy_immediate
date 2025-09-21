@@ -12,9 +12,9 @@ use bevy_platform::collections::HashMap;
 use crate::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImmediateSystemSet};
 
 /// Base capability for UI that sets up correct order of immediate system execution
-pub struct CapabilityUiChildrenOrder;
+pub struct CapabilityUiLayoutOrder;
 
-impl ImmCapability for CapabilityUiChildrenOrder {
+impl ImmCapability for CapabilityUiLayoutOrder {
     fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<Cap>) {
         app.insert_resource(UiOrderTracker::<Cap>::default());
         app.add_systems(

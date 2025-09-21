@@ -1,6 +1,6 @@
 use bevy_immediate::{
     Imm,
-    ui::{CapUi, ImplCapUi, picking::clicked::ImmUiClicked, text::ImmUiText},
+    ui::{CapsUi, ImplCapsUi, picking::clicked::ImmUiClicked, text::ImmUiText},
 };
 use bevy_ui::{AlignItems, FlexDirection, Node, UiRect};
 
@@ -20,13 +20,13 @@ pub struct WidgetParams<'a> {
 }
 
 /// You can implement your functional widget as a simple function with arbitrary parameters
-pub fn my_functional_widget(ui: &mut Imm<CapUi>, value: WidgetParams) {
+pub fn my_functional_widget(ui: &mut Imm<CapsUi>, value: WidgetParams) {
     my_functional_widget_generic(ui, value);
 }
 
 /// If you develop a library, use generic variants so that users can use your widget
 /// with `Cap` that has additional capabilities available (.clicked(), .hovered() etc)
-pub fn my_functional_widget_generic<Cap: ImplCapUi>(ui: &mut Imm<Cap>, value: WidgetParams) {
+pub fn my_functional_widget_generic<Cap: ImplCapsUi>(ui: &mut Imm<Cap>, value: WidgetParams) {
     ui.ch()
         .on_spawn_insert(|| Node {
             flex_direction: FlexDirection::Row,

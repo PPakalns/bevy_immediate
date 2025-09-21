@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, sync::Arc};
+use std::sync::Arc;
 
 use bevy_ecs::{
     component::{Component, ComponentId, Mutable},
@@ -11,9 +11,9 @@ use crate::{CapSet, ImmEntity};
 
 /// Stores requested capabilities for given immediate mode request
 #[derive(bevy_ecs::resource::Resource)]
-pub struct ImmCapAccessRequestsResource<Cap: CapSet> {
+pub struct ImmCapAccessRequestsResource<Caps: CapSet> {
     /// Information about access requests issued by provided `Cap`
-    pub capabilities: Arc<ImmCapAccessRequests<Cap>>,
+    pub capabilities: Arc<ImmCapAccessRequests<Caps>>,
 }
 
 impl<Cap: CapSet> ImmCapAccessRequestsResource<Cap> {
@@ -25,14 +25,16 @@ impl<Cap: CapSet> ImmCapAccessRequestsResource<Cap> {
 }
 
 /// Tracks what kind of query accesses capability has requested
-pub struct ImmCapAccessRequests<Cap: CapSet> {
+pub struct ImmCapAccessRequests<Caps: CapSet> {
     // type_id_map: HashMap<TypeId, ComponentId>,
     components: HashMap<ComponentId, ComponentRequests>,
     resources: HashMap<ComponentId, ResourceRequest>,
-    on_children: Vec<Box<dyn Fn(&mut ImmEntity<Cap>) + Send + Sync>>,
+
+    #[allow(clippy::type_complexity)]
+    pub(crate) on_children: Vec<Box<dyn Fn(&mut ImmEntity<Caps>) + Send + Sync>>,
 }
 
-impl<Cap: CapSet> Default for ImmCapAccessRequests<Cap> {
+impl<Caps: CapSet> Default for ImmCapAccessRequests<Caps> {
     fn default() -> Self {
         Self {
             components: Default::default(),
@@ -42,7 +44,7 @@ impl<Cap: CapSet> Default for ImmCapAccessRequests<Cap> {
     }
 }
 
-impl<Cap: CapSet> ImmCapAccessRequests<Cap> {
+impl<Caps: CapSet> ImmCapAccessRequests<Caps> {
     /// Mark that component will be immutably accessed
     pub fn request_component_read<C: Component<Mutability = Mutable>>(
         &mut self,
@@ -73,7 +75,7 @@ impl<Cap: CapSet> ImmCapAccessRequests<Cap> {
     #[allow(clippy::type_complexity)]
     pub fn add_on_children_event_listener(
         &mut self,
-        listener: Box<dyn Fn(&mut ImmEntity<Cap>) + Send + Sync>,
+        listener: Box<dyn Fn(&mut ImmEntity<Caps>) + Send + Sync>,
     ) {
         self.on_children.push(listener);
     }

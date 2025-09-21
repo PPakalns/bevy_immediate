@@ -1,32 +1,33 @@
 #[cfg(feature = "picking")]
-use crate::capabilities::ImplEmpty;
-use crate::impl_capabilities;
+use crate::capabilities::ImplCapsEmpty;
+use crate::impl_capability_set;
 
-/// Defines capability that contains all Ui capabilities from this crate
-pub struct CapUi;
+/// Defines capability set for Ui
+pub struct CapsUi;
 
 #[cfg(feature = "picking")]
-impl_capabilities!(
-    CapUi,
-    ImplCapUi > ImplEmpty,
+impl_capability_set!(
+    CapsUi,
+    ImplCapsUi > ImplCapsEmpty,
     (
         ui_base::CapabilityUiBase,
-        ui_children_order::CapabilityUiChildrenOrder,
+        ui_layout_order::CapabilityUiLayoutOrder,
         interaction::CapabilityUiInteraction,
         text::CapabilityUiText,
+        // picking
         picking::clicked::CapabilityUiClicked,
     )
 );
 
 #[cfg(not(feature = "picking"))]
-impl_capabilities!(
-    CapUi,
-    ImplCapUi > ImplEmpty,
+impl_capability_set!(
+    CapsUi,
+    ImplCapsUi > ImplCapsEmpty,
     (
-        ui_base::CapUiBase,
-        ui_children_order::CapabilityUiChildrenOrder,
-        interaction::CapUiInteraction,
-        text::CapUiText
+        ui_base::CapabilityUiBase,
+        ui_layout_order::CapabilityUiLayoutOrder,
+        interaction::CapabilityUiInteraction,
+        text::CapabilityUiText,
     )
 );
 
@@ -36,8 +37,8 @@ impl_capabilities!(
 pub mod ui_base;
 
 /// Implements functionality to place children entities created in immediate mode in creation (.ch)
-/// call order for Ui layout
-pub mod ui_children_order;
+/// call order. Needed for correct Ui layout.
+pub mod ui_layout_order;
 
 /// Implements functionality to access [`bevy_ui::Interaction`]
 pub mod interaction;

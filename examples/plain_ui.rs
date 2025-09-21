@@ -1,5 +1,5 @@
 use bevy_ecs::system::ResMut;
-use bevy_immediate::{BevyImmediatePlugin, ImmCtx, ui::CapUi};
+use bevy_immediate::{BevyImmediatePlugin, ImmCtx, ui::CapsUi};
 use bevy_ui::Node;
 
 use crate::{
@@ -17,14 +17,14 @@ pub struct PlainUiExamplePlugin;
 impl bevy_app::Plugin for PlainUiExamplePlugin {
     fn build(&self, app: &mut bevy_app::App) {
         // Initialize plugin (it can be initialized multiple times)
-        app.add_plugins(BevyImmediatePlugin::<CapUi>::new());
+        app.add_plugins(BevyImmediatePlugin::<CapsUi>::new());
 
         // Build your ui as a simple system
         app.add_systems(bevy_app::Update, ui);
     }
 }
 
-fn ui(ctx: ImmCtx<CapUi>, example: ResMut<CurrentExample>) {
+fn ui(ctx: ImmCtx<CapsUi>, example: ResMut<CurrentExample>) {
     // Build your ui
     ctx.build_immediate_root("unique_id")
         .ch()
