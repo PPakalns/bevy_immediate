@@ -11,6 +11,7 @@ impl_capabilities!(
     ImplCapUi > ImplEmpty,
     (
         ui_base::CapabilityUiBase,
+        ui_children_order::CapabilityUiChildrenOrder,
         interaction::CapabilityUiInteraction,
         text::CapabilityUiText,
         picking::clicked::CapabilityUiClicked,
@@ -23,6 +24,7 @@ impl_capabilities!(
     ImplCapUi > ImplEmpty,
     (
         ui_base::CapUiBase,
+        ui_children_order::CapabilityUiChildrenOrder,
         interaction::CapUiInteraction,
         text::CapUiText
     )
@@ -30,8 +32,12 @@ impl_capabilities!(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/// Implements capability that correctly set ups immediate mode systems for UI case
+/// Implements capability that correctly set ups immediate mode systems execution order for UI case
 pub mod ui_base;
+
+/// Implements functionality to place children entities created in immediate mode in creation (.ch)
+/// call order for Ui layout
+pub mod ui_children_order;
 
 /// Implements functionality to access [`bevy_ui::Interaction`]
 pub mod interaction;

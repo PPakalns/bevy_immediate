@@ -572,6 +572,11 @@ impl<'r, 'w, 's, Cap: CapSet> ImmEntity<'r, 'w, 's, Cap> {
     pub fn cap_entity_tmp_store_mut(&mut self) -> &mut ImmTypeMap {
         &mut self.tmp_store
     }
+
+    /// Get [`Entity`] for parent entity of this entity
+    pub fn parent_entity(&self) -> Option<Entity> {
+        self.imm.current_entity()
+    }
 }
 
 /// Component that is added to entities that are managed by immediate mode system

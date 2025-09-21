@@ -7,7 +7,7 @@ use bevy_ecs::{
 };
 use bevy_platform::collections::HashMap;
 
-use crate::CapSet;
+use crate::{CapSet, ImmEntity};
 
 /// Stores requested capabilities for given immediate mode request
 #[derive(bevy_ecs::resource::Resource)]
@@ -29,7 +29,7 @@ pub struct ImmCapAccessRequests<Cap: CapSet> {
     // type_id_map: HashMap<TypeId, ComponentId>,
     components: HashMap<ComponentId, ComponentRequests>,
     resources: HashMap<ComponentId, ResourceRequest>,
-    _ph: PhantomData<Cap>,
+    on_children: Vec<Box<dyn Fn(&mut ImmEntity<Cap>) + Send + Sync>>,
 }
 
 impl<Cap: CapSet> Default for ImmCapAccessRequests<Cap> {
@@ -37,7 +37,7 @@ impl<Cap: CapSet> Default for ImmCapAccessRequests<Cap> {
         Self {
             components: Default::default(),
             resources: Default::default(),
-            _ph: PhantomData,
+            on_children: Default::default(),
         }
     }
 }
@@ -67,6 +67,15 @@ impl<Cap: CapSet> ImmCapAccessRequests<Cap> {
     /// Mark that resource will be written during immediate mode
     pub fn request_resource_write<R: Resource>(&mut self, world: &mut World) {
         self.request_resource_inner::<R>(world, true)
+    }
+
+    /// Add listener that will be called after child entity is created in UI
+    #[allow(clippy::type_complexity)]
+    pub fn add_on_children_event_listener(
+        &mut self,
+        listener: Box<dyn Fn(&mut ImmEntity<Cap>) + Send + Sync>,
+    ) {
+        self.on_children.push(listener);
     }
 
     fn request_component_inner<C: Component>(&mut self, world: &mut World, mutable: bool) {

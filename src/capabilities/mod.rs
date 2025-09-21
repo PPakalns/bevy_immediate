@@ -85,3 +85,5 @@ pub use access_requests::{ImmCapAccessRequests, ImmCapAccessRequestsResource};
 /// allows to retrieve all requested data by capabilities
 mod system_param;
 pub use system_param::{ImmCapQueryParam, ImmCapResourcesParam};
+
+use crate::ImmEntity;
