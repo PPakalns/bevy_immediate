@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, ops::Deref, sync::Arc};
+use std::{marker::PhantomData, sync::Arc};
 
 use crate::{CapSet, ImmCapAccessRequests, ImmCapAccessRequestsResource};
 use bevy_ecs::{

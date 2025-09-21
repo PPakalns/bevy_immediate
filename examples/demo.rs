@@ -1,11 +1,10 @@
 use bevy::prelude::*;
-mod utils;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         // Reusable code for demo examples and effects
-        .add_plugins(utils::DemoUtilsPlugin)
+        .add_plugins(styles::DemoStylePlugin)
         // Setup camera
         .add_systems(Startup, setup_camera)
         //
@@ -20,6 +19,7 @@ fn main() {
         .add_plugins(menu::MenuExamplePlugin)
         .add_plugins(extension::ExtensionExamplePlugin)
         .add_plugins(extension_use::ExtensionUseExamplePlugin)
+        .add_plugins(power_user::PowerUserExamplePlugin)
         .run();
 }
 
@@ -43,4 +43,6 @@ mod extension;
 
 mod extension_use;
 
-// mod power_user;
+mod power_user;
+
+mod styles;

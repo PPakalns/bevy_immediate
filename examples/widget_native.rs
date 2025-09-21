@@ -9,7 +9,7 @@ use bevy_immediate::{
 };
 use bevy_ui::{AlignItems, FlexDirection, Node, UiRect};
 
-use crate::utils;
+use crate::styles;
 
 pub struct WidgetNativeExamplePlugin;
 
@@ -44,30 +44,31 @@ impl ImmediateAttach<CapsUi> for NativeWidgetComp {
                 flex_direction: FlexDirection::Row,
                 align_items: AlignItems::Center,
                 padding: UiRect::ZERO,
-                ..utils::node_container()
+                ..styles::node_container()
             })
             .add(|ui| {
                 let change_detector = ui.change_detector();
 
                 ui.ch()
-                    .on_spawn_insert(utils::text_style)
-                    // Change detection can be used to optimize UI
+                    .on_spawn_insert(styles::text_style)
+                    // Change detection can be used to
+                    // update bevy only when something has changed.
                     .on_change_text_fn(change_detector.has_changed(&value), || {
                         format!("{}: {}", value.title, value.counter)
                     });
 
-                let mut button = ui.ch().on_spawn_insert(utils::button_bundle).add(|ui| {
+                let mut button = ui.ch().on_spawn_insert(styles::button_bundle).add(|ui| {
                     ui.ch()
-                        .on_spawn_insert(utils::text_style)
+                        .on_spawn_insert(styles::text_style)
                         .on_spawn_text("-");
                 });
                 if button.clicked() {
                     value.counter = value.counter.saturating_sub(1);
                 }
 
-                let mut button = ui.ch().on_spawn_insert(utils::button_bundle).add(|ui| {
+                let mut button = ui.ch().on_spawn_insert(styles::button_bundle).add(|ui| {
                     ui.ch()
-                        .on_spawn_insert(utils::text_style)
+                        .on_spawn_insert(styles::text_style)
                         .on_spawn_text("+");
                 });
                 if button.clicked() {

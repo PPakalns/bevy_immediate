@@ -11,7 +11,7 @@ use bevy_immediate::{
 use bevy_ui::Node;
 
 use crate::{
-    utils::{self},
+    styles::{self},
     widget_functional::{WidgetParams, my_functional_widget},
     widget_native::NativeWidgetComp,
 };
@@ -41,11 +41,11 @@ impl ImmediateAttach<CapsUi> for WidgetUseExampleRoot {
 
     fn construct(ui: &mut Imm<CapsUi>, params: &mut Params) {
         ui.ch()
-            .on_spawn_insert(utils::title_text_style)
+            .on_spawn_insert(styles::title_text_style)
             .on_spawn_text("Widget preview");
 
         ui.ch()
-            .on_spawn_insert(utils::text_style)
+            .on_spawn_insert(styles::text_style)
             .on_spawn_text("Embed native widgets");
 
         for i in 0..2 {
@@ -58,7 +58,7 @@ impl ImmediateAttach<CapsUi> for WidgetUseExampleRoot {
         }
 
         ui.ch()
-            .on_spawn_insert(utils::text_style)
+            .on_spawn_insert(styles::text_style)
             .on_spawn_text("Embed functional widgets");
 
         for (idx, counter) in params.functional_counter.values.iter_mut().enumerate() {

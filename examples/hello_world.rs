@@ -3,13 +3,12 @@ use bevy_ecs::component::Component;
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
-    ui::{CapsUi, text::ImmUiText},
+    ui::CapsUi,
 };
 use bevy_ui::{
     BackgroundColor, BorderColor, BorderRadius, FlexDirection, Node, TextShadow, UiRect, Val,
+    widget::Text,
 };
-
-use crate::utils::{BACKGROUND, MyStyleBundle};
 
 pub struct HelloWorldPlugin;
 
@@ -24,33 +23,38 @@ impl bevy_app::Plugin for HelloWorldPlugin {
 pub struct HelloWorldRoot;
 
 impl ImmediateAttach<CapsUi> for HelloWorldRoot {
-    type Params = ();
+    type Params = (); // SystemParams from `World``
 
     fn construct(ui: &mut Imm<CapsUi>, _: &mut ()) {
+        // CapsUi - Capability set for Ui.
+        // Add usefult extensions for implementing UI with rust type system support!
+
         // Construct entity hierarchies
         // and attach necessary components
         ui.ch()
-            .on_spawn_insert(|| MyStyleBundle {
-                node: Node {
-                    flex_direction: FlexDirection::Column,
-                    border: UiRect::all(Val::Px(10.)),
-                    padding: UiRect::all(Val::Px(10.)),
-                    column_gap: Val::Px(10.),
-                    row_gap: Val::Px(10.),
-                    ..default()
-                },
-                border_color: BorderColor(Color::srgb(1., 0., 0.)),
-                border_radius: BorderRadius::all(Val::Px(5.)),
-                background_color: BackgroundColor(BACKGROUND),
+            .on_spawn_insert(|| {
+                (
+                    Node {
+                        flex_direction: FlexDirection::Column,
+                        border: UiRect::all(Val::Px(10.)),
+                        padding: UiRect::all(Val::Px(10.)),
+                        column_gap: Val::Px(10.),
+                        row_gap: Val::Px(10.),
+                        ..default()
+                    },
+                    BorderColor(Color::srgb(1., 0., 0.)),
+                    BorderRadius::all(Val::Px(5.)),
+                    BackgroundColor(Color::srgb(0.05, 0.05, 0.05)),
+                )
             })
             .add(|ui| {
-                ui.ch()
-                    .on_spawn_insert(|| {
-                        (TextColor(Color::srgb(0.9, 0.9, 0.9)), TextShadow::default())
-                    })
-                    // You can use extensions supported by `CapUi`
-                    // See [`bevy_immediate::ui::CapUi`]
-                    .on_spawn_text("Hello world");
+                ui.ch().on_spawn_insert(|| {
+                    (
+                        TextColor(Color::srgb(0.9, 0.9, 0.9)),
+                        TextShadow::default(),
+                        Text("Hello world".into()),
+                    )
+                });
             });
     }
 }

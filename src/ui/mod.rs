@@ -14,6 +14,7 @@ impl_capability_set!(
         ui_layout_order::CapabilityUiLayoutOrder,
         interaction::CapabilityUiInteraction,
         text::CapabilityUiText,
+        selected::CapabilityUiSelected,
         // picking
         picking::clicked::CapabilityUiClicked,
     )
@@ -28,6 +29,7 @@ impl_capability_set!(
         ui_layout_order::CapabilityUiLayoutOrder,
         interaction::CapabilityUiInteraction,
         text::CapabilityUiText,
+        selected::CapabilityUiSelected,
     )
 );
 
@@ -45,6 +47,9 @@ pub mod interaction;
 
 /// Implements capabilities for working with nodes that contain [`bevy_ui::widget::Text`]
 pub mod text;
+
+/// Implements capabilities for Selected marker component
+pub mod selected;
 
 /// Contains API extensions for ergonomic API that use [`bevy_picking`]
 #[cfg(feature = "picking")]

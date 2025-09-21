@@ -1,9 +1,10 @@
 use bevy::color::Color;
 use bevy::{color::palettes::basic::*, prelude::*};
+use bevy_immediate::ui::selected::Selected;
 
-pub struct DemoUtilsPlugin;
+pub struct DemoStylePlugin;
 
-impl bevy_app::Plugin for DemoUtilsPlugin {
+impl bevy_app::Plugin for DemoStylePlugin {
     fn build(&self, app: &mut bevy_app::App) {
         app.add_systems(Update, button_system);
     }
@@ -12,24 +13,33 @@ impl bevy_app::Plugin for DemoUtilsPlugin {
 #[allow(clippy::type_complexity)]
 fn button_system(
     mut interaction_query: Query<
-        (&Interaction, &mut BackgroundColor, &mut BorderColor),
-        (Changed<Interaction>, With<Button>),
+        (
+            &Interaction,
+            &mut BackgroundColor,
+            &mut BorderColor,
+            Option<&mut Selected>,
+        ),
+        (Or<(Changed<Interaction>, Changed<Selected>)>, With<Button>),
     >,
 ) {
-    for (interaction, mut color, mut border_color) in &mut interaction_query {
+    for (interaction, mut color, mut border_color, selected) in &mut interaction_query {
         match *interaction {
             Interaction::Pressed => {
-                *color = PRESSED_BUTTON.into();
+                color.0 = PRESSED_BUTTON;
                 border_color.0 = RED.into();
             }
             Interaction::Hovered => {
-                *color = HOVERED_BUTTON.into();
+                color.0 = HOVERED_BUTTON;
                 border_color.0 = Color::WHITE;
             }
             Interaction::None => {
-                *color = NORMAL_BUTTON.into();
+                color.0 = NORMAL_BUTTON;
                 border_color.0 = Color::BLACK;
             }
+        }
+        if selected.map(|s| s.selected) == Some(true) {
+            color.0 = color.0.mix(&SELECTED, 0.5);
+            border_color.0 = border_color.0.mix(&SELECTED, 0.5);
         }
     }
 }
@@ -38,6 +48,7 @@ pub const BACKGROUND: Color = Color::srgb(0.05, 0.05, 0.05);
 pub const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
 pub const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
 pub const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
+pub const SELECTED: Color = Color::srgb(0.0, 0.0, 0.45);
 
 pub fn fill_parent_node() -> Node {
     Node {

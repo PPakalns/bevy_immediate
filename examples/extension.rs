@@ -1,6 +1,12 @@
 use bevy_ecs::component::Component;
 use bevy_immediate::{CapSet, ImmCapability, ImmEntity, ImplCap};
 
+// This extension example tries to showcase the WORST case.
+// Where code wants to read from and write to component.
+//
+// For very simple capability implementations see
+// [bevy_immediate::ui] capability implementations
+
 pub struct ExtensionExamplePlugin;
 
 impl bevy_app::Plugin for ExtensionExamplePlugin {
@@ -10,6 +16,9 @@ impl bevy_app::Plugin for ExtensionExamplePlugin {
 }
 
 /// Create your own capability
+///
+/// For example, we will create a capability which will allow to store toggle state
+/// attached to component
 pub struct CapUiToggle;
 
 impl ImmCapability for CapUiToggle {
@@ -22,9 +31,11 @@ impl ImmCapability for CapUiToggle {
             app.add_plugins(ExtensionExamplePlugin);
         }
 
+        // If necessary, you can add requirements for resources
         // cap_req.request_resource_write::<Resource1>(app.world_mut());
         // cap_req.request_resource_read::<Resource2>(app.world_mut());
 
+        // Add read, write requests for immediate mode managed entity components
         cap_req.request_component_write::<ToggleState>(app.world_mut());
     }
 }
@@ -43,9 +54,11 @@ pub trait ImmCapUiCollapse {
     fn with_toggle(&mut self, f: impl FnOnce(&mut bool));
 }
 
-impl<Cap> ImmCapUiCollapse for ImmEntity<'_, '_, '_, Cap>
+impl<Caps> ImmCapUiCollapse for ImmEntity<'_, '_, '_, Caps>
 where
-    Cap: ImplCap<CapUiToggle>,
+    // Trait functions only implemented for capability sets with
+    // CapUiToggle capability
+    Caps: ImplCap<CapUiToggle>,
 {
     fn get_toggle(&mut self) -> bool {
         let mut ret = false;
@@ -78,7 +91,7 @@ where
 
     fn with_toggle(&mut self, f: impl FnOnce(&mut bool)) {
         if let Ok(Some(mut comp)) = self.cap_get_component_mut::<ToggleState>() {
-            // Lookup from component
+            // Lookup directly from component
             f(&mut comp.state);
         } else if let Some(tmp_store) = self.cap_entity_tmp_store_mut().get_mut::<ToggleState>() {
             // Entity currently being built, use temporary value
@@ -96,7 +109,10 @@ where
             let mut state = false;
             f(&mut state);
 
-            // Insert state
+            // Insert state into component and in entity tmp store
+            //
+            // Tmp store is required because components can not be looked up from entity_commands
+            // therefore for first frame we need additionally to store in tmp store the toggle state
             self.entity_commands().insert(ToggleState { state });
             self.cap_entity_tmp_store_mut()
                 .insert(ToggleState { state });

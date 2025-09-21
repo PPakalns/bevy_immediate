@@ -6,7 +6,8 @@ use crate::{
     extension_use::ExtensionUseExampleRoot,
     hello_world::HelloWorldRoot,
     menu::{CurrentExample, MenuUiRoot},
-    utils,
+    power_user::PowerUserExampleRoot,
+    styles,
     widget_use::WidgetUseExampleRoot,
 };
 
@@ -20,36 +21,41 @@ impl bevy_app::Plugin for PlainUiExamplePlugin {
         app.add_plugins(BevyImmediatePlugin::<CapsUi>::new());
 
         // Build your ui as a simple system
-        app.add_systems(bevy_app::Update, ui);
+        app.add_systems(bevy_app::Update, ui_system);
     }
 }
 
-fn ui(ctx: ImmCtx<CapsUi>, example: ResMut<CurrentExample>) {
+fn ui_system(ctx: ImmCtx<CapsUi>, example: ResMut<CurrentExample>) {
+    // It is possible to access world data that is not
+    // used by immediate mode.
+    // See bevy_immediate documentation for what is and is not used.
+
     // Build your ui
     ctx.build_immediate_root("unique_id")
         .ch()
         .on_spawn_insert(|| Node {
             flex_direction: bevy_ui::FlexDirection::Row,
             column_gap: bevy_ui::Val::Px(10.),
-            ..utils::fill_parent_node()
+            ..styles::fill_parent_node()
         })
         .add(|ui| {
             // Menu container
             ui.ch()
-                .on_spawn_insert(utils::container_with_background)
+                .on_spawn_insert(styles::container_with_background)
                 .on_spawn_insert(|| MenuUiRoot);
 
             // Content container
             let content = ui
                 .ch_id(*example) // Changing id creates a new entity
                 .on_spawn_insert(|| {
-                    let mut bundle = utils::container_with_background();
+                    let mut bundle = styles::container_with_background();
                     bundle.node.flex_grow = 1.; // Fill remaining space
                     bundle
                 });
 
             match *example {
                 CurrentExample::WidgetUse => {
+                    // We insert UI widget as an entity with ui widget root component
                     content.on_spawn_insert(|| WidgetUseExampleRoot);
                 }
                 CurrentExample::HelloWorld => {
@@ -57,6 +63,9 @@ fn ui(ctx: ImmCtx<CapsUi>, example: ResMut<CurrentExample>) {
                 }
                 CurrentExample::ExtensionUse => {
                     content.on_spawn_insert(|| ExtensionUseExampleRoot);
+                }
+                CurrentExample::PowerUser => {
+                    content.on_spawn_insert(|| PowerUserExampleRoot);
                 }
             }
         });
