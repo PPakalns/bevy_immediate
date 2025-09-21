@@ -46,6 +46,7 @@ struct ToggleState {
 }
 
 /// Implements access to collapse state
+#[allow(unused)]
 pub trait ImmCapUiCollapse {
     fn get_toggle(&mut self) -> bool;
     fn set_toggle(&mut self, value: bool);
