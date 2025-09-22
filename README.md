@@ -7,7 +7,7 @@
 
 A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, combining immediate mode ergonomics with Bevy ECS-powered retained UI.  
 
-* Write complex UI logic in a **single function**.  
+* Write complex UI logic as simple Rust code.  
 * No signals, observers, triggers, events, or callbacks.  
 * Focus on your UI, not the boilerplate.
 
@@ -41,7 +41,7 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
 
 | bevy_immediate | bevy | MSRV           |
 |------------|------| ----------------|
-| 0.1        | 0.16 | 1.83 |
+| 0.1        | 0.16 | 1.85 |
 
 To use add `bevy_immediate` to your project dependencies in `Cargo.toml` file.
 
@@ -369,6 +369,7 @@ Publish your own crate that is built using `bevy_immediate`!
   - [x] Tried transitive capability implementation (works only inside one crate)
   - [x] Tried transitive trait implementation (works only inside one crate)
   - [x] Tried TupleList approach (conflicting trait implementations)
+
   Therefore currently to define capability set users need to list all used capabilities.
 - [ ] Improve examples
   - [ ] Add Example for hot reloading
