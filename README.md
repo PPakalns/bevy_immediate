@@ -64,6 +64,7 @@ Check out `./examples/` (cargo run --example demo).
   - [Using extensions](./examples/extension_use.rs) - Use a custom predefined set of extensions
 - [Style](./examples/styles.rs) - Simple example how to apply custom styles to UI
 
+<img width="768" height="447" alt="image" src="https://github.com/user-attachments/assets/a6aa921b-d87b-4779-91e7-0106773183d1" />
 
 ### Menu example
 
