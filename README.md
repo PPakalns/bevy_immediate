@@ -103,7 +103,7 @@ impl ImmediateAttach<CapsUi> for HelloWorldRoot {
 
 ### Menu example
 
-Example with code reuse:
+Example with code reuse and **interactive elements**:
 
 ```rs
 
