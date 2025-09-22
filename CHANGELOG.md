@@ -1,5 +1,9 @@
 # Changelog
 
-# 0.1
+# 0.1.1
 
-Initial version
+Minor documentation improvements.
+
+# 0.1.0
+
+Initial version.
