@@ -19,10 +19,10 @@ pub trait ImplCap<T>: CapSet {}
 
 /// Implements list of capabilities for given type
 ///
-/// ```no_run
+/// ```ignore
 /// pub struct CapMy;
 ///
-/// impl_capability_set!(CapMy, ImplCapMy > ImplChildSet, (Cap1, Cap2, Cap3));
+/// bevy_immediate::impl_capability_set!(CapMy, ImplCapMy > ImplChildSet, (Cap1, Cap2, Cap3));
 /// ````
 ///
 /// Defines trait `ImplCapMy` that can be used to easily check that CapSet has

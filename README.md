@@ -71,7 +71,7 @@ Check out `./examples/` (`cargo run --example demo`).
 
 Example with code reuse and **interactive elements**:
 
-```rust
+```rust,ignore
 
 pub struct MenuExamplePlugin;
 
@@ -171,7 +171,7 @@ pub enum CurrentExample {
 
 Here's a more advanced example where user has added their own API.
 
-```rust
+```rust,ignore
 pub struct PowerUserExamplePlugin;
 
 impl bevy_app::Plugin for PowerUserExamplePlugin {
@@ -238,7 +238,7 @@ impl ImmediateAttach<CapsUi> for PowerUserExampleRoot {
 You can add new capabilities with just a few lines of code.
 Here’s how `.selected(...)` is implemented.
 
-```rust
+```rust,ignore
 
 /// Implements capability to mark entities as selectable.
 pub struct CapabilityUiSelectable;
