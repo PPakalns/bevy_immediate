@@ -15,6 +15,8 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
 
 - **Immediate mode entity hierarchy management**  
   Build interactive entity hierarchies with a clean API.
+- **Fully compatible with Bevy**  
+  Heavy lifting is done by Bevy ECS and `bevy_ui` retained mode UI.
 - **Custom extension support**  
   Add custom capabilities like `.clicked()`, `.selected(true)`, `.hovered()`. 
   Extension use integrated with rust type system for IDE and compile check support.
