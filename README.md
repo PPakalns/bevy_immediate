@@ -47,58 +47,22 @@ To use add `bevy_immediate` to your project dependencies in `Cargo.toml` file.
 
 See [CHANGELOG](./CHANGELOG.md) for changes between versions.
 
-### Hello world
+## Examples
 
-At the most basic level, you can construct entity hierarchies with immediate mode logic:
+Check out `./examples/` (cargo run --example demo).
 
-```rs
-pub struct HelloWorldPlugin;
-
-impl bevy_app::Plugin for HelloWorldPlugin {
-    fn build(&self, app: &mut bevy_app::App) {
-        // Add bevy immediate plugin with UI support which will construct UI
-        // rooted at entity with `HelloWorldRoot`` component
-        app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, HelloWorldRoot>::new());
-    }
-}
-
-#[derive(Component)]
-pub struct HelloWorldRoot;
-
-impl ImmediateAttach<CapsUi> for HelloWorldRoot {
-    type Params = (); // Access data from World using SystemParam
-
-    fn construct(ui: &mut Imm<CapsUi>, _: &mut ()) {
-        // Construct entity hierarchies
-        // and attach necessary components
-        ui.ch()
-            .on_spawn_insert(|| {
-                (
-                    Node {
-                        flex_direction: FlexDirection::Column,
-                        border: UiRect::all(Val::Px(10.)),
-                        padding: UiRect::all(Val::Px(10.)),
-                        column_gap: Val::Px(10.),
-                        row_gap: Val::Px(10.),
-                        ..default()
-                    },
-                    BorderColor(Color::srgb(1., 0., 0.)),
-                    BorderRadius::all(Val::Px(5.)),
-                    BackgroundColor(Color::srgb(0.05, 0.05, 0.05)),
-                )
-            })
-            .add(|ui| {
-                ui.ch().on_spawn_insert(|| {
-                    (
-                        TextColor(Color::srgb(0.9, 0.9, 0.9)),
-                        TextShadow::default(),
-                        Text("Hello world".into()),
-                    )
-                });
-            });
-    }
-}
-```
+- [Hello world](./examples/hello_world.rs) - Minimal usage example
+- [Power user](./examples/power_user.rs) - Customized API for complex use cases
+- [Plain UI](./examples/plain_ui.rs) - Create your UI as a single system
+- **Reusable widgets**
+  - [Functional widget](./examples/widget_functional.rs) - Implement widgets as plain functions
+  - [Native widget](./examples/widget_native.rs) - Implement native Bevy-like widgets
+  - [Widget use](./examples/widget_use.rs) - Use functional and native widgets together
+- [Menu example](./examples/menu.rs) - Build a simple menu with selectable buttons
+- Extensions
+  - [Extension implementation](./examples/extension.rs) - Write your own capabilities (e.g. `.clicked()` or `.selected(...)`)
+  - [Using extensions](./examples/extension_use.rs) - Use a custom predefined set of extensions
+- [Style](./examples/styles.rs) - Simple example how to apply custom styles to UI
 
 
 ### Menu example
@@ -317,30 +281,6 @@ where
 }
 ```
 
-
-## Full list of examples
-
-Check out `./examples/demo.rs` (cargo run --example demo).
-
-- [Hello world](./examples/hello_world.rs) - Minimal usage example
-- [Power user](./examples/power_user.rs) - Customized API for complex use cases
-- [Plain UI](./examples/plain_ui.rs) - Create your UI as a single system
-- **Reusable widgets**
-  - [Functional widget](./examples/widget_functional.rs) - Implement widgets as plain functions
-  - [Native widget](./examples/widget_native.rs) - Implement native Bevy-like widgets
-  - [Widget use](./examples/widget_use.rs) - Use functional and native widgets together
-- [Menu example](./examples/menu.rs) - Build a simple menu with selectable buttons
-- Extensions
-  - [Extension implementation](./examples/extension.rs) - Write your own capabilities (e.g. `.clicked()` or `.selected(...)`)
-  - [Using extensions](./examples/extension_use.rs) - Use a custom predefined set of extensions
-- [Style](./examples/styles.rs) - Simple example how to apply custom styles to UI
-
-## Inspiration
-
-* Originally created for [Settletopia](https://settletopia.com/)
-* Inspired by [egui_taffy](https://github.com/ppakalns/egui_taffy/).
-* [Initial idea discussion](https://github.com/bevyengine/bevy/discussions/21030)
-
 ## FAQ
 
 ### UI nodes are changing order and not correctly laid out
@@ -361,6 +301,12 @@ Contributions are welcome!
 * Suggest or implement new capabilities useful for UI creation
 
 Publish your own crate that is built using `bevy_immediate`!
+
+## Inspiration
+
+* Originally created for [Settletopia](https://settletopia.com/)
+* Inspired by [egui_taffy](https://github.com/ppakalns/egui_taffy/).
+* [Initial idea discussion](https://github.com/bevyengine/bevy/discussions/21030)
 
 
 ## Future work
