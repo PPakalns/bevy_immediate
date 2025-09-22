@@ -8,7 +8,7 @@
 A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, combining immediate mode ergonomics with Bevy ECS-powered retained UI.  
 
 * Write complex UI logic as simple Rust code.  
-* No signals, observers, triggers, events, or callbacks.  
+* No macros, observers, triggers, events, signals.  
 * Focus on your UI, not the boilerplate.
 
 ## Features
@@ -49,8 +49,6 @@ See [CHANGELOG](./CHANGELOG.md) for changes between versions.
 
 ## Examples
 
-Check out `./examples/` (cargo run --example demo).
-
 - [Hello world](./examples/hello_world.rs) - Minimal usage example
 - [Power user](./examples/power_user.rs) - Customized API for complex use cases
 - [Plain UI](./examples/plain_ui.rs) - Create your UI as a single system
@@ -63,6 +61,9 @@ Check out `./examples/` (cargo run --example demo).
   - [Extension implementation](./examples/extension.rs) - Write your own capabilities (e.g. `.clicked()` or `.selected(...)`)
   - [Using extensions](./examples/extension_use.rs) - Use a custom predefined set of extensions
 - [Style](./examples/styles.rs) - Simple example how to apply custom styles to UI
+
+
+Check out `./examples/` (`cargo run --example demo`).
 
 <img width="768" height="447" alt="image" src="https://github.com/user-attachments/assets/a6aa921b-d87b-4779-91e7-0106773183d1" />
 
