@@ -338,7 +338,7 @@ Check out `./examples/demo.rs` (cargo run --example demo).
 ## Inspiration
 
 * Originally created for [Settletopia](https://settletopia.com/)
-* Inspired by [egui_taffy](https://github.com/ppakalns/bevy_immediate/).
+* Inspired by [egui_taffy](https://github.com/ppakalns/egui_taffy/).
 * [Initial idea discussion](https://github.com/bevyengine/bevy/discussions/21030)
 
 ## FAQ
