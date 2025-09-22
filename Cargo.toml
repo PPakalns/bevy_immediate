@@ -10,7 +10,7 @@ keywords = ["bevy", "ui", "immediate", "simple", "ecs"]
 categories = ["gui", "graphics", "ui"]
 license = "MIT"
 rust-version = "1.85"
-exclude = ["/.github", "./examples/web/"]
+exclude = ["/.github"]
 autoexamples = false
 
 [dependencies]

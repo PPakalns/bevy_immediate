@@ -7,9 +7,9 @@
 
 A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, combining immediate mode ergonomics with Bevy ECS-powered retained UI.  
 
-Write complex UI logic in a **single function**.  
-No signals, observers, triggers, events, or callbacks.  
-Focus on your UI, not the boilerplate.
+* Write complex UI logic in a **single function**.  
+* No signals, observers, triggers, events, or callbacks.  
+* Focus on your UI, not the boilerplate.
 
 ## Features
 
@@ -18,20 +18,20 @@ Focus on your UI, not the boilerplate.
 - **Custom extension support**  
   Add custom capabilities like `.clicked()`, `.selected(true)`, `.hovered()`. 
   Extension use integrated with rust type system for IDE and compile check support.
-- **Inbuilt support for UI use case**
+- **Inbuilt support for UI use case**  
   Contains extensions that implement necessary logic for constructing UI.
 - **Reusable widgets**  
   Implement widgets using functional or bevy native style.
-- **Fast**
+- **Fast**  
   Only visits each entity once per tick and does minimal amount of changes. Heavy lifting is done by Bevy's retained UI.
-- **Parallelizable**
+- **Parallelizable**  
   Minimal data access requirements allow systems to run in parallel with other systems without exclusive world access.
-- **Simple**
+- **Simple**  
   Define UI in straightforward functions, free from macro/observer/trigger boilerplate.
-- **Modular**
+- **Modular**  
   Extend the API with your own small capabilities and traits that encapsulate complex logic.
 - **Integration-friendly**  
-  Works with other libraries (e.g., CSS style with [bevy_flair](https://github.com/eckz/bevy_flair)).
+  Works with other libraries (e.g., reloadable CSS style with [bevy_flair](https://github.com/eckz/bevy_flair)).
 - **Hot reloading support**  
   Can be added via [hot_lib_reloader](https://docs.rs/hot-lib-reloader/latest/hot_lib_reloader/).
 
@@ -100,6 +100,107 @@ impl ImmediateAttach<CapsUi> for HelloWorldRoot {
 }
 ```
 
+
+### Menu example
+
+Example with code reuse:
+
+```rs
+
+pub struct MenuExamplePlugin;
+
+impl bevy_app::Plugin for MenuExamplePlugin {
+    fn build(&self, app: &mut bevy_app::App) {
+        app.insert_resource(CurrentExample::WidgetUse);
+
+        app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, MenuUiRoot>::new());
+    }
+}
+
+#[derive(Component)]
+pub struct MenuUiRoot;
+
+#[derive(SystemParam)]
+pub struct Params<'w> {
+    current_example: ResMut<'w, CurrentExample>,
+    debug_options: ResMut<'w, UiDebugOptions>,
+}
+
+impl ImmediateAttach<CapsUi> for MenuUiRoot {
+    type Params = Params<'static>;
+
+    fn construct(ui: &mut Imm<CapsUi>, params: &mut Params) {
+        ui.ch()
+            .on_spawn_insert(|| Node {
+                flex_direction: FlexDirection::Column,
+                align_items: bevy_ui::AlignItems::Stretch,
+                ..fill_parent_node()
+            })
+            .add(|ui| {
+                ui.ch()
+                    .on_spawn_insert(styles::title_text_style)
+                    .on_spawn_text("Demo");
+                ui.ch()
+                    .on_spawn_insert(styles::text_style)
+                    .on_spawn_text("bevy_immediate");
+
+                ui.ch().on_spawn_insert(|| Node {
+                    height: Val::Px(10.),
+                    ..default()
+                });
+
+                for (example, title) in MENU_VARIANTS {
+                    let mut button = ui
+                        .ch()
+                        .on_spawn_insert(styles::button_bundle)
+                        .selected(example == *params.current_example)
+                        .add(|ui| {
+                            ui.ch()
+                                .on_spawn_insert(styles::text_style)
+                                .on_spawn_text(title);
+                        });
+
+                    if button.clicked() {
+                        *params.current_example = example;
+                    }
+                }
+
+                ui.ch().on_spawn_insert(|| Node {
+                    flex_grow: 1.,
+                    ..default()
+                });
+
+                let mut button = ui
+                    .ch()
+                    .on_spawn_insert(button_bundle)
+                    .selected(params.debug_options.enabled)
+                    .add(|ui| {
+                        ui.ch().on_spawn_insert(text_style).text("Debug");
+                    });
+                if button.clicked() {
+                    params.debug_options.enabled = !params.debug_options.enabled;
+                }
+            });
+    }
+}
+
+pub const MENU_VARIANTS: [(CurrentExample, &str); 4] = [
+    (CurrentExample::HelloWorld, "Hello World"),
+    (CurrentExample::WidgetUse, "Widget usage"),
+    (CurrentExample::ExtensionUse, "Extension usage"),
+    (CurrentExample::PowerUser, "Power user"),
+];
+
+#[derive(Resource, Hash, Clone, Copy, PartialEq, Eq)]
+pub enum CurrentExample {
+    WidgetUse,
+    HelloWorld,
+    ExtensionUse,
+    PowerUser,
+}
+```
+
+
 ### Power user example
 
 Here's a more advanced example where user has added their own API.
@@ -163,6 +264,7 @@ impl ImmediateAttach<CapsUi> for PowerUserExampleRoot {
         ui.ch().my_text("It is really simple!");
     }
 }
+```
 
 
 ### Extend functionality by implementing new capability
@@ -220,18 +322,18 @@ where
 
 Check out `./examples/demo.rs` (cargo run --example demo).
 
-- [Hello world]() - Minimal usage example
-- [Power user]() - Customized API for complex use cases
-- [Plain UI]() - Create your UI as a single system
+- [Hello world](./examples/hello_world.rs) - Minimal usage example
+- [Power user](./examples/power_user.rs) - Customized API for complex use cases
+- [Plain UI](./examples/plain_ui.rs) - Create your UI as a single system
 - **Reusable widgets**
-  - [Functional widget]() - Implement widgets as plain functions
-  - [Native widget]() - Implement native Bevy-like widgets
-  - [Widget use]() - Use functional and native widgets together
-- [Menu example]() - Build a simple menu with selectable buttons
+  - [Functional widget](./examples/widget_functional.rs) - Implement widgets as plain functions
+  - [Native widget](./examples/widget_native.rs) - Implement native Bevy-like widgets
+  - [Widget use](./examples/widget_use.rs) - Use functional and native widgets together
+- [Menu example](./examples/menu.rs) - Build a simple menu with selectable buttons
 - Extensions
-  - [Extension implementation]() - Write your own capabilities (e.g. `.clicked()` or `.selected(...)`)
-  - [Using extensions]() - Use a custom predefined set of extensions
-- [Style]() - Simple example how to apply custom styles to UI
+  - [Extension implementation](./examples/extension.rs) - Write your own capabilities (e.g. `.clicked()` or `.selected(...)`)
+  - [Using extensions](./examples/extension_use.rs) - Use a custom predefined set of extensions
+- [Style](./examples/styles.rs) - Simple example how to apply custom styles to UI
 
 ## Inspiration
 
