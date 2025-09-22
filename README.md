@@ -1,46 +1,277 @@
-# bevy_immediate: immediate mode to easily build complex UI
+# bevy_immediate: Immediate Mode UI for Bevy
 
 [![bevy_version](https://img.shields.io/badge/bevy-0.16-blue)](https://github.com/bevy/bevy)
-[![taffy_version](https://img.shields.io/badge/taffy-0.7-blue)](https://github.com/DioxusLabs/taffy)
 [![Latest version](https://img.shields.io/crates/v/bevy_immediate.svg)](https://crates.io/crates/bevy_immediate)
 [![Documentation](https://docs.rs/bevy_immediate/badge.svg)](https://docs.rs/bevy_immediate)
 [![License](https://img.shields.io/crates/l/bevy_immediate.svg)](https://crates.io/crates/bevy_immediate)
 
-Powerful and easy to use UI library for bevy. Construct complex UI in one single function. No need to think about signals, observers, triggers, events, callbacks and ... 
+A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, combining immediate mode ergonomics with Bevy ECS-powered retained UI.  
 
-Focus on what matters!
+Write complex UI logic in a **single function**.  
+No signals, observers, triggers, events, or callbacks.  
+Focus on your UI, not the boilerplate.
 
-Additionally this library provides immediate mode API to easily manage entity hierarchies.
+## Features
 
-This library is in active development and some breaking changes are expected, but they will be kept as small as possible.
+- **Immediate mode entity hierarchy management**  
+  Build interactive entity hierarchies with a clean API.
+- **Custom extension support**  
+  Add custom capabilities like `.clicked()`, `.selected(true)`, `.hovered()`. 
+  Extension use integrated with rust type system for IDE and compile check support.
+- **Inbuilt support for UI use case**
+  Contains extensions that implement necessary logic for constructing UI.
+- **Reusable widgets**  
+  Implement widgets using functional or bevy native style.
+- **Fast**
+  Only visits each entity once per tick and does minimal amount of changes. Heavy lifting is done by Bevy's retained UI.
+- **Parallelizable**
+  Minimal data access requirements allow systems to run in parallel with other systems without exclusive world access.
+- **Simple**
+  Define UI in straightforward functions, free from macro/observer/trigger boilerplate.
+- **Modular**
+  Extend the API with your own small capabilities and traits that encapsulate complex logic.
+- **Integration-friendly**  
+  Works with other libraries (e.g., CSS style with [bevy_flair](https://github.com/eckz/bevy_flair)).
+- **Hot reloading support**  
+  Can be added via [hot_lib_reloader](https://docs.rs/hot-lib-reloader/latest/hot_lib_reloader/).
 
-### 👉 [Web Demo](https://ppakalns.github.io/bevy_immediate/) 👈 of the latest released version.
+⚠️ **Note:** This library is under active development. Expect some breaking changes, but they will be minimized.
 
 ## Version compatibility
 
 | bevy_immediate | bevy | MSRV           |
 |------------|------| ----------------|
-| 0.1        | 0.16 | 1.83 (nightly) |
+| 0.1        | 0.16 | 1.83 |
 
 To use add `bevy_immediate` to your project dependencies in `Cargo.toml` file.
 
 See [CHANGELOG](./CHANGELOG.md) for changes between versions.
 
-## Examples
+### Hello world
+
+At the most basic level, you can construct entity hierarchies with immediate mode logic:
+
+```rs
+pub struct HelloWorldPlugin;
+
+impl bevy_app::Plugin for HelloWorldPlugin {
+    fn build(&self, app: &mut bevy_app::App) {
+        // Add bevy immediate plugin with UI support which will construct UI
+        // rooted at entity with `HelloWorldRoot`` component
+        app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, HelloWorldRoot>::new());
+    }
+}
+
+#[derive(Component)]
+pub struct HelloWorldRoot;
+
+impl ImmediateAttach<CapsUi> for HelloWorldRoot {
+    type Params = (); // Access data from World using SystemParam
+
+    fn construct(ui: &mut Imm<CapsUi>, _: &mut ()) {
+        // Construct entity hierarchies
+        // and attach necessary components
+        ui.ch()
+            .on_spawn_insert(|| {
+                (
+                    Node {
+                        flex_direction: FlexDirection::Column,
+                        border: UiRect::all(Val::Px(10.)),
+                        padding: UiRect::all(Val::Px(10.)),
+                        column_gap: Val::Px(10.),
+                        row_gap: Val::Px(10.),
+                        ..default()
+                    },
+                    BorderColor(Color::srgb(1., 0., 0.)),
+                    BorderRadius::all(Val::Px(5.)),
+                    BackgroundColor(Color::srgb(0.05, 0.05, 0.05)),
+                )
+            })
+            .add(|ui| {
+                ui.ch().on_spawn_insert(|| {
+                    (
+                        TextColor(Color::srgb(0.9, 0.9, 0.9)),
+                        TextShadow::default(),
+                        Text("Hello world".into()),
+                    )
+                });
+            });
+    }
+}
+```
+
+### Power user example
+
+Here's a more advanced example where user has added their own API.
+
+```rs
+pub struct PowerUserExamplePlugin;
+
+impl bevy_app::Plugin for PowerUserExamplePlugin {
+    fn build(&self, app: &mut bevy_app::App) {
+        // Initialize plugin with your widget root component
+        app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, PowerUserExampleRoot>::new());
+        app.insert_resource(ShowHidden { show: false });
+    }
+}
+
+#[derive(Resource)]
+struct ShowHidden {
+    show: bool,
+}
+
+#[derive(Component)]
+pub struct PowerUserExampleRoot;
+
+#[derive(SystemParam)]
+pub struct Params<'w> {
+    show_hidden: ResMut<'w, ShowHidden>,
+}
+
+impl ImmediateAttach<CapsUi> for PowerUserExampleRoot {
+    type Params = Params<'static>;
+
+    fn construct(ui: &mut Imm<CapsUi>, params: &mut Params) {
+        ui.ch().my_title("Bevy power user example");
+
+        ui.ch()
+            .my_subtitle("Use helper functions to simplify and reuse code!");
+
+        ui.ch().my_subtitle("Show collapsible element");
+
+        ui.ch().my_row_container().add(|ui| {
+            for (text, state) in [("No", false), ("Yes", true)] {
+                let mut button = ui
+                    .ch_id(("choice", state))
+                    .my_button()
+                    .selected(params.show_hidden.show == state)
+                    .add(|ui| {
+                        ui.ch().my_text(text);
+                    });
+                if button.clicked() {
+                    params.show_hidden.show = state;
+                }
+            }
+        });
+
+        if params.show_hidden.show {
+            ui.ch_id("yes_no").my_container_with_background().add(|ui| {
+                ui.ch().my_text("Lorem Ipsum!");
+            });
+        }
+
+        ui.ch().my_text("It is really simple!");
+    }
+}
+
+
+### Extend functionality by implementing new capability
+
+You can add new capabilities with just a few lines of code.
+Here’s how `.selected(...)` is implemented.
+
+```rs
+
+/// Implements capability to mark entities as selectable.
+pub struct CapabilityUiSelectable;
+
+impl ImmCapability for CapabilityUiSelectable {
+    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
+        cap_req.request_component_write::<Selectable>(app.world_mut());
+    }
+}
+
+/// Marks component as being selectable
+#[derive(bevy_ecs::component::Component)]
+pub struct Selectable {
+    /// Is selectable component selected
+    pub selected: bool,
+}
+
+/// Implements methods to set entity selectable
+pub trait ImmUiSelectable {
+    /// Insert [`Selected`] component with given boolean value
+    ///
+    /// Useful for styling purposes
+    fn selected(self, selected: bool) -> Self;
+}
+
+impl<Cap> ImmUiSelectable for ImmEntity<'_, '_, '_, Cap>
+where
+    Cap: ImplCap<CapabilityUiSelectable>,
+{
+    fn selected(mut self, selected: bool) -> Self {
+        if let Ok(Some(mut comp)) = self.cap_get_component_mut::<Selectable>() {
+            if comp.selected == selected {
+                return self;
+            }
+            comp.selected = selected;
+            return self;
+        }
+
+        self.entity_commands().insert(Selectable { selected });
+        self
+    }
+}
+```
+
+
+## Full list of examples
 
 Check out `./examples/demo.rs` (cargo run --example demo).
 
-### Demo example:
-
-
+- [Hello world]() - Minimal usage example
+- [Power user]() - Customized API for complex use cases
+- [Plain UI]() - Create your UI as a single system
+- **Reusable widgets**
+  - [Functional widget]() - Implement widgets as plain functions
+  - [Native widget]() - Implement native Bevy-like widgets
+  - [Widget use]() - Use functional and native widgets together
+- [Menu example]() - Build a simple menu with selectable buttons
+- Extensions
+  - [Extension implementation]() - Write your own capabilities (e.g. `.clicked()` or `.selected(...)`)
+  - [Using extensions]() - Use a custom predefined set of extensions
+- [Style]() - Simple example how to apply custom styles to UI
 
 ## Inspiration
 
-This crate is made for [Settletopia](https://settletopia.com/)
+* Originally created for [Settletopia](https://settletopia.com/)
+* Inspired by [egui_taffy](https://github.com/ppakalns/bevy_immediate/).
+* [Initial idea discussion](https://github.com/bevyengine/bevy/discussions/21030)
 
-This crate was inspired by my previous work on
-* [egui_taffy](https://github.com/ppakalns/bevy_immediate/)
+## FAQ
+
+### UI nodes are changing order and not correctly laid out
+
+Make sure that you assign unique id using `ch_id` for ui nodes that
+can appear, disappear.
+
+### How do I avoid collisions with resources or queries in my systems?
+
+* Queries: Add `Without<ImmMarker<Caps>>` to your query filter.
+* Resources: Avoid direct conflicts, or use .ctx() / .ctx_mut() APIs to access resources used by capabilities.
 
 ## Contributing
 
-Contributions are welcome. Please add your improvements to examples so that it is easy to see and validate.
+Contributions are welcome! 
+
+* Add your improvements to examples
+* Suggest or implement new capabilities useful for UI creation
+
+Publish your own crate that is built using `bevy_immediate`!
+
+
+## Future work
+
+- Easier definition of new capability sets
+  - [x] Tried transitive capability implementation (works only inside one crate)
+  - [x] Tried transitive trait implementation (works only inside one crate)
+  - [x] Tried TupleList approach (conflicting trait implementations)
+  Therefore currently to define capability set users need to list all used capabilities.
+- [ ] Improve examples
+  - [ ] Add Example for hot reloading
+- Create reusable logic for:
+  - [ ] Scroll areas
+  - [ ] Tooltips
+  - [ ] Windows (like `egui::Window`)
+

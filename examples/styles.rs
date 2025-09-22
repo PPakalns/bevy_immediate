@@ -1,6 +1,6 @@
 use bevy::color::Color;
 use bevy::{color::palettes::basic::*, prelude::*};
-use bevy_immediate::ui::selected::Selected;
+use bevy_immediate::ui::selected::Selectable;
 
 pub struct DemoStylePlugin;
 
@@ -17,9 +17,12 @@ fn button_system(
             &Interaction,
             &mut BackgroundColor,
             &mut BorderColor,
-            Option<&mut Selected>,
+            Option<&mut Selectable>,
         ),
-        (Or<(Changed<Interaction>, Changed<Selected>)>, With<Button>),
+        (
+            Or<(Changed<Interaction>, Changed<Selectable>)>,
+            With<Button>,
+        ),
     >,
 ) {
     for (interaction, mut color, mut border_color, selected) in &mut interaction_query {

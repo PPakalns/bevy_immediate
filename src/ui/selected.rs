@@ -1,35 +1,35 @@
 use crate::{CapSet, ImmCapability, ImmEntity, ImplCap};
 
-/// Capability that makes [`bevy_ui::Interaction`] accessible from immediate UI
-pub struct CapabilityUiSelected;
+/// Implements capability to mark entities as selectable.
+pub struct CapabilityUiSelectable;
 
-impl ImmCapability for CapabilityUiSelected {
+impl ImmCapability for CapabilityUiSelectable {
     fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
-        cap_req.request_component_write::<Selected>(app.world_mut());
+        cap_req.request_component_write::<Selectable>(app.world_mut());
     }
 }
 
 /// Marks component as being selectable
 #[derive(bevy_ecs::component::Component)]
-pub struct Selected {
+pub struct Selectable {
     /// Is selectable component selected
     pub selected: bool,
 }
 
-/// Implements methods to access [`bevy_ui::Interaction`] in immediate mode
-pub trait ImmUiSelected {
+/// Implements methods to set entity selectable
+pub trait ImmUiSelectable {
     /// Insert [`Selected`] component with given boolean value
     ///
     /// Useful for styling purposes
     fn selected(self, selected: bool) -> Self;
 }
 
-impl<Cap> ImmUiSelected for ImmEntity<'_, '_, '_, Cap>
+impl<Cap> ImmUiSelectable for ImmEntity<'_, '_, '_, Cap>
 where
-    Cap: ImplCap<CapabilityUiSelected>,
+    Cap: ImplCap<CapabilityUiSelectable>,
 {
     fn selected(mut self, selected: bool) -> Self {
-        if let Ok(Some(mut comp)) = self.cap_get_component_mut::<Selected>() {
+        if let Ok(Some(mut comp)) = self.cap_get_component_mut::<Selectable>() {
             if comp.selected == selected {
                 return self;
             }
@@ -37,7 +37,7 @@ where
             return self;
         }
 
-        self.entity_commands().insert(Selected { selected });
+        self.entity_commands().insert(Selectable { selected });
         self
     }
 }

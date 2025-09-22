@@ -7,7 +7,7 @@ use bevy_ecs::{
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
-    ui::{CapsUi, picking::clicked::ImmUiClicked, selected::ImmUiSelected, text::ImmUiText},
+    ui::{CapsUi, picking::clicked::ImmUiClicked, selected::ImmUiSelectable, text::ImmUiText},
 };
 use bevy_ui::{FlexDirection, Node, UiDebugOptions, Val};
 

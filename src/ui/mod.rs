@@ -14,7 +14,7 @@ impl_capability_set!(
         ui_layout_order::CapabilityUiLayoutOrder,
         interaction::CapabilityUiInteraction,
         text::CapabilityUiText,
-        selected::CapabilityUiSelected,
+        selected::CapabilityUiSelectable,
         // picking
         picking::clicked::CapabilityUiClicked,
     )
@@ -29,7 +29,7 @@ impl_capability_set!(
         ui_layout_order::CapabilityUiLayoutOrder,
         interaction::CapabilityUiInteraction,
         text::CapabilityUiText,
-        selected::CapabilityUiSelected,
+        selected::CapabilityUiSelectable,
     )
 );
 

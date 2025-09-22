@@ -14,7 +14,8 @@ pub struct HelloWorldPlugin;
 
 impl bevy_app::Plugin for HelloWorldPlugin {
     fn build(&self, app: &mut bevy_app::App) {
-        // Add plugin
+        // Add bevy immediate plugin with UI support which will construct UI
+        // rooted at entity with `HelloWorldRoot` component
         app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, HelloWorldRoot>::new());
     }
 }
@@ -23,12 +24,9 @@ impl bevy_app::Plugin for HelloWorldPlugin {
 pub struct HelloWorldRoot;
 
 impl ImmediateAttach<CapsUi> for HelloWorldRoot {
-    type Params = (); // SystemParams from `World``
+    type Params = (); // Access data from World using SystemParam
 
     fn construct(ui: &mut Imm<CapsUi>, _: &mut ()) {
-        // CapsUi - Capability set for Ui.
-        // Add usefult extensions for implementing UI with rust type system support!
-
         // Construct entity hierarchies
         // and attach necessary components
         ui.ch()
