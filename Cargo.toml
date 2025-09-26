@@ -51,6 +51,10 @@ bevy = { version = "0.17.0-rc.2", default-features = false, features = [
   "bevy_text",
   "default_font",
   "bevy_picking",
+
+  # UI widgets
+  "experimental_bevy_ui_widgets",
+  "experimental_bevy_feathers",
 ] }
 
 

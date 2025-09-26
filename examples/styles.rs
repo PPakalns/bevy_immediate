@@ -10,6 +10,11 @@ impl bevy_app::Plugin for DemoStylePlugin {
     }
 }
 
+// Component used to apply button style
+// to entities with this component
+#[derive(Component)]
+pub struct MyStyle;
+
 #[allow(clippy::type_complexity)]
 fn button_system(
     mut interaction_query: Query<
@@ -22,6 +27,7 @@ fn button_system(
         (
             Or<(Changed<Interaction>, Changed<Selectable>)>,
             With<Button>,
+            With<MyStyle>,
         ),
     >,
 ) {
@@ -121,7 +127,7 @@ pub fn container_with_background() -> MyStyleBundle {
 pub fn button_bundle() -> MyButtonBundle {
     MyButtonBundle {
         button: Button,
-        interact: Interaction::None,
+        my_style: MyStyle,
         style: MyStyleBundle {
             node: Node {
                 border: UiRect::all(Val::Px(5.0)),
@@ -134,6 +140,7 @@ pub fn button_bundle() -> MyButtonBundle {
             border_radius: BorderRadius::all(Val::Px(5.)),
             background_color: BackgroundColor(NORMAL_BUTTON),
         },
+        interact: Interaction::None,
     }
 }
 
@@ -148,6 +155,7 @@ pub struct MyStyleBundle {
 #[derive(Bundle)]
 pub struct MyButtonBundle {
     pub button: Button,
+    pub my_style: MyStyle,
     pub style: MyStyleBundle,
     pub interact: Interaction,
 }

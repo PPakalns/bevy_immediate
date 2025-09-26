@@ -3,6 +3,7 @@ use bevy_immediate::{BevyImmediatePlugin, ImmCtx, ui::CapsUi};
 use bevy_ui::Node;
 
 use crate::{
+    bevy_inbuilt_ui::BevyInbuiltUiExampleRoot,
     extension_use::ExtensionUseExampleRoot,
     hello_world::HelloWorldRoot,
     menu::{CurrentExample, MenuUiRoot},
@@ -66,6 +67,9 @@ fn ui_system(ctx: ImmCtx<CapsUi>, example: ResMut<CurrentExample>) {
                 }
                 CurrentExample::PowerUser => {
                     content.on_spawn_insert(|| PowerUserExampleRoot);
+                }
+                CurrentExample::BevyInbuiltUi => {
+                    content.on_spawn_insert(|| BevyInbuiltUiExampleRoot);
                 }
             }
         });

@@ -564,6 +564,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_feathers"
+version = "0.17.0-rc.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6bfd2c529fc7e2349ce83bd4b130247a15f4746e8d076058a3d14c3939b3fcef"
+dependencies = [
+ "accesskit",
+ "bevy_a11y",
+ "bevy_app",
+ "bevy_asset",
+ "bevy_camera",
+ "bevy_color",
+ "bevy_ecs",
+ "bevy_input_focus",
+ "bevy_log",
+ "bevy_math",
+ "bevy_picking",
+ "bevy_platform",
+ "bevy_reflect",
+ "bevy_render",
+ "bevy_shader",
+ "bevy_text",
+ "bevy_ui",
+ "bevy_ui_render",
+ "bevy_ui_widgets",
+ "bevy_window",
+ "smol_str",
+]
+
+[[package]]
 name = "bevy_gizmos"
 version = "0.17.0-rc.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -631,7 +660,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_immediate"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "ahash",
  "bevy",
@@ -697,6 +726,7 @@ dependencies = [
  "bevy_derive",
  "bevy_diagnostic",
  "bevy_ecs",
+ "bevy_feathers",
  "bevy_gizmos",
  "bevy_image",
  "bevy_input",
@@ -718,6 +748,7 @@ dependencies = [
  "bevy_transform",
  "bevy_ui",
  "bevy_ui_render",
+ "bevy_ui_widgets",
  "bevy_utils",
  "bevy_window",
  "bevy_winit",
@@ -1225,6 +1256,25 @@ dependencies = [
  "bytemuck",
  "derive_more",
  "tracing",
+]
+
+[[package]]
+name = "bevy_ui_widgets"
+version = "0.17.0-rc.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68a262683889bc87a8957481b6101207121225c1b3e6f522569421c9e4a84170"
+dependencies = [
+ "accesskit",
+ "bevy_a11y",
+ "bevy_app",
+ "bevy_ecs",
+ "bevy_input",
+ "bevy_input_focus",
+ "bevy_log",
+ "bevy_math",
+ "bevy_picking",
+ "bevy_reflect",
+ "bevy_ui",
 ]
 
 [[package]]

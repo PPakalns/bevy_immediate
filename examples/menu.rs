@@ -55,7 +55,13 @@ impl ImmediateAttach<CapsUi> for MenuUiRoot {
                     ..default()
                 });
 
-                for (example, title) in MENU_VARIANTS {
+                for (example, title) in [
+                    (CurrentExample::HelloWorld, "Hello World"),
+                    (CurrentExample::BevyInbuiltUi, "Bevy Inbuilt Ui"),
+                    (CurrentExample::WidgetUse, "Widget usage"),
+                    (CurrentExample::ExtensionUse, "Extension usage"),
+                    (CurrentExample::PowerUser, "Power user"),
+                ] {
                     let mut button = ui
                         .ch()
                         .on_spawn_insert(styles::button_bundle)
@@ -90,17 +96,11 @@ impl ImmediateAttach<CapsUi> for MenuUiRoot {
     }
 }
 
-pub const MENU_VARIANTS: [(CurrentExample, &str); 4] = [
-    (CurrentExample::HelloWorld, "Hello World"),
-    (CurrentExample::WidgetUse, "Widget usage"),
-    (CurrentExample::ExtensionUse, "Extension usage"),
-    (CurrentExample::PowerUser, "Power user"),
-];
-
 #[derive(Resource, Hash, Clone, Copy, PartialEq, Eq)]
 pub enum CurrentExample {
-    WidgetUse,
     HelloWorld,
+    BevyInbuiltUi,
+    WidgetUse,
     ExtensionUse,
     PowerUser,
 }
