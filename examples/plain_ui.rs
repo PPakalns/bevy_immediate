@@ -1,5 +1,6 @@
 use bevy_ecs::system::ResMut;
 use bevy_immediate::{BevyImmediatePlugin, ImmCtx, ui::CapsUi};
+use bevy_input_focus::tab_navigation::TabGroup;
 use bevy_ui::Node;
 
 use crate::{
@@ -34,10 +35,15 @@ fn ui_system(ctx: ImmCtx<CapsUi>, example: ResMut<CurrentExample>) {
     // Build your ui
     ctx.build_immediate_root("unique_id")
         .ch()
-        .on_spawn_insert(|| Node {
-            flex_direction: bevy_ui::FlexDirection::Row,
-            column_gap: bevy_ui::Val::Px(10.),
-            ..styles::fill_parent_node()
+        .on_spawn_insert(|| {
+            (
+                Node {
+                    flex_direction: bevy_ui::FlexDirection::Row,
+                    column_gap: bevy_ui::Val::Px(10.),
+                    ..styles::fill_parent_node()
+                },
+                TabGroup::new(0),
+            )
         })
         .add(|ui| {
             // Menu container

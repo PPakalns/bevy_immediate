@@ -91,7 +91,7 @@ where
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Add click tracking related logic
-pub struct TrackClickedPlugin;
+struct TrackClickedPlugin;
 
 impl bevy_app::Plugin for TrackClickedPlugin {
     fn build(&self, app: &mut bevy_app::App) {

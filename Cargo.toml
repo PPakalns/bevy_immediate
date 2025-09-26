@@ -21,6 +21,8 @@ bevy_platform = "0.17.0-rc.2"
 bevy_picking = { version = "0.17.0-rc.2", optional = true }
 bevy_derive = "0.17.0-rc.2"
 bevy_internal = { version = "0.17.0-rc.2", default-features = false }
+bevy_input = { version = "0.17.0-rc.2", default-features = false, optional = true }
+bevy_input_focus = { version = "0.17.0-rc.2", default-features = false, optional = true }
 
 log = "0.4"
 ahash = "0.8"
@@ -32,8 +34,11 @@ default = ["ui", "picking"]
 ui = ["dep:bevy_ui"]
 picking = [
   "ui",
+  "dep:bevy_input",
   "dep:bevy_picking",
+  "dep:bevy_input_focus",
   "bevy_internal/bevy_picking",
+  "bevy_internal/bevy_input_focus",
   "bevy_internal/bevy_ui_picking_backend",
 ]
 

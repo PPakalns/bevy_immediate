@@ -16,7 +16,8 @@ impl_capability_set!(
         text::CapabilityUiText,
         selected::CapabilityUiSelectable,
         // picking
-        picking::clicked::CapabilityUiClicked,
+        clicked::CapabilityUiClicked,
+        activated::CapabilityUiClicked,
     )
 );
 
@@ -51,6 +52,11 @@ pub mod text;
 /// Implements capabilities for Selected marker component
 pub mod selected;
 
-/// Contains API extensions for ergonomic API that use [`bevy_picking`]
+/// Implements capabilities for detecting activated entity
 #[cfg(feature = "picking")]
-pub mod picking;
+pub mod activated;
+
+/// Module implments `Pointer<Click>` related
+/// functionality like `.clicked()`
+#[cfg(feature = "picking")]
+pub mod clicked;
