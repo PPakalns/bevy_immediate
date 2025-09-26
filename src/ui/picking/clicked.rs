@@ -1,8 +1,8 @@
 use bevy_ecs::{
     entity::Entity,
-    observer::Trigger,
+    lifecycle,
+    observer::On,
     system::{Commands, ResMut},
-    world::OnAdd,
 };
 use bevy_picking::{
     events::{Click, Pointer},
@@ -102,8 +102,8 @@ impl bevy_app::Plugin for TrackClickedPlugin {
 }
 
 // Insert on_click picking observer only once
-fn track_clicked_insert(trigger: Trigger<OnAdd, TrackClicked>, mut commands: Commands) {
-    let entity = trigger.target();
+fn track_clicked_insert(trigger: On<lifecycle::Add, TrackClicked>, mut commands: Commands) {
+    let entity = trigger.event().entity;
     commands.entity(entity).observe(on_click);
 }
 
@@ -112,8 +112,8 @@ fn track_clicked_insert(trigger: Trigger<OnAdd, TrackClicked>, mut commands: Com
 #[component(storage = "SparseSet")]
 pub struct TrackClicked;
 
-fn on_click(trigger: Trigger<Pointer<Click>>, mut resource: ResMut<TrackClickedEntitiesResource>) {
-    let entity = trigger.target();
+fn on_click(trigger: On<Pointer<Click>>, mut resource: ResMut<TrackClickedEntitiesResource>) {
+    let entity = trigger.event().entity;
     resource.clicked.insert(entity, trigger.event().clone());
 }
 

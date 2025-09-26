@@ -1,4 +1,4 @@
-use bevy::utils::default;
+use bevy::{ui_render::UiDebugOptions, utils::default};
 use bevy_ecs::{
     component::Component,
     resource::Resource,
@@ -9,7 +9,7 @@ use bevy_immediate::{
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
     ui::{CapsUi, picking::clicked::ImmUiClicked, selected::ImmUiSelectable, text::ImmUiText},
 };
-use bevy_ui::{FlexDirection, Node, UiDebugOptions, Val};
+use bevy_ui::{FlexDirection, Node, Val};
 
 use crate::styles::{self, button_bundle, fill_parent_node, text_style};
 
