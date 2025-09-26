@@ -3,10 +3,10 @@ use std::{any::TypeId, marker::PhantomData};
 use bevy_ecs::{
     component::Component,
     entity::Entity,
-    observer::Trigger,
+    lifecycle,
+    observer::On,
     query::With,
     system::{Commands, In, Query, StaticSystemParam, SystemParam},
-    world::OnAdd,
 };
 
 use crate::{BevyImmediatePlugin, CapSet, Imm, ImmCtx, ImmId};
@@ -119,11 +119,11 @@ fn run_system_on_insert<Caps: CapSet, RootComponent: ImmediateAttach<Caps>>(
 }
 
 fn on_insert<Caps: CapSet, RootComponent: ImmediateAttach<Caps>>(
-    trigger: Trigger<OnAdd, RootComponent>,
+    trigger: On<lifecycle::Add, RootComponent>,
     query: Query<(), With<RootComponentBuilt<(Caps, RootComponent)>>>,
     mut commands: Commands,
 ) {
-    let entity = trigger.target();
+    let entity = trigger.event().entity;
     if !query.contains(entity) {
         log::trace!(
             "On insert system scheduled to build immediate tree for {}",

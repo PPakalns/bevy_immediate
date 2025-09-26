@@ -25,24 +25,42 @@ fn button_system(
         ),
     >,
 ) {
+    // Set interactable element
+    // background and border colors
+    // when inactive, pressed, hovered and when selected
+
     for (interaction, mut color, mut border_color, selected) in &mut interaction_query {
         match *interaction {
             Interaction::Pressed => {
                 color.0 = PRESSED_BUTTON;
-                border_color.0 = RED.into();
+                border_color.set_all(RED);
             }
             Interaction::Hovered => {
                 color.0 = HOVERED_BUTTON;
-                border_color.0 = Color::WHITE;
+                border_color.set_all(Color::WHITE);
             }
             Interaction::None => {
                 color.0 = NORMAL_BUTTON;
-                border_color.0 = Color::BLACK;
+                border_color.set_all(Color::BLACK);
             }
         }
         if selected.map(|s| s.selected) == Some(true) {
-            color.0 = color.0.mix(&SELECTED, 0.5);
-            border_color.0 = border_color.0.mix(&SELECTED, 0.5);
+            let BorderColor {
+                top,
+                right,
+                bottom,
+                left,
+            } = &mut *border_color;
+
+            fn assign_color(color: &mut Color) {
+                *color = color.mix(&SELECTED, 0.5);
+            }
+
+            assign_color(&mut color.0);
+            assign_color(top);
+            assign_color(right);
+            assign_color(bottom);
+            assign_color(left);
         }
     }
 }
@@ -94,7 +112,7 @@ pub fn container_with_background() -> MyStyleBundle {
 
     MyStyleBundle {
         node,
-        border_color: BorderColor(Color::srgb(1., 0., 0.)),
+        border_color: BorderColor::all(Color::srgb(1., 0., 0.)),
         border_radius: BorderRadius::all(Val::Px(5.)),
         background_color: BackgroundColor(BACKGROUND),
     }
@@ -112,7 +130,7 @@ pub fn button_bundle() -> MyButtonBundle {
                 padding: UiRect::all(Val::Px(5.)),
                 ..default()
             },
-            border_color: BorderColor(Color::BLACK),
+            border_color: BorderColor::all(Color::BLACK),
             border_radius: BorderRadius::all(Val::Px(5.)),
             background_color: BackgroundColor(NORMAL_BUTTON),
         },

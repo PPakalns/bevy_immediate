@@ -20,7 +20,7 @@ pub struct ImmCapQueryParam<'w, 's, Cap: CapSet> {
     /// In case of collision. Use [`super::ImmQuery`] or
     /// [`bevy_ecs::prelude::Without<ImmMarker<()>>`] (replace () with your used `Cap``)
     #[deref]
-    pub query: Query<'w, 's, FilteredEntityMut<'static>, With<ImmMarker<Cap>>>,
+    pub query: Query<'w, 's, FilteredEntityMut<'static, 'static>, With<ImmMarker<Cap>>>,
 }
 
 /// You can retrieve resources that were registered by capability. See [`FilteredResourcesMut`]

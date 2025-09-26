@@ -3,9 +3,9 @@ use std::marker::PhantomData;
 use ahash::HashMap;
 use bevy_ecs::{
     entity::Entity,
-    observer::Trigger,
+    lifecycle,
+    observer::On,
     system::{Query, ResMut},
-    world::{OnAdd, OnRemove},
 };
 
 use crate::{ImmId, immediate::ImmMarker};
@@ -32,11 +32,11 @@ pub fn init<Caps: Send + Sync + 'static>(app: &mut bevy_app::App) {
 }
 
 fn on_sui_marker_added<Caps: Send + Sync + 'static>(
-    trigger: Trigger<OnAdd, ImmMarker<Caps>>,
+    trigger: On<lifecycle::Add, ImmMarker<Caps>>,
     marker: Query<&ImmMarker<Caps>>,
     mut mapping: ResMut<ImmediateModeEntityMapping<Caps>>,
 ) {
-    let entity = trigger.target();
+    let entity = trigger.event().entity;
     if let Ok(marker) = marker.get(entity) {
         let old = mapping.id_to_entity.insert(marker.id, entity);
         if let Some(old) = old {
@@ -50,11 +50,11 @@ fn on_sui_marker_added<Caps: Send + Sync + 'static>(
 }
 
 fn on_sui_marker_removed<Caps: Send + Sync + 'static>(
-    trigger: Trigger<OnRemove, ImmMarker<Caps>>,
+    trigger: On<lifecycle::Remove, ImmMarker<Caps>>,
     marker: Query<&ImmMarker<Caps>>,
     mut mapping: ResMut<ImmediateModeEntityMapping<Caps>>,
 ) {
-    let entity = trigger.target();
+    let entity = trigger.event().entity;
     if let Ok(marker) = marker.get(entity) {
         mapping.id_to_entity.remove(&marker.id);
     }
