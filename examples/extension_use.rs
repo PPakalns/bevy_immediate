@@ -21,11 +21,13 @@ impl_capability_set!(
         // you correctly listed them
         bevy_immediate::ui::ui_base::CapabilityUiBase,
         bevy_immediate::ui::ui_layout_order::CapabilityUiLayoutOrder,
+        bevy_immediate::ui::ui_look::CapabilityUiLook,
         bevy_immediate::ui::interaction::CapabilityUiInteraction,
         bevy_immediate::ui::text::CapabilityUiText,
         bevy_immediate::ui::selected::CapabilityUiSelectable,
+        bevy_immediate::ui::checked::CapabilityUiChecked,
         bevy_immediate::ui::clicked::CapabilityUiClicked,
-        bevy_immediate::ui::activated::CapabilityUiClicked,
+        bevy_immediate::ui::activated::CapabilityUiActivated,
         //
         // Add your own capabilities
         crate::extension::CapUiToggle

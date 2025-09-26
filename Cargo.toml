@@ -20,18 +20,25 @@ bevy_app = "0.17.0-rc.2"
 bevy_platform = "0.17.0-rc.2"
 bevy_picking = { version = "0.17.0-rc.2", optional = true }
 bevy_derive = "0.17.0-rc.2"
+bevy_color = { version = "0.17.0-rc.2", optional = true }
 bevy_internal = { version = "0.17.0-rc.2", default-features = false }
 bevy_input = { version = "0.17.0-rc.2", default-features = false, optional = true }
 bevy_input_focus = { version = "0.17.0-rc.2", default-features = false, optional = true }
 
+bevy_ui_widgets = { version = "0.17.0-rc.2", default-features = false, optional = true }
+bevy_feathers = { version = "0.17.0-rc.2", default-features = false, optional = true }
+
 log = "0.4"
 ahash = "0.8"
 type-map = "0.5"
+paste = "1.0"
 
 [features]
-default = ["ui", "picking"]
+default = ["ui", "picking", "bevy_ui_widgets", "bevy_feathers"]
 
-ui = ["dep:bevy_ui"]
+ui = ["dep:bevy_ui", "dep:bevy_color"]
+bevy_feathers = ["dep:bevy_feathers", "bevy_ui_widgets", "dep:bevy_color"]
+bevy_ui_widgets = ["dep:bevy_ui_widgets", "picking"]
 picking = [
   "ui",
   "dep:bevy_input",
@@ -54,6 +61,7 @@ bevy = { version = "0.17.0-rc.2", default-features = false, features = [
   "x11",
   "wayland",
   "bevy_text",
+  "bevy_input_focus",
   "default_font",
   "bevy_picking",
 

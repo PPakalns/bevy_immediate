@@ -18,9 +18,9 @@ use crate::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap};
 
 /// Immediate mode capability for `.clicked()`
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CapabilityUiClicked;
+pub struct CapabilityUiActivated;
 
-impl ImmCapability for CapabilityUiClicked {
+impl ImmCapability for CapabilityUiActivated {
     fn build<CM: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<CM>) {
         if !app.is_plugin_added::<TrackClickedPlugin>() {
             app.add_plugins(TrackClickedPlugin);
@@ -39,7 +39,7 @@ pub trait ImmUiActivated {
 
 impl<Cap: CapSet> ImmUiActivated for ImmEntity<'_, '_, '_, Cap>
 where
-    Cap: ImplCap<CapabilityUiClicked>,
+    Cap: ImplCap<CapabilityUiActivated>,
 {
     fn activated(&mut self) -> bool {
         'correct: {

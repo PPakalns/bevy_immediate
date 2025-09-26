@@ -23,3 +23,6 @@ pub mod ui;
 
 /// Utility types to simplify implementation
 pub mod utils;
+
+/// For capability set macro
+pub use paste;
