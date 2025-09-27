@@ -126,14 +126,78 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
             .on_spawn_insert(title_style)
             .on_spawn_text("Bevy feathers widgets (based on bevy_ui_widgets)");
 
-        let count = values.len();
+        ui.ch()
+            .on_spawn_insert(|| Node {
+                flex_direction: bevy_ui::FlexDirection::Row,
+                column_gap: Val::Px(4.),
+                justify_content: bevy_ui::JustifyContent::FlexStart,
+                align_self: bevy_ui::AlignSelf::FlexStart,
+                ..default()
+            })
+            .add(|ui| {
+                ui.ch().on_spawn_text("Values:");
+
+                let mut button = ui
+                    .ch()
+                    .on_spawn_insert(|| {
+                        feathers::controls::button(
+                            ButtonProps {
+                                variant: ButtonVariant::Normal,
+                                corners: RoundedCorners::Left,
+                                on_click: Callback::Ignore,
+                            },
+                            (),
+                            (),
+                        )
+                    })
+                    .add(|ui| {
+                        ui.ch().on_spawn_text("+");
+                    });
+
+                if button.activated() {
+                    values.push(Checkbox {
+                        value: false,
+                        disabled: false,
+                    });
+                }
+
+                let mut button = ui
+                    .ch()
+                    .on_spawn_insert(|| {
+                        feathers::controls::button(
+                            ButtonProps {
+                                variant: ButtonVariant::Normal,
+                                corners: RoundedCorners::Right,
+                                on_click: Callback::Ignore,
+                            },
+                            (),
+                            (),
+                        )
+                    })
+                    .add(|ui| {
+                        ui.ch().on_spawn_text("-");
+                    })
+                    .interactions_disabled(values.len() == 1);
+                if button.activated() {
+                    values.pop();
+                }
+            });
+
+        let column_count = values.len().max(1);
         ui.ch()
             .on_spawn_insert(|| Node {
                 display: Display::Grid,
-                grid_template_columns: RepeatedGridTrack::auto(count as u16),
+                grid_template_columns: RepeatedGridTrack::auto(column_count as u16),
                 row_gap: Val::Px(4.),
                 column_gap: Val::Px(4.),
                 ..default()
+            })
+            .node_mut(|node| {
+                // Check if column count needs change
+                let value = RepeatedGridTrack::auto(column_count as u16);
+                if node.grid_template_columns != value {
+                    node.grid_template_columns = value;
+                }
             })
             .add(|ui| {
                 for (variant_idx, variant) in [ButtonVariant::Primary, ButtonVariant::Normal]
@@ -147,7 +211,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                                 feathers::controls::button(
                                     ButtonProps {
                                         variant: variant.clone(),
-                                        corners: button_rounded_corners_row(idx, count),
+                                        corners: button_rounded_corners_row(idx, column_count),
                                         on_click: Callback::Ignore,
                                     },
                                     (),
@@ -172,7 +236,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                             feathers::controls::button(
                                 ButtonProps {
                                     variant: Default::default(),
-                                    corners: button_rounded_corners_row(idx, count),
+                                    corners: button_rounded_corners_row(idx, column_count),
                                     on_click: Callback::Ignore,
                                 },
                                 (),
@@ -255,8 +319,15 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
 
                 ui.ch()
                     .on_spawn_insert(|| Node {
-                        grid_column: GridPlacement::span(count as u16),
+                        // GridPlacement::start_end(1, -1) doesn't work correctly
+                        grid_column: GridPlacement::span(column_count as u16),
                         ..default()
+                    })
+                    .node_mut(|node| {
+                        let span = GridPlacement::span(column_count as u16);
+                        if node.grid_column != span {
+                            node.grid_column = span;
+                        }
                     })
                     .on_spawn_text("Interactions disabled:");
 
@@ -274,12 +345,12 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                 }
             });
 
-        ui.ch()
-            .on_spawn_insert(|| Node {
-                grid_column: GridPlacement::span(count as u16),
-                ..default()
-            })
-            .on_spawn_text("Color sliders");
+        ui.ch().on_spawn_insert(|| Node {
+            height: Val::Px(50.),
+            ..default()
+        });
+
+        ui.ch().on_spawn_text("Color sliders");
 
         ui.ch().on_spawn_insert(Node::default).add(|ui| {
             ui.ch()
