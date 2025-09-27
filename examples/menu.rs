@@ -17,7 +17,7 @@ pub struct MenuExamplePlugin;
 
 impl bevy_app::Plugin for MenuExamplePlugin {
     fn build(&self, app: &mut bevy_app::App) {
-        app.insert_resource(CurrentExample::WidgetUse);
+        app.insert_resource(CurrentExample::BevyInbuiltUi);
 
         app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, MenuUiRoot>::new());
     }

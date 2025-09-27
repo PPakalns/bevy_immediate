@@ -25,13 +25,11 @@ where
     Cap: ImplCap<CapabilityUiSliderBaseColor>,
 {
     fn slider_base_color(mut self, value: Color) -> Self {
-        if let Some(mut entity) = self.cap_get_entity_mut().ok() {
-            if let Some(mut current_value) = entity.get_mut::<SliderBaseColor>() {
-                if current_value.0 != value {
-                    current_value.0 = value;
-                }
-                return self;
+        if let Ok(Some(mut current_value)) = self.cap_get_component_mut::<SliderBaseColor>() {
+            if current_value.0 != value {
+                current_value.0 = value;
             }
+            return self;
         }
 
         let mut commands = self.entity_commands();

@@ -12,7 +12,7 @@ use bevy_input::{
 use bevy_input_focus::FocusedInput;
 use bevy_picking::events::{Click, Pointer};
 use bevy_platform::collections::HashSet;
-use bevy_ui::{InteractionDisabled, Pressed};
+use bevy_ui::InteractionDisabled;
 
 use crate::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap};
 
@@ -123,12 +123,13 @@ fn button_on_key_event(
 
 fn button_on_pointer_click(
     mut click: On<Pointer<Click>>,
-    mut q_state: Query<(Has<Pressed>, Has<InteractionDisabled>)>,
+    mut q_state: Query<Has<InteractionDisabled>>,
     mut activated: ResMut<TrackActivetedEntitiesResource>,
 ) {
-    if let Ok((pressed, disabled)) = q_state.get_mut(click.entity) {
+    // WARN: Check for pressed removed
+    if let Ok(disabled) = q_state.get_mut(click.entity) {
         click.propagate(false);
-        if pressed && !disabled {
+        if !disabled {
             activated.activated.insert(click.entity);
         }
     }

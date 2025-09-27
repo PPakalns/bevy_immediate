@@ -19,9 +19,10 @@ impl_capability_set!(
         //
         // Macro will add compile time check to check that
         // you correctly listed them
-        bevy_immediate::ui::ui_base::CapabilityUiBase,
-        bevy_immediate::ui::ui_layout_order::CapabilityUiLayoutOrder,
-        bevy_immediate::ui::ui_look::CapabilityUiLook,
+        bevy_immediate::ui::base::CapabilityUiBase,
+        bevy_immediate::ui::layout_order::CapabilityUiLayoutOrder,
+        bevy_immediate::ui::look::CapabilityUiLook,
+        bevy_immediate::ui::disabled::CapabilityUiDisabled,
         bevy_immediate::ui::interaction::CapabilityUiInteraction,
         bevy_immediate::ui::text::CapabilityUiText,
         bevy_immediate::ui::selected::CapabilityUiSelectable,

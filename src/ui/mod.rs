@@ -10,9 +10,10 @@ impl_capability_set!(
     CapsUi,
     ImplCapsUi > ImplCapsEmpty,
     (
-        ui_base::CapabilityUiBase,
-        ui_layout_order::CapabilityUiLayoutOrder,
-        ui_look::CapabilityUiLook,
+        base::CapabilityUiBase,
+        layout_order::CapabilityUiLayoutOrder,
+        look::CapabilityUiLook,
+        disabled::CapabilityUiDisabled,
         interaction::CapabilityUiInteraction,
         text::CapabilityUiText,
         selected::CapabilityUiSelectable,
@@ -28,10 +29,10 @@ impl_capability_set!(
     CapsUi,
     ImplCapsUi > ImplCapsEmpty,
     (
-        ui_base::CapabilityUiBase,
-        ui_layout_order::CapabilityUiLayoutOrder,
-        ui_look::CapabilityUiLook,
-        ui_style::CapabilityUiStyle,
+        base::CapabilityUiBase,
+        layout_order::CapabilityUiLayoutOrder,
+        look::CapabilityUiLook,
+        disabled::CapabilityUiLook,
         interaction::CapabilityUiInteraction,
         text::CapabilityUiText,
         selected::CapabilityUiSelectable,
@@ -47,9 +48,10 @@ impl_capability_set!(
     CapsUiWidget,
     ImplCapsUiWidget > ImplCapsUi,
     (
-        ui_base::CapabilityUiBase,
-        ui_layout_order::CapabilityUiLayoutOrder,
-        ui_look::CapabilityUiLook,
+        base::CapabilityUiBase,
+        layout_order::CapabilityUiLayoutOrder,
+        look::CapabilityUiLook,
+        disabled::CapabilityUiDisabled,
         interaction::CapabilityUiInteraction,
         text::CapabilityUiText,
         selected::CapabilityUiSelectable,
@@ -70,9 +72,10 @@ impl_capability_set!(
     CapsUiFeathers,
     ImplCapsUiFeathers > ImplCapsUiWidget,
     (
-        ui_base::CapabilityUiBase,
-        ui_layout_order::CapabilityUiLayoutOrder,
-        ui_look::CapabilityUiLook,
+        base::CapabilityUiBase,
+        layout_order::CapabilityUiLayoutOrder,
+        look::CapabilityUiLook,
+        disabled::CapabilityUiDisabled,
         interaction::CapabilityUiInteraction,
         text::CapabilityUiText,
         selected::CapabilityUiSelectable,
@@ -84,20 +87,24 @@ impl_capability_set!(
         slider_value::CapabilityUiSliderValue,
         // bevy_feathers
         slider_base_color::CapabilityUiSliderBaseColor,
+        button_variant::CapabilityUiFeathersButtonVariant,
     )
 );
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Implements capability that correctly set ups immediate mode systems execution order for UI case
-pub mod ui_base;
+pub mod base;
 
 /// Implements functionality to place children entities created in immediate mode in creation (.ch)
 /// call order. Needed for correct Ui layout.
-pub mod ui_layout_order;
+pub mod layout_order;
 
 /// Implements functions to access node styling
-pub mod ui_look;
+pub mod look;
+
+/// Implements functions to manage disabled node state
+pub mod disabled;
 
 /// Implements functionality to access [`bevy_ui::Interaction`]
 pub mod interaction;
@@ -127,3 +134,7 @@ pub mod slider_value;
 /// Module implements functionality for setting SliderValue
 #[cfg(feature = "bevy_feathers")]
 pub mod slider_base_color;
+
+/// Module implements functionality for setting SliderValue
+#[cfg(feature = "bevy_feathers")]
+pub mod button_variant;

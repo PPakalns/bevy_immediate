@@ -1,12 +1,13 @@
 use bevy::color::Color;
 use bevy::{color::palettes::basic::*, prelude::*};
 use bevy_immediate::ui::selected::Selectable;
+use bevy_input_focus::InputFocus;
 
 pub struct DemoStylePlugin;
 
 impl bevy_app::Plugin for DemoStylePlugin {
     fn build(&self, app: &mut bevy_app::App) {
-        app.add_systems(Update, button_system);
+        app.add_systems(Update, (button_system, focus_system));
     }
 }
 
@@ -67,6 +68,33 @@ fn button_system(
             assign_color(right);
             assign_color(bottom);
             assign_color(left);
+        }
+    }
+}
+
+#[derive(Component)]
+#[component(storage = "SparseSet")]
+pub struct Focus;
+
+fn focus_system(
+    mut commands: Commands,
+    focus: Res<InputFocus>,
+    mut focus_entities: Query<Entity, With<Focus>>,
+) {
+    if focus.is_changed() {
+        for entity in focus_entities.iter_mut() {
+            commands.entity(entity).remove::<(Focus, Outline)>();
+        }
+
+        if let Some(entity) = focus.0 {
+            commands.entity(entity).insert((
+                Focus,
+                Outline {
+                    color: Color::WHITE,
+                    width: Val::Px(2.0),
+                    offset: Val::Px(2.0),
+                },
+            ));
         }
     }
 }

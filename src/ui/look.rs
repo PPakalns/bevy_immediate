@@ -28,13 +28,11 @@ where
     Cap: ImplCap<CapabilityUiLook>,
 {
     fn background_color(mut self, value: Color) -> Self {
-        if let Some(mut entity) = self.cap_get_entity_mut().ok() {
-            if let Some(mut current_value) = entity.get_mut::<BackgroundColor>() {
-                if current_value.0 != value {
-                    current_value.0 = value;
-                }
-                return self;
+        if let Ok(Some(mut current_value)) = self.cap_get_component_mut::<BackgroundColor>() {
+            if current_value.0 != value {
+                current_value.0 = value;
             }
+            return self;
         }
 
         let mut commands = self.entity_commands();
@@ -43,13 +41,11 @@ where
     }
 
     fn border_color(mut self, value: &BorderColor) -> Self {
-        if let Some(mut entity) = self.cap_get_entity_mut().ok() {
-            if let Some(mut current_value) = entity.get_mut::<BorderColor>() {
-                if *current_value != *value {
-                    *current_value = *value;
-                }
-                return self;
+        if let Ok(Some(mut current_value)) = self.cap_get_component_mut::<BorderColor>() {
+            if *current_value != *value {
+                *current_value = *value;
             }
+            return self;
         }
 
         let mut commands = self.entity_commands();

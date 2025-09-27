@@ -31,7 +31,7 @@ where
     Cap: ImplCap<CapabilityUiSliderValue>,
 {
     fn slider(mut self, value: &mut f32) -> Self {
-        if let Some(mut entity) = self.cap_get_entity_mut().ok() {
+        if let Ok(mut entity) = self.cap_get_entity_mut() {
             let current_value = entity.get::<SliderValue>().map(|val| val.0);
             let last_value = entity.get::<StoredSliderValue>().map(|val| val.value);
 

@@ -1,5 +1,7 @@
+use std::ops::DerefMut;
+
 use bevy::{
-    color::{Hsva, palettes::css::RED},
+    color::Hsva,
     feathers::{
         self, FeathersPlugins,
         controls::{
@@ -14,22 +16,25 @@ use bevy::{
     ui_widgets::Callback,
     utils::default,
 };
+use bevy_color::palettes::css::DARK_BLUE;
 use bevy_ecs::{
     component::Component,
+    hierarchy::Children,
+    query::Without,
     resource::Resource,
-    system::{ResMut, SystemParam},
+    system::{Query, ResMut, SystemParam},
 };
 use bevy_immediate::{
-    Imm,
+    CapSet, Imm, ImmMarker,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
     ui::{
-        CapsUiFeathers, activated::ImmUiActivated, checked::ImmUiChecked,
+        CapsUiFeathers, activated::ImmUiActivated, button_variant::ImmUiFeathersButtonVariant,
+        checked::ImmUiChecked, disabled::ImmUiInteractionsDisabled, look::ImmUiLook,
         slider_base_color::ImmUiSliderBaseColor, slider_value::ImmUiSliderValue as _,
-        text::ImmUiText, ui_look::ImmUiLook,
+        text::ImmUiText,
     },
 };
-use bevy_ui::{FlexDirection, JustifyContent, Node};
-use bevy_ui_widgets::RadioGroup;
+use bevy_ui::{BackgroundColor, Display, GridPlacement, Node, RepeatedGridTrack, Val};
 
 pub struct BevyInbuiltUiExamplePlugin;
 
@@ -55,63 +60,119 @@ pub struct BevyInbuiltUiExampleRoot;
 
 #[derive(Resource)]
 struct WidgetState {
-    checkboxes: Vec<bool>,
+    values: Vec<Checkbox>,
     hsva: Hsva,
+}
+
+struct Checkbox {
+    value: bool,
+    disabled: bool,
 }
 
 impl Default for WidgetState {
     fn default() -> Self {
         Self {
-            checkboxes: vec![true, false, true],
-            hsva: RED.into(),
+            values: [false, true]
+                .into_iter()
+                .flat_map(|disabled| {
+                    [false, true]
+                        .into_iter()
+                        .map(move |value| Checkbox { value, disabled })
+                })
+                .collect(),
+            hsva: DARK_BLUE.into(),
         }
     }
 }
 
 #[derive(SystemParam)]
-pub struct Params<'w> {
+pub struct Params<'w, 's, Caps: CapSet> {
     state: ResMut<'w, WidgetState>,
+
+    // Needed for color swatch
+    children: Query<'w, 's, &'static Children>,
+    background: Query<'w, 's, &'static mut BackgroundColor, Without<ImmMarker<Caps>>>,
 }
 
 impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
-    type Params = Params<'static>;
+    type Params = Params<'static, 'static, CapsUiFeathers>;
 
-    fn construct(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
-        ui.ch().on_spawn_insert(|| Node {
-            flex_grow: 1.,
-            ..default()
-        });
+    fn construct(ui: &mut Imm<CapsUiFeathers>, params: &mut Params<CapsUiFeathers>) {
+        let Params {
+            state,
+            children,
+            background,
+        } = params;
+
+        let WidgetState { values, hsva } = state.deref_mut();
+
+        let title_style = || {
+            let mut font = TextFont::default();
+            font.font_size *= 1.4;
+            font
+        };
+
+        fn button_rounded_corners_row(idx: usize, count: usize) -> RoundedCorners {
+            if idx == 0 {
+                RoundedCorners::Left
+            } else if idx + 1 == count {
+                RoundedCorners::Right
+            } else {
+                RoundedCorners::None
+            }
+        }
 
         ui.ch()
-            .on_spawn_insert(|| {
-                let mut font = TextFont::default();
-                font.font_size *= 1.4;
-                font
-            })
-            .on_spawn_text("Supported");
+            .on_spawn_insert(title_style)
+            .on_spawn_text("Bevy feathers widgets (based on bevy_ui_widgets)");
 
+        let count = values.len();
         ui.ch()
             .on_spawn_insert(|| Node {
-                flex_direction: FlexDirection::Row,
-                column_gap: bevy_ui::Val::Px(4.),
+                display: Display::Grid,
+                grid_template_columns: RepeatedGridTrack::auto(count as u16),
+                row_gap: Val::Px(4.),
+                column_gap: Val::Px(4.),
                 ..default()
             })
             .add(|ui| {
-                let state_len = params.state.checkboxes.len();
-                for (idx, state) in params.state.checkboxes.iter_mut().enumerate() {
+                for (variant_idx, variant) in [ButtonVariant::Primary, ButtonVariant::Normal]
+                    .into_iter()
+                    .enumerate()
+                {
+                    for (idx, state) in values.iter_mut().enumerate() {
+                        let mut button = ui
+                            .ch_id(("variant", variant_idx, idx))
+                            .on_spawn_insert(|| {
+                                feathers::controls::button(
+                                    ButtonProps {
+                                        variant: variant.clone(),
+                                        corners: button_rounded_corners_row(idx, count),
+                                        on_click: Callback::Ignore,
+                                    },
+                                    (),
+                                    (),
+                                )
+                            })
+                            .add(|ui| {
+                                ui.ch().on_spawn_text_fn(|| idx.to_string());
+                            })
+                            .interactions_disabled(state.disabled);
+
+                        if button.activated() {
+                            state.value = !state.value;
+                        }
+                    }
+                }
+
+                for (idx, state) in values.iter_mut().enumerate() {
                     let mut button = ui
-                        .ch_id(idx)
+                        .ch_id(("primary_change", idx))
                         .on_spawn_insert(|| {
                             feathers::controls::button(
                                 ButtonProps {
-                                    variant: ButtonVariant::Normal,
-                                    corners: if idx == 0 {
-                                        RoundedCorners::Left
-                                    } else if idx + 1 == state_len {
-                                        RoundedCorners::Right
-                                    } else {
-                                        RoundedCorners::None
-                                    },
+                                    variant: Default::default(),
+                                    corners: button_rounded_corners_row(idx, count),
                                     on_click: Callback::Ignore,
                                 },
                                 (),
@@ -120,24 +181,18 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                         })
                         .add(|ui| {
                             ui.ch().on_spawn_text_fn(|| idx.to_string());
-                        });
+                        })
+                        .primary_button(state.value)
+                        .interactions_disabled(state.disabled);
 
                     if button.activated() {
-                        *state = !*state;
+                        state.value = !state.value;
                     }
                 }
-            });
-        ui.ch()
-            .on_spawn_insert(|| Node {
-                flex_direction: FlexDirection::Row,
-                justify_content: JustifyContent::SpaceBetween,
-                column_gap: bevy_ui::Val::Px(10.),
-                ..default()
-            })
-            .add(|ui| {
-                for (idx, state) in params.state.checkboxes.iter_mut().enumerate() {
+
+                for (idx, state) in values.iter_mut().enumerate() {
                     let checkbox = ui
-                        .ch_id(idx)
+                        .ch_id(("checkbox", idx))
                         .on_spawn_insert(|| {
                             feathers::controls::checkbox(
                                 CheckboxProps {
@@ -149,21 +204,13 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                         })
                         .add(|ui| {
                             ui.ch().on_spawn_text_fn(|| format!("Checkbox {idx}"));
-                        });
-                    checkbox.checked(state);
+                        })
+                        .interactions_disabled(state.disabled);
+                    checkbox.checked(&mut state.value);
                 }
-            });
 
-        ui.ch()
-            .on_spawn_insert(|| Node {
-                flex_direction: FlexDirection::Row,
-                justify_content: JustifyContent::SpaceBetween,
-                column_gap: bevy_ui::Val::Px(10.),
-                ..default()
-            })
-            .add(|ui| {
-                for (idx, state) in params.state.checkboxes.iter_mut().enumerate() {
-                    ui.ch_id(idx)
+                for (idx, state) in values.iter_mut().enumerate() {
+                    ui.ch_id(("toggle", idx))
                         .on_spawn_insert(|| {
                             feathers::controls::toggle_switch(
                                 ToggleSwitchProps {
@@ -172,23 +219,69 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                                 (),
                             )
                         })
-                        .checked(state);
+                        .interactions_disabled(state.disabled)
+                        .checked(&mut state.value);
                 }
-            });
-        ui.ch()
-            .on_spawn_insert(|| Node {
-                flex_direction: FlexDirection::Row,
-                justify_content: JustifyContent::SpaceBetween,
-                column_gap: bevy_ui::Val::Px(10.),
-                ..default()
-            })
-            .add(|ui| {
-                for (idx, state) in params.state.checkboxes.iter_mut().enumerate() {
-                    ui.ch_id(idx).text(format!("{idx}: {:?}", state));
+
+                for (idx, state) in values.iter_mut().enumerate() {
+                    let mut radio_button = ui
+                        .ch_id(("radio", idx))
+                        .on_spawn_insert(|| feathers::controls::radio((), ()))
+                        .add(|ui| {
+                            ui.ch().on_spawn_text("Radio button");
+                        })
+                        .interactions_disabled(state.disabled)
+                        .checked(&mut state.value);
+
+                    // WARN: Widget doesn't update it's checked state. Need to check if widget was activated
+                    if radio_button.activated() {
+                        state.value = !state.value;
+                    }
+                }
+
+                for (idx, state) in values.iter_mut().enumerate() {
+                    ui.ch_id(("value", idx))
+                        .text(format!("{idx}: {:6?}", state.value));
+                }
+
+                for (idx, state) in values.iter_mut().enumerate() {
+                    let text = if state.disabled {
+                        "disabled"
+                    } else {
+                        "enabled"
+                    };
+                    ui.ch_id(("disabled_text", idx)).text(format!("{:8}", text));
+                }
+
+                ui.ch()
+                    .on_spawn_insert(|| Node {
+                        grid_column: GridPlacement::span(count as u16),
+                        ..default()
+                    })
+                    .on_spawn_text("Interactions disabled:");
+
+                for (idx, state) in values.iter_mut().enumerate() {
+                    ui.ch_id(("disabled", idx))
+                        .on_spawn_insert(|| {
+                            feathers::controls::toggle_switch(
+                                ToggleSwitchProps {
+                                    on_change: Callback::Ignore,
+                                },
+                                (),
+                            )
+                        })
+                        .checked(&mut state.disabled);
                 }
             });
 
-        ui.ch().on_spawn_insert(|| Node { ..default() }).add(|ui| {
+        ui.ch()
+            .on_spawn_insert(|| Node {
+                grid_column: GridPlacement::span(count as u16),
+                ..default()
+            })
+            .on_spawn_text("Color sliders");
+
+        ui.ch().on_spawn_insert(Node::default).add(|ui| {
             ui.ch()
                 .on_spawn_insert(|| {
                     feathers::controls::color_slider(
@@ -200,9 +293,9 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                         (),
                     )
                 })
-                .slider(&mut params.state.hsva.hue);
+                .slider(&mut hsva.hue);
         });
-        ui.ch().on_spawn_insert(|| Node { ..default() }).add(|ui| {
+        ui.ch().on_spawn_insert(Node::default).add(|ui| {
             ui.ch()
                 .on_spawn_insert(|| {
                     feathers::controls::color_slider(
@@ -214,10 +307,10 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                         (),
                     )
                 })
-                .slider_base_color(params.state.hsva.with_saturation(1.).with_value(1.).into())
-                .slider(&mut params.state.hsva.saturation);
+                .slider_base_color(hsva.with_saturation(1.).with_value(1.).into())
+                .slider(&mut hsva.saturation);
         });
-        ui.ch().on_spawn_insert(|| Node { ..default() }).add(|ui| {
+        ui.ch().on_spawn_insert(Node::default).add(|ui| {
             ui.ch()
                 .on_spawn_insert(|| {
                     feathers::controls::color_slider(
@@ -229,9 +322,9 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                         (),
                     )
                 })
-                .slider(&mut params.state.hsva.value);
+                .slider(&mut hsva.value);
         });
-        ui.ch().on_spawn_insert(|| Node { ..default() }).add(|ui| {
+        ui.ch().on_spawn_insert(Node::default).add(|ui| {
             ui.ch()
                 .on_spawn_insert(|| {
                     feathers::controls::color_slider(
@@ -243,10 +336,10 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                         (),
                     )
                 })
-                .slider_base_color(params.state.hsva.into())
-                .slider(&mut params.state.hsva.alpha);
+                .slider_base_color((*hsva).into())
+                .slider(&mut hsva.alpha);
         });
-        ui.ch().on_spawn_insert(|| Node { ..default() }).add(|ui| {
+        ui.ch().on_spawn_insert(Node::default).add(|ui| {
             ui.ch()
                 .on_spawn_insert(|| {
                     feathers::controls::slider(
@@ -259,67 +352,27 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                         (),
                     )
                 })
-                .slider_base_color(params.state.hsva.into())
-                .slider(&mut params.state.hsva.alpha);
+                .slider_base_color((*hsva).into())
+                .slider(&mut hsva.alpha);
         });
 
-        ui.ch().on_spawn_insert(|| Node {
-            flex_grow: 1.,
-            ..default()
-        });
-
-        ui.ch()
-            .on_spawn_insert(|| {
-                let mut font = TextFont::default();
-                font.font_size *= 1.4;
-                font
-            })
-            .on_spawn_text("Does not support interactive updates (for now)");
-
-        ui.ch().on_spawn_text("Color swatch:");
-
-        // Background color must be updated for not for entity, but for first child element
-        // And currently used assets/materials are private
-        //
-        // Need to udpate color swatch on the bevy side
-        ui.ch()
+        // WARN: Requires manual support
+        // Background color must be updated not for entity, but for the first child
+        let entity = ui
+            .ch()
             .on_spawn_insert(|| feathers::controls::color_swatch(()))
-            .background_color(params.state.hsva.into());
+            .background_color((*hsva).into());
 
-        ui.ch().on_spawn_text("Radio group:");
-        // Radio group currently is unusable due to
-        // UI doing more than necessary.
-        //
-        // It updates the value of radio buttons only through callback
-        ui.ch()
-            .on_spawn_insert(|| {
-                (
-                    Node {
-                        flex_direction: FlexDirection::Row,
-                        justify_content: JustifyContent::SpaceBetween,
-                        column_gap: bevy_ui::Val::Px(10.),
-                        ..default()
-                    },
-                    // !!!!!! Needs to be added
-                    RadioGroup {
-                        on_change: Callback::Ignore,
-                    },
-                )
-            })
-            .add(|ui| {
-                for (idx, state) in params.state.checkboxes.iter_mut().enumerate() {
-                    ui.ch_id(idx)
-                        .on_spawn_insert(|| feathers::controls::radio((), ()))
-                        .add(|ui| {
-                            ui.ch().on_spawn_text("Radio button");
-                        })
-                        .checked(state);
-                }
-            });
-
-        ui.ch().on_spawn_insert(|| Node {
-            flex_grow: 1.,
-            ..default()
-        });
+        if let Some(mut background) = children
+            .get(entity.entity())
+            .ok()
+            .and_then(|children| children.first())
+            .and_then(|child| background.get_mut(*child).ok())
+        {
+            // Additional check to avoid unnecessary updates
+            if *background != (*hsva).into() {
+                *background = (*hsva).into();
+            }
+        }
     }
 }
