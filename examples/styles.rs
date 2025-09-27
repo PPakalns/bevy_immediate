@@ -1,7 +1,7 @@
 use bevy::color::Color;
 use bevy::{color::palettes::basic::*, prelude::*};
 use bevy_immediate::ui::selected::Selectable;
-use bevy_input_focus::InputFocus;
+use bevy_input_focus::{InputFocus, InputFocusVisible};
 
 pub struct DemoStylePlugin;
 
@@ -79,14 +79,17 @@ pub struct Focus;
 fn focus_system(
     mut commands: Commands,
     focus: Res<InputFocus>,
+    focus_visible: Res<InputFocusVisible>,
     mut focus_entities: Query<Entity, With<Focus>>,
 ) {
-    if focus.is_changed() {
+    if focus.is_changed() || focus_visible.is_changed() {
         for entity in focus_entities.iter_mut() {
             commands.entity(entity).remove::<(Focus, Outline)>();
         }
 
-        if let Some(entity) = focus.0 {
+        if focus_visible.0
+            && let Some(entity) = focus.0
+        {
             commands.entity(entity).insert((
                 Focus,
                 Outline {
