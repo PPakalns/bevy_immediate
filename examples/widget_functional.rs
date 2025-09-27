@@ -1,6 +1,6 @@
 use bevy_immediate::{
     Imm,
-    ui::{CapsUi, ImplCapsUi, picking::clicked::ImmUiClicked, text::ImmUiText},
+    ui::{CapsUi, ImplCapsUi, clicked::ImmUiClicked, text::ImmUiText},
 };
 use bevy_ui::{AlignItems, FlexDirection, Node, UiRect};
 

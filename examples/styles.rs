@@ -1,14 +1,20 @@
 use bevy::color::Color;
 use bevy::{color::palettes::basic::*, prelude::*};
 use bevy_immediate::ui::selected::Selectable;
+use bevy_input_focus::{InputFocus, InputFocusVisible};
 
 pub struct DemoStylePlugin;
 
 impl bevy_app::Plugin for DemoStylePlugin {
     fn build(&self, app: &mut bevy_app::App) {
-        app.add_systems(Update, button_system);
+        app.add_systems(Update, (button_system, focus_system));
     }
 }
+
+// Component used to apply button style
+// to entities with this component
+#[derive(Component)]
+pub struct MyStyle;
 
 #[allow(clippy::type_complexity)]
 fn button_system(
@@ -22,27 +28,76 @@ fn button_system(
         (
             Or<(Changed<Interaction>, Changed<Selectable>)>,
             With<Button>,
+            With<MyStyle>,
         ),
     >,
 ) {
+    // Set interactable element
+    // background and border colors
+    // when inactive, pressed, hovered and when selected
+
     for (interaction, mut color, mut border_color, selected) in &mut interaction_query {
         match *interaction {
             Interaction::Pressed => {
                 color.0 = PRESSED_BUTTON;
-                border_color.0 = RED.into();
+                border_color.set_all(RED);
             }
             Interaction::Hovered => {
                 color.0 = HOVERED_BUTTON;
-                border_color.0 = Color::WHITE;
+                border_color.set_all(Color::WHITE);
             }
             Interaction::None => {
                 color.0 = NORMAL_BUTTON;
-                border_color.0 = Color::BLACK;
+                border_color.set_all(Color::BLACK);
             }
         }
         if selected.map(|s| s.selected) == Some(true) {
-            color.0 = color.0.mix(&SELECTED, 0.5);
-            border_color.0 = border_color.0.mix(&SELECTED, 0.5);
+            let BorderColor {
+                top,
+                right,
+                bottom,
+                left,
+            } = &mut *border_color;
+
+            fn assign_color(color: &mut Color) {
+                *color = color.mix(&SELECTED, 0.5);
+            }
+
+            assign_color(&mut color.0);
+            assign_color(top);
+            assign_color(right);
+            assign_color(bottom);
+            assign_color(left);
+        }
+    }
+}
+
+#[derive(Component)]
+#[component(storage = "SparseSet")]
+pub struct Focus;
+
+fn focus_system(
+    mut commands: Commands,
+    focus: Res<InputFocus>,
+    focus_visible: Res<InputFocusVisible>,
+    mut focus_entities: Query<Entity, With<Focus>>,
+) {
+    if focus.is_changed() || focus_visible.is_changed() {
+        for entity in focus_entities.iter_mut() {
+            commands.entity(entity).remove::<(Focus, Outline)>();
+        }
+
+        if focus_visible.0
+            && let Some(entity) = focus.0
+        {
+            commands.entity(entity).insert((
+                Focus,
+                Outline {
+                    color: Color::WHITE,
+                    width: Val::Px(2.0),
+                    offset: Val::Px(2.0),
+                },
+            ));
         }
     }
 }
@@ -94,7 +149,7 @@ pub fn container_with_background() -> MyStyleBundle {
 
     MyStyleBundle {
         node,
-        border_color: BorderColor(Color::srgb(1., 0., 0.)),
+        border_color: BorderColor::all(Color::srgb(1., 0., 0.)),
         border_radius: BorderRadius::all(Val::Px(5.)),
         background_color: BackgroundColor(BACKGROUND),
     }
@@ -103,7 +158,7 @@ pub fn container_with_background() -> MyStyleBundle {
 pub fn button_bundle() -> MyButtonBundle {
     MyButtonBundle {
         button: Button,
-        interact: Interaction::None,
+        my_style: MyStyle,
         style: MyStyleBundle {
             node: Node {
                 border: UiRect::all(Val::Px(5.0)),
@@ -112,10 +167,11 @@ pub fn button_bundle() -> MyButtonBundle {
                 padding: UiRect::all(Val::Px(5.)),
                 ..default()
             },
-            border_color: BorderColor(Color::BLACK),
+            border_color: BorderColor::all(Color::BLACK),
             border_radius: BorderRadius::all(Val::Px(5.)),
             background_color: BackgroundColor(NORMAL_BUTTON),
         },
+        interact: Interaction::None,
     }
 }
 
@@ -130,6 +186,7 @@ pub struct MyStyleBundle {
 #[derive(Bundle)]
 pub struct MyButtonBundle {
     pub button: Button,
+    pub my_style: MyStyle,
     pub style: MyStyleBundle,
     pub interact: Interaction,
 }

@@ -8,7 +8,7 @@ use bevy_immediate::{
     Imm, ImmEntity,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
     ui::{
-        CapsUi, ImplCapsUi, picking::clicked::ImmUiClicked, selected::ImmUiSelectable,
+        CapsUi, ImplCapsUi,clicked::ImmUiClicked, selected::ImmUiSelectable,
         text::ImmUiText,
     },
 };

@@ -12,6 +12,7 @@ fn main() {
         // All examples are implemented in seperate modules
         //
         .add_plugins(hello_world::HelloWorldPlugin)
+        .add_plugins(bevy_inbuilt_ui::BevyInbuiltUiExamplePlugin)
         .add_plugins(plain_ui::PlainUiExamplePlugin)
         .add_plugins(widget_use::WidgetUseExamplePlugin)
         .add_plugins(widget_native::WidgetNativeExamplePlugin)
@@ -28,6 +29,8 @@ fn setup_camera(mut commands: Commands) {
 }
 
 mod hello_world;
+
+mod bevy_inbuilt_ui;
 
 mod plain_ui;
 

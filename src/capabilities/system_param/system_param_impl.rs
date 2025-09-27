@@ -1,7 +1,6 @@
 use std::marker::PhantomData;
 
 use bevy_ecs::{
-    archetype::Archetype,
     query::With,
     system::{
         FilteredResourcesMutParamBuilder, Query, QueryParamBuilder, SystemMeta, SystemParam,
@@ -20,10 +19,7 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapQueryParam<'_, '_, Caps> {
     type State = CapQueryState<Caps>;
     type Item<'world, 'state> = ImmCapQueryParam<'world, 'state, Caps>;
 
-    fn init_state(
-        world: &mut World,
-        system_meta: &mut bevy_ecs::system::SystemMeta,
-    ) -> Self::State {
+    fn init_state(world: &mut World) -> Self::State {
         let requested_access = world
             .get_resource::<ImmCapAccessRequestsResource<Caps>>()
             .expect("bevy_immediate mode plugin not correctly added");
@@ -45,28 +41,18 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapQueryParam<'_, '_, Caps> {
                 }
             });
 
-        let query_state = params.build(world, system_meta);
+        let query_state = params.build(world);
 
         CapQueryState { state: query_state }
     }
 
-    unsafe fn new_archetype(
-        state: &mut Self::State,
-        archetype: &Archetype,
+    fn init_access(
+        state: &Self::State,
         system_meta: &mut SystemMeta,
+        component_access_set: &mut bevy_ecs::query::FilteredAccessSet,
+        world: &mut World,
     ) {
-        unsafe { Query::new_archetype(&mut state.state, archetype, system_meta) };
-    }
-
-    unsafe fn get_param<'world, 'state>(
-        state: &'state mut Self::State,
-        system_meta: &bevy_ecs::system::SystemMeta,
-        world: bevy_ecs::world::unsafe_world_cell::UnsafeWorldCell<'world>,
-        change_tick: bevy_ecs::component::Tick,
-    ) -> Self::Item<'world, 'state> {
-        let query = unsafe { Query::get_param(&mut state.state, system_meta, world, change_tick) };
-
-        Self::Item::<'world, 'state> { query }
+        Query::init_access(&state.state, system_meta, component_access_set, world)
     }
 
     fn apply(state: &mut Self::State, system_meta: &SystemMeta, world: &mut World) {
@@ -82,16 +68,27 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapQueryParam<'_, '_, Caps> {
     }
 
     unsafe fn validate_param(
-        state: &Self::State,
+        state: &mut Self::State,
         system_meta: &SystemMeta,
         world: bevy_ecs::world::unsafe_world_cell::UnsafeWorldCell,
     ) -> Result<(), bevy_ecs::system::SystemParamValidationError> {
-        unsafe { Query::validate_param(&state.state, system_meta, world) }
+        unsafe { Query::validate_param(&mut state.state, system_meta, world) }
+    }
+
+    unsafe fn get_param<'world, 'state>(
+        state: &'state mut Self::State,
+        system_meta: &bevy_ecs::system::SystemMeta,
+        world: bevy_ecs::world::unsafe_world_cell::UnsafeWorldCell<'world>,
+        change_tick: bevy_ecs::component::Tick,
+    ) -> Self::Item<'world, 'state> {
+        let query = unsafe { Query::get_param(&mut state.state, system_meta, world, change_tick) };
+
+        Self::Item::<'world, 'state> { query }
     }
 }
 
 pub struct CapQueryState<Caps: CapSet> {
-    state: bevy_ecs::query::QueryState<FilteredEntityMut<'static>, With<ImmMarker<Caps>>>,
+    state: bevy_ecs::query::QueryState<FilteredEntityMut<'static, 'static>, With<ImmMarker<Caps>>>,
 }
 
 #[expect(unsafe_code)]
@@ -99,10 +96,7 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapResourcesParam<'_, '_, Caps> {
     type State = CapResourceState<Caps>;
     type Item<'world, 'state> = ImmCapResourcesParam<'world, 'state, Caps>;
 
-    fn init_state(
-        world: &mut World,
-        system_meta: &mut bevy_ecs::system::SystemMeta,
-    ) -> Self::State {
+    fn init_state(world: &mut World) -> Self::State {
         let requested_access = world
             .get_resource::<ImmCapAccessRequestsResource<Caps>>()
             .expect("bevy_immediate mode plugin not correctly added");
@@ -120,7 +114,7 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapResourcesParam<'_, '_, Caps> {
                 }
             }
         });
-        let state = builder.build(world, system_meta);
+        let state = builder.build(world);
 
         CapResourceState {
             access: state,
@@ -144,14 +138,6 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapResourcesParam<'_, '_, Caps> {
         }
     }
 
-    unsafe fn new_archetype(
-        state: &mut Self::State,
-        archetype: &Archetype,
-        system_meta: &mut SystemMeta,
-    ) {
-        unsafe { FilteredResourcesMut::new_archetype(&mut state.access, archetype, system_meta) }
-    }
-
     fn apply(state: &mut Self::State, system_meta: &SystemMeta, world: &mut World) {
         FilteredResourcesMut::apply(&mut state.access, system_meta, world)
     }
@@ -165,15 +151,24 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapResourcesParam<'_, '_, Caps> {
     }
 
     unsafe fn validate_param(
-        state: &Self::State,
+        state: &mut Self::State,
         system_meta: &SystemMeta,
         world: bevy_ecs::world::unsafe_world_cell::UnsafeWorldCell,
     ) -> Result<(), bevy_ecs::system::SystemParamValidationError> {
-        unsafe { FilteredResourcesMut::validate_param(&state.access, system_meta, world) }
+        unsafe { FilteredResourcesMut::validate_param(&mut state.access, system_meta, world) }
+    }
+
+    fn init_access(
+        state: &Self::State,
+        system_meta: &mut SystemMeta,
+        component_access_set: &mut bevy_ecs::query::FilteredAccessSet,
+        world: &mut World,
+    ) {
+        FilteredResourcesMut::init_access(&state.access, system_meta, component_access_set, world)
     }
 }
 
 pub struct CapResourceState<Caps: CapSet> {
     _ph: PhantomData<Caps>,
-    access: bevy_ecs::query::Access<bevy_ecs::component::ComponentId>,
+    access: bevy_ecs::query::Access,
 }

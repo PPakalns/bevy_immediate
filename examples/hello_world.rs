@@ -6,8 +6,8 @@ use bevy_immediate::{
     ui::CapsUi,
 };
 use bevy_ui::{
-    BackgroundColor, BorderColor, BorderRadius, FlexDirection, Node, TextShadow, UiRect, Val,
-    widget::Text,
+    BackgroundColor, BorderColor, BorderRadius, FlexDirection, Node, UiRect, Val,
+    widget::{Text, TextShadow},
 };
 
 pub struct HelloWorldPlugin;
@@ -40,7 +40,7 @@ impl ImmediateAttach<CapsUi> for HelloWorldRoot {
                         row_gap: Val::Px(10.),
                         ..default()
                     },
-                    BorderColor(Color::srgb(1., 0., 0.)),
+                    BorderColor::all(Color::srgb(1., 0., 0.)),
                     BorderRadius::all(Val::Px(5.)),
                     BackgroundColor(Color::srgb(0.05, 0.05, 0.05)),
                 )

@@ -3,7 +3,7 @@ use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
     impl_capability_set,
-    ui::{ImplCapsUi, picking::clicked::ImmUiClicked, selected::ImmUiSelectable, text::ImmUiText},
+    ui::{ImplCapsUi, clicked::ImmUiClicked, selected::ImmUiSelectable, text::ImmUiText},
 };
 
 use crate::{extension::ImmCapUiCollapse, styles};
@@ -19,12 +19,16 @@ impl_capability_set!(
         //
         // Macro will add compile time check to check that
         // you correctly listed them
-        bevy_immediate::ui::ui_base::CapabilityUiBase,
-        bevy_immediate::ui::ui_layout_order::CapabilityUiLayoutOrder,
+        bevy_immediate::ui::base::CapabilityUiBase,
+        bevy_immediate::ui::layout_order::CapabilityUiLayoutOrder,
+        bevy_immediate::ui::look::CapabilityUiLook,
+        bevy_immediate::ui::disabled::CapabilityUiDisabled,
         bevy_immediate::ui::interaction::CapabilityUiInteraction,
         bevy_immediate::ui::text::CapabilityUiText,
         bevy_immediate::ui::selected::CapabilityUiSelectable,
-        bevy_immediate::ui::picking::clicked::CapabilityUiClicked,
+        bevy_immediate::ui::checked::CapabilityUiChecked,
+        bevy_immediate::ui::clicked::CapabilityUiClicked,
+        bevy_immediate::ui::activated::CapabilityUiActivated,
         //
         // Add your own capabilities
         crate::extension::CapUiToggle

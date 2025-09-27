@@ -31,7 +31,7 @@ pub struct ImmCapAccessRequests<Caps: CapSet> {
     resources: HashMap<ComponentId, ResourceRequest>,
 
     #[allow(clippy::type_complexity)]
-    pub(crate) on_children: Vec<Box<dyn Fn(&mut ImmEntity<Caps>) + Send + Sync>>,
+    pub(crate) on_children: Vec<Box<dyn Fn(&mut ImmEntity<'_, '_, '_, Caps>) + Send + Sync>>,
 }
 
 impl<Caps: CapSet> Default for ImmCapAccessRequests<Caps> {
@@ -46,10 +46,7 @@ impl<Caps: CapSet> Default for ImmCapAccessRequests<Caps> {
 
 impl<Caps: CapSet> ImmCapAccessRequests<Caps> {
     /// Mark that component will be immutably accessed
-    pub fn request_component_read<C: Component<Mutability = Mutable>>(
-        &mut self,
-        world: &mut World,
-    ) {
+    pub fn request_component_read<C: Component>(&mut self, world: &mut World) {
         self.request_component_inner::<C>(world, false)
     }
 

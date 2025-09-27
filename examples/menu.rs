@@ -1,4 +1,4 @@
-use bevy::utils::default;
+use bevy::{ui_render::UiDebugOptions, utils::default};
 use bevy_ecs::{
     component::Component,
     resource::Resource,
@@ -7,9 +7,9 @@ use bevy_ecs::{
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
-    ui::{CapsUi, picking::clicked::ImmUiClicked, selected::ImmUiSelectable, text::ImmUiText},
+    ui::{CapsUi, clicked::ImmUiClicked, selected::ImmUiSelectable, text::ImmUiText},
 };
-use bevy_ui::{FlexDirection, Node, UiDebugOptions, Val};
+use bevy_ui::{FlexDirection, Node, Val};
 
 use crate::styles::{self, button_bundle, fill_parent_node, text_style};
 
@@ -17,7 +17,7 @@ pub struct MenuExamplePlugin;
 
 impl bevy_app::Plugin for MenuExamplePlugin {
     fn build(&self, app: &mut bevy_app::App) {
-        app.insert_resource(CurrentExample::WidgetUse);
+        app.insert_resource(CurrentExample::BevyInbuiltUi);
 
         app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, MenuUiRoot>::new());
     }
@@ -55,7 +55,13 @@ impl ImmediateAttach<CapsUi> for MenuUiRoot {
                     ..default()
                 });
 
-                for (example, title) in MENU_VARIANTS {
+                for (example, title) in [
+                    (CurrentExample::HelloWorld, "Hello World"),
+                    (CurrentExample::BevyInbuiltUi, "Bevy Inbuilt Ui"),
+                    (CurrentExample::WidgetUse, "Widget usage"),
+                    (CurrentExample::ExtensionUse, "Extension usage"),
+                    (CurrentExample::PowerUser, "Power user"),
+                ] {
                     let mut button = ui
                         .ch()
                         .on_spawn_insert(styles::button_bundle)
@@ -90,17 +96,11 @@ impl ImmediateAttach<CapsUi> for MenuUiRoot {
     }
 }
 
-pub const MENU_VARIANTS: [(CurrentExample, &str); 4] = [
-    (CurrentExample::HelloWorld, "Hello World"),
-    (CurrentExample::WidgetUse, "Widget usage"),
-    (CurrentExample::ExtensionUse, "Extension usage"),
-    (CurrentExample::PowerUser, "Power user"),
-];
-
 #[derive(Resource, Hash, Clone, Copy, PartialEq, Eq)]
 pub enum CurrentExample {
-    WidgetUse,
     HelloWorld,
+    BevyInbuiltUi,
+    WidgetUse,
     ExtensionUse,
     PowerUser,
 }

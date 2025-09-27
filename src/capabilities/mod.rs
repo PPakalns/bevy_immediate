@@ -53,11 +53,14 @@ macro_rules! impl_capability_set {
             impl $crate::ImplCap<$t> for $name {}
         )+
 
-        #[allow(unused)]
-        fn _check<T: $subset_check>() {}
-        #[allow(unused)]
-        fn _check_capability_implements_at_least_provided_subset() {
-            _check::<$name>();
+        $crate::paste::paste!{
+            #[allow(warnings)]
+            fn [<_subset_check_for $set_trait>]<T: $subset_check>() {}
+
+            #[allow(warnings)]
+            fn [< _check_ $set_trait _implements_at_least_provided_subset $subset_check >]() {
+                [<_subset_check_for $set_trait>]::<$name>();
+            }
         }
     };
 }

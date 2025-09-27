@@ -6,7 +6,7 @@ use bevy_ecs::{
     change_detection::DetectChanges,
     component::{Component, Mutable},
     entity::Entity,
-    event::Event,
+    event::EntityEvent,
     hierarchy::ChildOf,
     query::{QueryEntityError, Without},
     resource::Resource,
@@ -344,14 +344,14 @@ impl<'r, 'w, 's, Caps: CapSet> ImmEntity<'r, 'w, 's, Caps> {
     /// Helper method to simplify entity retrieval
     pub fn cap_get_entity(
         &self,
-    ) -> Result<FilteredEntityRef<'_>, bevy_ecs::query::QueryEntityError> {
+    ) -> Result<FilteredEntityRef<'_, '_>, bevy_ecs::query::QueryEntityError> {
         self.ctx().cap_entities.get(self.entity())
     }
 
     /// Helper method to simplify entity retrieval
     pub fn cap_get_entity_mut(
         &mut self,
-    ) -> Result<bevy_ecs::world::FilteredEntityMut<'_>, bevy_ecs::query::QueryEntityError> {
+    ) -> Result<bevy_ecs::world::FilteredEntityMut<'_, '_>, bevy_ecs::query::QueryEntityError> {
         let entity = self.entity();
         self.ctx_mut().cap_entities.get_mut(entity)
     }
@@ -385,7 +385,7 @@ impl<'r, 'w, 's, Caps: CapSet> ImmEntity<'r, 'w, 's, Caps> {
     /// Issue [`EntityCommands`] at this moment
     pub fn at_this_moment_apply_commands<F>(mut self, f: F) -> Self
     where
-        F: FnOnce(&mut EntityCommands),
+        F: FnOnce(&mut EntityCommands<'_>),
     {
         let mut entity_commands = self.entity_commands();
         f(&mut entity_commands);
@@ -395,7 +395,7 @@ impl<'r, 'w, 's, Caps: CapSet> ImmEntity<'r, 'w, 's, Caps> {
     /// Issue [`EntityCommands`] at this moment if condition is met
     pub fn at_this_moment_apply_commands_if<F>(self, f: F, condition: impl FnOnce() -> bool) -> Self
     where
-        F: FnOnce(&mut EntityCommands),
+        F: FnOnce(&mut EntityCommands<'_>),
     {
         if condition() {
             self.at_this_moment_apply_commands(f)
@@ -408,7 +408,7 @@ impl<'r, 'w, 's, Caps: CapSet> ImmEntity<'r, 'w, 's, Caps> {
     /// (issued only when entity is created).
     pub fn on_spawn_apply_commands<F>(self, f: F) -> Self
     where
-        F: FnOnce(&mut EntityCommands),
+        F: FnOnce(&mut EntityCommands<'_>),
     {
         if self.e.will_be_spawned {
             self.at_this_moment_apply_commands(f)
@@ -421,7 +421,7 @@ impl<'r, 'w, 's, Caps: CapSet> ImmEntity<'r, 'w, 's, Caps> {
     /// (issued only when entity is created).
     pub fn on_spawn_apply_commands_if<F>(self, f: F, condition: impl FnOnce() -> bool) -> Self
     where
-        F: FnOnce(&mut EntityCommands),
+        F: FnOnce(&mut EntityCommands<'_>),
     {
         if self.e.will_be_spawned {
             self.at_this_moment_apply_commands_if(f, condition)
@@ -486,7 +486,7 @@ impl<'r, 'w, 's, Caps: CapSet> ImmEntity<'r, 'w, 's, Caps> {
 
     /// Observe with [`bevy_ecs::system::ObserverSystem`]
     /// (added only when entity is created).
-    pub fn on_spawn_observe<E: Event, B: Bundle, M>(
+    pub fn on_spawn_observe<E: EntityEvent, B: Bundle, M>(
         self,
         observer: impl IntoObserverSystem<E, B, M>,
     ) -> Self {
