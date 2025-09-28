@@ -34,7 +34,10 @@ pub use paste;
 #[macro_export]
 macro_rules! lch {
     ($ui:ident) => {
-        $ui.ch_id((line!(), column!()))
+        $ui.ch_id($crate::lid!())
+    };
+    ($ui:ident, $id:ident) => {
+        $ui.ch_id($crate::lid!($id))
     };
 }
 
@@ -46,5 +49,8 @@ macro_rules! lch {
 macro_rules! lid {
     () => {
         (line!(), column!())
+    };
+    ($id:ident) => {
+        (line!(), column!(), $id)
     };
 }
