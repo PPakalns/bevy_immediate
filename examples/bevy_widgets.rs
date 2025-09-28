@@ -31,10 +31,13 @@ use bevy_immediate::{
     },
 };
 use bevy_ui::{BackgroundColor, Display, GridPlacement, Node, RepeatedGridTrack, Val};
+use bevy_ui_widgets::SliderStep;
 
-pub struct BevyInbuiltUiExamplePlugin;
+use crate::styles::title_text_style;
 
-impl bevy_app::Plugin for BevyInbuiltUiExamplePlugin {
+pub struct BevyWidgetExamplePlugin;
+
+impl bevy_app::Plugin for BevyWidgetExamplePlugin {
     fn build(&self, app: &mut bevy_app::App) {
         // You will need bevy feature `experimental_bevy_feathers` and/or `experimental_bevy_ui_widgets`
         // For bevy feather prestyled bevy ui components
@@ -44,15 +47,19 @@ impl bevy_app::Plugin for BevyInbuiltUiExamplePlugin {
         // Initialize plugin with your root component
         app.add_plugins(BevyImmediateAttachPlugin::<
             CapsUiFeathers,
-            BevyInbuiltUiExampleRoot,
+            BevyWidgetExampleRoot,
         >::new());
 
         app.insert_resource(WidgetState::default());
     }
 }
 
+// See bevy example `bevy/examples/ui/feathers.rs`
+// https://github.com/bevyengine/bevy/tree/main/examples
+// for more information
+
 #[derive(Component)]
-pub struct BevyInbuiltUiExampleRoot;
+pub struct BevyWidgetExampleRoot;
 
 #[derive(Resource)]
 struct WidgetState {
@@ -90,7 +97,7 @@ pub struct Params<'w, 's, Caps: CapSet> {
     background: Query<'w, 's, &'static mut BackgroundColor, Without<ImmMarker<Caps>>>,
 }
 
-impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
+impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
     type Params = Params<'static, 'static, CapsUiFeathers>;
 
     fn construct(ui: &mut Imm<CapsUiFeathers>, params: &mut Params<CapsUiFeathers>) {
@@ -101,12 +108,6 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
         } = params;
 
         let WidgetState { values, hsva } = state.deref_mut();
-
-        let title_style = || {
-            let mut font = TextFont::default();
-            font.font_size *= 1.4;
-            font
-        };
 
         fn button_rounded_corners_row(idx: usize, count: usize) -> RoundedCorners {
             if idx == 0 {
@@ -119,8 +120,10 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
         }
 
         ui.ch()
-            .on_spawn_insert(title_style)
-            .on_spawn_text("Bevy feathers widgets (based on bevy_ui_widgets)");
+            .on_spawn_insert(title_text_style)
+            .on_spawn_text("Bevy widgets");
+        ui.ch()
+            .on_spawn_text("Using bevy_feathers styling, based on bevy_ui_widgets.");
 
         ui.ch()
             .on_spawn_insert(|| Node {
@@ -330,7 +333,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                             value: 0.,
                             channel: feathers::controls::ColorChannel::HslHue,
                         },
-                        (),
+                        SliderStep(5.),
                     )
                 })
                 .slider(&mut hsva.hue);
@@ -343,7 +346,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                             value: 0.,
                             channel: feathers::controls::ColorChannel::HslSaturation,
                         },
-                        (),
+                        SliderStep(0.05),
                     )
                 })
                 .slider_base_color(hsva.with_saturation(1.).with_value(1.).into())
@@ -357,7 +360,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                             value: 0.,
                             channel: feathers::controls::ColorChannel::HslLightness,
                         },
-                        (),
+                        SliderStep(0.05),
                     )
                 })
                 .slider(&mut hsva.value);
@@ -370,7 +373,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                             value: 0.,
                             channel: feathers::controls::ColorChannel::Alpha,
                         },
-                        (),
+                        SliderStep(0.05),
                     )
                 })
                 .slider_base_color((*hsva).into())
@@ -381,11 +384,11 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                 .on_spawn_insert(|| {
                     feathers::controls::slider(
                         SliderProps {
-                            value: 3.,
+                            value: 0.,
                             min: 0.,
                             max: 1.,
                         },
-                        (),
+                        SliderStep(0.05),
                     )
                 })
                 .slider_base_color((*hsva).into())

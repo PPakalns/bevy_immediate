@@ -145,6 +145,7 @@ pub fn title_text_style() -> impl Bundle + use<> {
 
 pub fn container_with_background() -> MyStyleBundle {
     let mut node = node_container();
+    node.overflow = Overflow::clip();
     node.border = UiRect::all(Val::Px(5.0));
 
     MyStyleBundle {

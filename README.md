@@ -55,15 +55,18 @@ See [CHANGELOG](./CHANGELOG.md) for changes between versions.
 - [Hello world](./examples/hello_world.rs) - Minimal usage example
 - [Power user](./examples/power_user.rs) - Customized API for complex use cases
 - [Plain UI](./examples/plain_ui.rs) - Create your UI as a single system
-- **Reusable widgets**
+- **Bevy inbuilt widgets**:
+  - [Widgets](./examples/bevy_widgets.rs) - Showcases how to use widgets from bevy
+  - [Scrollarea](./examples/bevy_scrollbars.rs) - Showcases how to create reusable scrollareas 
+- **Reusable widget implementation**
   - [Functional widget](./examples/widget_functional.rs) - Implement widgets as plain functions
   - [Native widget](./examples/widget_native.rs) - Implement native Bevy-like widgets
   - [Widget use](./examples/widget_use.rs) - Use functional and native widgets together
 - [Menu example](./examples/menu.rs) - Build a simple menu with selectable buttons
-- Extensions
+- **Extensions**
   - [Extension implementation](./examples/extension.rs) - Write your own capabilities (e.g. `.clicked()` or `.selected(...)`)
   - [Using extensions](./examples/extension_use.rs) - Use a custom predefined set of extensions
-- [Style](./examples/styles.rs) - Simple example how to apply custom styles to UI
+- [Style](./examples/styles.rs) - Contains UI styling implementation for examples
 
 
 Check out `./examples/` (`cargo run --example demo`).
@@ -321,11 +324,10 @@ Publish your own crate that is built using `bevy_immediate`!
   - [x] Tried transitive trait implementation (works only inside one crate)
   - [x] Tried TupleList approach (conflicting trait implementations)
 
-  Therefore currently to define capability set users need to list all used capabilities.
-- [ ] Improve examples
-  - [ ] Add Example for hot reloading
 - Create reusable logic for:
-  - [ ] Scroll areas
+  - [x] Bevy ui widgets
+  - [x] Bevy scroll areas
   - [ ] Tooltips
-  - [ ] Windows (like `egui::Window`)
+  - [ ] Popups
+  - [ ] Draggable windows (like `egui::Window`)
 

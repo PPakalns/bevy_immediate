@@ -41,6 +41,8 @@ impl_capability_set!(
 );
 
 /// Defines capability set for Ui with bevy_ui_widgets support
+///
+/// If you want to use bevy feathers, you probably want to use [CapsUiFeathers]
 pub struct CapsUiWidget;
 
 #[cfg(feature = "bevy_ui_widgets")]
@@ -64,7 +66,7 @@ impl_capability_set!(
     )
 );
 
-/// Defined capability set for Ui with bevy_feathers support
+/// Defined capability set for Ui with bevy_feathers and bevy_ui_widgets support
 pub struct CapsUiFeathers;
 
 #[cfg(feature = "bevy_feathers")]

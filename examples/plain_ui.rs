@@ -4,7 +4,8 @@ use bevy_input_focus::tab_navigation::TabGroup;
 use bevy_ui::Node;
 
 use crate::{
-    bevy_inbuilt_ui::BevyInbuiltUiExampleRoot,
+    bevy_scrollarea::BevyScrollareaExampleRoot,
+    bevy_widgets::BevyWidgetExampleRoot,
     extension_use::ExtensionUseExampleRoot,
     hello_world::HelloWorldRoot,
     menu::{CurrentExample, MenuUiRoot},
@@ -74,8 +75,11 @@ fn ui_system(ctx: ImmCtx<CapsUi>, example: ResMut<CurrentExample>) {
                 CurrentExample::PowerUser => {
                     content.on_spawn_insert(|| PowerUserExampleRoot);
                 }
-                CurrentExample::BevyInbuiltUi => {
-                    content.on_spawn_insert(|| BevyInbuiltUiExampleRoot);
+                CurrentExample::BevyWidgets => {
+                    content.on_spawn_insert(|| BevyWidgetExampleRoot);
+                }
+                CurrentExample::BevyScrollbar => {
+                    content.on_spawn_insert(|| BevyScrollareaExampleRoot);
                 }
             }
         });

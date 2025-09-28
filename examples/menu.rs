@@ -17,7 +17,7 @@ pub struct MenuExamplePlugin;
 
 impl bevy_app::Plugin for MenuExamplePlugin {
     fn build(&self, app: &mut bevy_app::App) {
-        app.insert_resource(CurrentExample::BevyInbuiltUi);
+        app.insert_resource(CurrentExample::BevyWidgets);
 
         app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, MenuUiRoot>::new());
     }
@@ -57,7 +57,8 @@ impl ImmediateAttach<CapsUi> for MenuUiRoot {
 
                 for (example, title) in [
                     (CurrentExample::HelloWorld, "Hello World"),
-                    (CurrentExample::BevyInbuiltUi, "Bevy Inbuilt Ui"),
+                    (CurrentExample::BevyWidgets, "Bevy Ui Widgets"),
+                    (CurrentExample::BevyScrollbar, "Bevy Ui Scrollareas"),
                     (CurrentExample::WidgetUse, "Widget usage"),
                     (CurrentExample::ExtensionUse, "Extension usage"),
                     (CurrentExample::PowerUser, "Power user"),
@@ -99,8 +100,9 @@ impl ImmediateAttach<CapsUi> for MenuUiRoot {
 #[derive(Resource, Hash, Clone, Copy, PartialEq, Eq)]
 pub enum CurrentExample {
     HelloWorld,
-    BevyInbuiltUi,
+    BevyWidgets,
     WidgetUse,
     ExtensionUse,
     PowerUser,
+    BevyScrollbar,
 }
