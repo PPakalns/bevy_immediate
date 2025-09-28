@@ -36,6 +36,8 @@ paste = "1.0"
 [features]
 default = ["ui", "picking", "bevy_ui_widgets", "bevy_feathers"]
 
+hotpatching = ["bevy_ecs/hotpatching"]
+
 ui = ["dep:bevy_ui", "dep:bevy_color"]
 bevy_feathers = ["dep:bevy_feathers", "bevy_ui_widgets", "dep:bevy_color"]
 bevy_ui_widgets = ["dep:bevy_ui_widgets", "picking"]

@@ -27,20 +27,31 @@ impl ImmediateAttach<CapsUi> for HotPatchingRoot {
     type Params = (); // Access data from World using SystemParam
 
     fn construct(ui: &mut Imm<CapsUi>, _: &mut ()) {
+        // There are two possible workflows:
+
+        // 1.
+        // If `hotpatching` feature is enabled for `bevy_immediate` and `bevy` crates
+        //
+        // it will trigger recreation of UI.
+
+        // 2.
+        // If `hotpatching` feature **is not** enabled for this crate.
+        //
         // Hot patching will try to reuse already existing nodes
         //
         // This may not reload changes that are marked as `on_spawn`
         //
         // To force recreation of node:
         //
-        // * Change id value passed to current `.ch_id(__)` or to ancestor element.
-        // * Comment out all code and then uncomment.
+        // * Change id value passed to current `.ch_id(__)` or to any ancestor element.
+        // * Comment out all code and then uncomment it.
         // * Open, close current UI,
         // * You can use `lid!()` macro which will use line and column number for id.
         //   Then node recreation will be based on source code location.
-        //
         // This library will try to develop a better way in future:
         // * like inserting compilation time as id :)
+
+        // To execute demo with hotpatching: See bevy_immediate README.md "Hotpatching" section.
 
         lch!(ui)
             .on_spawn_insert(title_text_style)

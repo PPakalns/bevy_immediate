@@ -38,6 +38,9 @@ pub struct ImmCtx<'w, 's, Caps: CapSet> {
     pub(super) state: Res<'w, ImmediateModeStateResource<Caps>>,
     pub(super) mapping: Res<'w, ImmediateModeEntityMapping<Caps>>,
     pub(super) entity_query: Query<'w, 's, ImmEntityQuery<Caps>, (With<ImmMarker<Caps>>, ())>,
+
+    #[cfg(feature = "hotpatching")]
+    pub(super) hotpatching: Res<'w, super::hotpatching::HotpatchingCounter>,
 }
 
 impl<'w, 's, Caps> ImmCtx<'w, 's, Caps>
@@ -45,11 +48,18 @@ where
     Caps: CapSet,
 {
     /// Initialize entity hierarchy managed by immediate mode
+    ///
+    /// When `hotpatching` feature is enabled. Will combine id with last time when hotpatching was triggered
     pub fn build_immediate_root<T: std::hash::Hash>(self, root_id: T) -> Imm<'w, 's, Caps> {
+        let id = ImmId::new(root_id);
+
+        #[cfg(feature = "hotpatching")]
+        let id = ImmId::new((id, self.hotpatching.hotpatch()));
+
         Imm {
             ctx: self,
             current: Current {
-                id: ImmId::new(root_id),
+                id,
                 entity: None,
                 idx: 0,
             },
@@ -57,15 +67,22 @@ where
     }
 
     /// Initialize entity hierarchy managed by immediate mode starting from given **existing** entity
+    ///
+    /// When `hotpatching` feature is enabled. Will combine id with last time when hotpatching was triggered
     pub fn build_immediate_from<T: std::hash::Hash>(
         self,
         root_id: T,
         entity: Entity,
     ) -> Imm<'w, 's, Caps> {
+        let id = ImmId::new(root_id);
+
+        #[cfg(feature = "hotpatching")]
+        let id = ImmId::new((id, self.hotpatching.hotpatch()));
+
         Imm {
             ctx: self,
             current: Current {
-                id: ImmId::new(root_id),
+                id,
                 entity: Some(CurrentEntity {
                     entity,
                     will_be_spawned: false,

@@ -47,6 +47,9 @@ where
         let mut capabilities = ImmCapAccessRequests::<Caps>::default();
         Caps::initialize(app, &mut capabilities);
         app.insert_resource(ImmCapAccessRequestsResource::new(capabilities));
+
+        #[cfg(feature = "hotpatching")]
+        hotpatching::init(app);
     }
 
     fn is_unique(&self) -> bool {
@@ -55,6 +58,10 @@ where
         false
     }
 }
+
+/// Adds support for bevy inbuilt hotpatching mechanism
+#[cfg(feature = "hotpatching")]
+pub mod hotpatching;
 
 mod system_set;
 pub use system_set::ImmediateSystemSet;

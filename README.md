@@ -35,7 +35,7 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
 - **Integration-friendly**  
   Works with other libraries (e.g., reloadable CSS style with [bevy_flair](https://github.com/eckz/bevy_flair)).
 - **Hot reloading support**  
-  Supported out of the box using bevy hotpatching approach.`
+  Supported out of the box using bevy hotpatching approach.
   See Hot-Patching example description in [Examples](#Examples) section.
   [hot_lib_reloader](https://docs.rs/hot-lib-reloader/latest/hot_lib_reloader/) works too as alternative.
 
@@ -73,16 +73,7 @@ Examples can be viewed: (`cargo run --example demo`).
   - [Using extensions](./examples/extension_use.rs) - Use a custom predefined set of extensions
 - [Style](./examples/styles.rs) - Contains UI styling implementation for examples
 - **[Hot-Patching example](./examples/hot_patching.rs) - Modify UI during program execution**:
-  Install `dx` tool:  [Instructions & Limitations](https://bevy.org/news/bevy-0-17/#hot-patching-systems-in-a-running-app)
-
-  Launch examples with:
-  `BEVY_ASSET_ROOT="." dx serve --hot-patch --features "bevy/hotpatching" --example demo`
-
-  Try to modify `./examples/hot_patching.rs` example.
-
-  Contains example code with macro that helps to force entity recreation upon changes. 
-  Instead of `ui.ch()` use `ui.ch_id('unique_id')` or `ch!(ui)` for reloaded function
-  to correctly identify exiting entities.
+  See [Hot-Patching instructions][#Hotpatching]
 
 Examples are located in [`./examples/`](./examples/)
 
@@ -304,12 +295,44 @@ where
 }
 ```
 
+## New element creation
+
+For child entity creation that could appear, disappear: **unique id must be provided**.
+
+Examples:
+```rs
+ui.ch_id(lid!());
+ui.ch_id("my_id");
+
+for idx in 0..20 {
+    ui.ch_id((lid!(), idx));
+    ui.ch_id(("my_loop", idx));
+}
+```
+
+## Hotpatching
+
+Install `dx` tool:  [Instructions & Limitations](https://bevy.org/news/bevy-0-17/#hot-patching-systems-in-a-running-app)
+
+Launch examples with:
+`BEVY_ASSET_ROOT="." dx serve --hot-patch --features "bevy_immediate/hotpatching" --features "bevy/hotpatching" --example demo`
+
+Make sure that you enable `hotpatching` feature `bevy_immediate` and `bevy` crates so that UI is recreated upon hotpatch.
+
+Try to modify and save `./examples/hot_patching.rs` or any other example.
+
 ## FAQ
 
 ### UI nodes are changing order and not correctly laid out
 
 Make sure that you assign unique id using `ch_id` for ui nodes that
 can appear, disappear.
+
+If you do not want to think about unique ids. 
+You can use helper macro `lid!()`. 
+But this still requires adding unique id counter inside loops: `ui.ch_id((lid!(), idx))`.
+
+See [New element creation](#New element creation)
 
 ### How do I avoid collisions with resources or queries in my systems?
 
