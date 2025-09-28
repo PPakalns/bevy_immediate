@@ -35,9 +35,8 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
 - **Integration-friendly**  
   Works with other libraries (e.g., reloadable CSS style with [bevy_flair](https://github.com/eckz/bevy_flair)).
 - **Hot reloading support**  
-  Supported out of the box using bevy hotpatching approach.
-  See Hot-Patching example description in [Examples](#Examples) section.
-  [hot_lib_reloader](https://docs.rs/hot-lib-reloader/latest/hot_lib_reloader/) works too as alternative.
+  * Supported out of the box. See [hotpatching](#Hotpatching).
+  * Alternative: [hot_lib_reloader](https://docs.rs/hot-lib-reloader/latest/hot_lib_reloader/) works too as alternative.
 
 
 ⚠️ **Note:** This library is under active development. Expect some breaking changes, but they will be minimized.
@@ -73,7 +72,7 @@ Examples can be viewed: (`cargo run --example demo`).
   - [Using extensions](./examples/extension_use.rs) - Use a custom predefined set of extensions
 - [Style](./examples/styles.rs) - Contains UI styling implementation for examples
 - **[Hot-Patching example](./examples/hot_patching.rs) - Modify UI during program execution**:
-  See [Hot-Patching instructions][#Hotpatching]
+  See [Hotpatching](#Hotpatching) section.
 
 Examples are located in [`./examples/`](./examples/)
 
@@ -321,7 +320,7 @@ Launch examples with:
 
 Make sure that you enable `hotpatching` feature `bevy_immediate` and `bevy` crates so that UI is recreated upon hotpatch.
 
-Try to modify and save `./examples/hot_patching.rs` or any other example.
+Try to modify and save `./examples/hot_patching.rs` or any other example and see changes in the live demo.
 
 ## FAQ
 
