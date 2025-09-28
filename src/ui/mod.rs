@@ -138,3 +138,6 @@ pub mod slider_base_color;
 /// Module implements functionality for setting SliderValue
 #[cfg(feature = "bevy_feathers")]
 pub mod button_variant;
+
+/// Contains plugin implementation for value change entity event tracking
+pub mod track_value_change_plugin;

@@ -1,7 +1,9 @@
-use bevy_ecs::component::Component;
 use bevy_ui_widgets::SliderValue;
 
-use crate::{CapSet, ImmCapability, ImmEntity, ImplCap};
+use crate::{
+    CapSet, ImmCapability, ImmEntity, ImplCap,
+    ui::track_value_change_plugin::{NewValueChange, TrackValueChangePlugin},
+};
 
 /// Implements capability to set slider value
 pub struct CapabilityUiSliderValue;
@@ -10,14 +12,13 @@ impl ImmCapability for CapabilityUiSliderValue {
     fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
         let _ = cap_req;
         let _ = app;
-        cap_req.request_component_write::<StoredSliderValue>(app.world_mut());
+        cap_req.request_component_write::<NewValueChange<f32>>(app.world_mut());
         cap_req.request_component_read::<SliderValue>(app.world_mut());
-    }
-}
 
-#[derive(Component)]
-struct StoredSliderValue {
-    value: f32,
+        if !app.is_plugin_added::<TrackValueChangePlugin<f32>>() {
+            app.add_plugins(TrackValueChangePlugin::<f32>::default());
+        }
+    }
 }
 
 /// Implements capability to set slider value
@@ -31,31 +32,44 @@ where
     Cap: ImplCap<CapabilityUiSliderValue>,
 {
     fn slider(mut self, value: &mut f32) -> Self {
-        if let Ok(mut entity) = self.cap_get_entity_mut() {
-            let current_value = entity.get::<SliderValue>().map(|val| val.0);
-            let last_value = entity.get::<StoredSliderValue>().map(|val| val.value);
+        'initialized: {
+            let Ok(mut entity) = self.cap_get_entity_mut() else {
+                break 'initialized;
+            };
 
-            if let (Some(current_value), Some(last_value)) = (current_value, last_value) {
-                if last_value != current_value {
-                    // Component has triggered checked value change
+            let Some(mut new_value) = entity.get_mut::<NewValueChange<f32>>() else {
+                break 'initialized;
+            };
+            let new_value = NewValueChange::take(&mut new_value);
 
-                    *value = current_value;
-                    entity.get_mut::<StoredSliderValue>().unwrap().value = current_value;
-                    return self;
-                }
+            let Some(last_value) = entity.get::<SliderValue>() else {
+                break 'initialized;
+            };
+            let last_value = last_value.0;
 
-                if *value != last_value {
-                    // Checked value changed
-                    entity.get_mut::<StoredSliderValue>().unwrap().value = *value;
-                    self.entity_commands().insert(SliderValue(*value));
-                }
-
+            if let Some(new_value) = new_value
+                // Avoid update loop
+                && new_value != last_value
+            {
+                *value = new_value;
+                self.entity_commands().insert(SliderValue(new_value));
                 return self;
             }
+
+            if *value != last_value {
+                // Checked value changed
+                self.entity_commands().insert(SliderValue(*value));
+            }
+
+            return self;
         }
 
         let mut commands = self.entity_commands();
-        commands.insert((StoredSliderValue { value: *value }, SliderValue(*value)));
+        commands
+            .insert(NewValueChange::<f32>::default())
+            .insert(SliderValue(*value));
         self
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////

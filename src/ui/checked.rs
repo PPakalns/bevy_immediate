@@ -1,73 +1,78 @@
-use bevy_ecs::component::Component;
+use bevy_ecs::system::EntityCommands;
 use bevy_ui::Checked;
 
-use crate::{CapSet, ImmCapability, ImmEntity, ImplCap};
+use crate::{
+    CapSet, ImmCapability, ImmEntity, ImplCap,
+    ui::track_value_change_plugin::{NewValueChange, TrackValueChangePlugin},
+};
 
-/// Implements capability to mark entities as selectable.
+/// Implements capability to synchronise checked value on component
 pub struct CapabilityUiChecked;
 
 impl ImmCapability for CapabilityUiChecked {
     fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
         let _ = cap_req;
         let _ = app;
-        cap_req.request_component_write::<StoredCheckedValue>(app.world_mut());
+        cap_req.request_component_write::<NewValueChange<bool>>(app.world_mut());
+
+        if !app.is_plugin_added::<TrackValueChangePlugin<bool>>() {
+            app.add_plugins(TrackValueChangePlugin::<bool>::default());
+        }
     }
 }
 
-#[derive(Component)]
-struct StoredCheckedValue {
-    checked: bool,
-}
-
-/// Implements methods to set entity as checked
+/// Implements capability to synchronise checked value on component
 pub trait ImmUiChecked {
-    /// Update checked state. It requires for component to use [`Checked`] component
-    /// for checked state synchronization
-    fn checked(self, checked: &mut bool) -> Self;
+    /// Synchronise checked value
+    fn checked(self, value: &mut bool) -> Self;
 }
 
 impl<Cap> ImmUiChecked for ImmEntity<'_, '_, '_, Cap>
 where
     Cap: ImplCap<CapabilityUiChecked>,
 {
-    fn checked(mut self, checked: &mut bool) -> Self {
-        let is_checked = self
-            .cap_get_entity()
-            .ok()
-            .map(|entity| entity.contains::<Checked>());
+    fn checked(mut self, value: &mut bool) -> Self {
+        fn update_checked(commands: &mut EntityCommands, value: bool) {
+            if value {
+                commands.insert(Checked);
+            } else {
+                commands.remove::<Checked>();
+            }
+        }
 
-        if let (Ok(Some(mut last_store)), Some(is_checked)) = (
-            self.cap_get_component_mut::<StoredCheckedValue>(),
-            is_checked,
-        ) {
-            if last_store.checked != is_checked {
-                // Component has triggered checked value change
+        'initialized: {
+            let Ok(mut entity) = self.cap_get_entity_mut() else {
+                break 'initialized;
+            };
+            let Some(mut new_value) = entity.get_mut::<NewValueChange<bool>>() else {
+                break 'initialized;
+            };
 
-                *checked = is_checked;
-                last_store.checked = is_checked;
+            let new_value = NewValueChange::take(&mut new_value);
+
+            let last_value = entity.contains::<Checked>();
+
+            if let Some(new_value) = new_value
+                    // Avoid update loop
+                    && new_value != last_value
+            {
+                *value = new_value;
+                update_checked(&mut self.entity_commands(), new_value);
                 return self;
             }
 
-            if *checked != last_store.checked {
+            if *value != last_value {
                 // Checked value changed
-
-                last_store.checked = *checked;
-                if *checked {
-                    self.entity_commands().insert(Checked);
-                } else {
-                    self.entity_commands().remove::<Checked>();
-                }
+                update_checked(&mut self.entity_commands(), *value);
             }
+
             return self;
         }
 
         let mut commands = self.entity_commands();
-        commands.insert(StoredCheckedValue { checked: *checked });
-        if *checked {
-            commands.insert(Checked);
-        } else {
-            commands.remove::<Checked>();
-        }
+        commands.insert(NewValueChange::<bool>::default());
+        update_checked(&mut commands, *value);
+
         self
     }
 }

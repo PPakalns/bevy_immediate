@@ -4,16 +4,12 @@ use bevy::{
     color::Hsva,
     feathers::{
         self, FeathersPlugins,
-        controls::{
-            ButtonProps, ButtonVariant, CheckboxProps, ColorSliderProps, SliderProps,
-            ToggleSwitchProps,
-        },
+        controls::{ButtonProps, ButtonVariant, ColorSliderProps, SliderProps},
         dark_theme::create_dark_theme,
         rounded_corners::RoundedCorners,
         theme::UiTheme,
     },
     text::TextFont,
-    ui_widgets::Callback,
     utils::default,
 };
 use bevy_color::palettes::css::DARK_BLUE;
@@ -144,7 +140,6 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                             ButtonProps {
                                 variant: ButtonVariant::Normal,
                                 corners: RoundedCorners::Left,
-                                on_click: Callback::Ignore,
                             },
                             (),
                             (),
@@ -168,7 +163,6 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                             ButtonProps {
                                 variant: ButtonVariant::Normal,
                                 corners: RoundedCorners::Right,
-                                on_click: Callback::Ignore,
                             },
                             (),
                             (),
@@ -212,7 +206,6 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                                     ButtonProps {
                                         variant: variant.clone(),
                                         corners: button_rounded_corners_row(idx, column_count),
-                                        on_click: Callback::Ignore,
                                     },
                                     (),
                                     (),
@@ -237,7 +230,6 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                                 ButtonProps {
                                     variant: Default::default(),
                                     corners: button_rounded_corners_row(idx, column_count),
-                                    on_click: Callback::Ignore,
                                 },
                                 (),
                                 (),
@@ -257,15 +249,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                 for (idx, state) in values.iter_mut().enumerate() {
                     let checkbox = ui
                         .ch_id(("checkbox", idx))
-                        .on_spawn_insert(|| {
-                            feathers::controls::checkbox(
-                                CheckboxProps {
-                                    on_change: Callback::Ignore,
-                                },
-                                (),
-                                (),
-                            )
-                        })
+                        .on_spawn_insert(|| feathers::controls::checkbox((), ()))
                         .add(|ui| {
                             ui.ch().on_spawn_text_fn(|| format!("Checkbox {idx}"));
                         })
@@ -275,14 +259,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
 
                 for (idx, state) in values.iter_mut().enumerate() {
                     ui.ch_id(("toggle", idx))
-                        .on_spawn_insert(|| {
-                            feathers::controls::toggle_switch(
-                                ToggleSwitchProps {
-                                    on_change: Callback::Ignore,
-                                },
-                                (),
-                            )
-                        })
+                        .on_spawn_insert(|| feathers::controls::toggle_switch(()))
                         .interactions_disabled(state.disabled)
                         .checked(&mut state.value);
                 }
@@ -333,14 +310,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
 
                 for (idx, state) in values.iter_mut().enumerate() {
                     ui.ch_id(("disabled", idx))
-                        .on_spawn_insert(|| {
-                            feathers::controls::toggle_switch(
-                                ToggleSwitchProps {
-                                    on_change: Callback::Ignore,
-                                },
-                                (),
-                            )
-                        })
+                        .on_spawn_insert(|| feathers::controls::toggle_switch(()))
                         .checked(&mut state.disabled);
                 }
             });
@@ -358,7 +328,6 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                     feathers::controls::color_slider(
                         ColorSliderProps {
                             value: 0.,
-                            on_change: Callback::Ignore,
                             channel: feathers::controls::ColorChannel::HslHue,
                         },
                         (),
@@ -372,7 +341,6 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                     feathers::controls::color_slider(
                         ColorSliderProps {
                             value: 0.,
-                            on_change: Callback::Ignore,
                             channel: feathers::controls::ColorChannel::HslSaturation,
                         },
                         (),
@@ -387,7 +355,6 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                     feathers::controls::color_slider(
                         ColorSliderProps {
                             value: 0.,
-                            on_change: Callback::Ignore,
                             channel: feathers::controls::ColorChannel::HslLightness,
                         },
                         (),
@@ -401,7 +368,6 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                     feathers::controls::color_slider(
                         ColorSliderProps {
                             value: 0.,
-                            on_change: Callback::Ignore,
                             channel: feathers::controls::ColorChannel::Alpha,
                         },
                         (),
@@ -418,7 +384,6 @@ impl ImmediateAttach<CapsUiFeathers> for BevyInbuiltUiExampleRoot {
                             value: 3.,
                             min: 0.,
                             max: 1.,
-                            on_change: Callback::Ignore,
                         },
                         (),
                     )
