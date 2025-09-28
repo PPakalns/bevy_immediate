@@ -35,7 +35,10 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
 - **Integration-friendly**  
   Works with other libraries (e.g., reloadable CSS style with [bevy_flair](https://github.com/eckz/bevy_flair)).
 - **Hot reloading support**  
-  Can be added via [hot_lib_reloader](https://docs.rs/hot-lib-reloader/latest/hot_lib_reloader/).
+  Supported out of the box using bevy hotpatching approach.`
+  See Hot-Patching example description in [Examples](#Examples) section.
+  [hot_lib_reloader](https://docs.rs/hot-lib-reloader/latest/hot_lib_reloader/) works too as alternative.
+
 
 ⚠️ **Note:** This library is under active development. Expect some breaking changes, but they will be minimized.
 
