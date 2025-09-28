@@ -52,6 +52,8 @@ See [CHANGELOG](./CHANGELOG.md) for changes between versions.
 
 ## Examples
 
+Examples can be viewed: (`cargo run --example demo`).
+
 - [Hello world](./examples/hello_world.rs) - Minimal usage example
 - [Power user](./examples/power_user.rs) - Customized API for complex use cases
 - [Plain UI](./examples/plain_ui.rs) - Create your UI as a single system
@@ -67,9 +69,19 @@ See [CHANGELOG](./CHANGELOG.md) for changes between versions.
   - [Extension implementation](./examples/extension.rs) - Write your own capabilities (e.g. `.clicked()` or `.selected(...)`)
   - [Using extensions](./examples/extension_use.rs) - Use a custom predefined set of extensions
 - [Style](./examples/styles.rs) - Contains UI styling implementation for examples
+- **[Hot-Patching example](./examples/hot_patching.rs) - Modify UI during program execution**:
+  Install `dx` tool:  [Instructions & Limitations](https://bevy.org/news/bevy-0-17/#hot-patching-systems-in-a-running-app)
 
+  Launch examples with:
+  `BEVY_ASSET_ROOT="." dx serve --hot-patch --features "bevy/hotpatching" --example demo`
 
-Check out `./examples/` (`cargo run --example demo`).
+  Try to modify `./examples/hot_patching.rs` example.
+
+  Contains example code with macro that helps to force entity recreation upon changes. 
+  Instead of `ui.ch()` use `ui.ch_id('unique_id')` or `ch!(ui)` for reloaded function
+  to correctly identify exiting entities.
+
+Examples are located in [`./examples/`](./examples/)
 
 <img width="768" height="447" alt="image" src="https://github.com/user-attachments/assets/a6aa921b-d87b-4779-91e7-0106773183d1" />
 

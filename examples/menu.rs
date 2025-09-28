@@ -62,6 +62,7 @@ impl ImmediateAttach<CapsUi> for MenuUiRoot {
                     (CurrentExample::WidgetUse, "Widget usage"),
                     (CurrentExample::ExtensionUse, "Extension usage"),
                     (CurrentExample::PowerUser, "Power user"),
+                    (CurrentExample::HotPatching, "Hot patching"),
                 ] {
                     let mut button = ui
                         .ch()
@@ -105,4 +106,5 @@ pub enum CurrentExample {
     ExtensionUse,
     PowerUser,
     BevyScrollbar,
+    HotPatching,
 }

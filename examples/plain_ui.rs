@@ -8,6 +8,7 @@ use crate::{
     bevy_widgets::BevyWidgetExampleRoot,
     extension_use::ExtensionUseExampleRoot,
     hello_world::HelloWorldRoot,
+    hot_patching::HotPatchingRoot,
     menu::{CurrentExample, MenuUiRoot},
     power_user::PowerUserExampleRoot,
     styles,
@@ -48,7 +49,7 @@ fn ui_system(ctx: ImmCtx<CapsUi>, example: ResMut<CurrentExample>) {
         })
         .add(|ui| {
             // Menu container
-            ui.ch()
+            ui.ch_id("menu")
                 .on_spawn_insert(styles::container_with_background)
                 .on_spawn_insert(|| MenuUiRoot);
 
@@ -80,6 +81,9 @@ fn ui_system(ctx: ImmCtx<CapsUi>, example: ResMut<CurrentExample>) {
                 }
                 CurrentExample::BevyScrollbar => {
                     content.on_spawn_insert(|| BevyScrollareaExampleRoot);
+                }
+                CurrentExample::HotPatching => {
+                    content.on_spawn_insert(|| HotPatchingRoot);
                 }
             }
         });

@@ -26,3 +26,25 @@ pub mod utils;
 
 /// For capability set macro
 pub use paste;
+
+/// Helper macro to create child nodes
+/// with macro location used as source for id value generation   
+///
+/// Unique id is derived from line and column numbers
+#[macro_export]
+macro_rules! lch {
+    ($ui:ident) => {
+        $ui.ch_id((line!(), column!()))
+    };
+}
+
+/// Helper macro to generate unique id for child nodes
+/// with macro location used as source for id value generation   
+///
+/// Unique id is derived from line and column numbers
+#[macro_export]
+macro_rules! lid {
+    () => {
+        (line!(), column!())
+    };
+}
