@@ -1,6 +1,6 @@
 # bevy_immediate: Immediate Mode UI for Bevy
 
-[![bevy_version](https://img.shields.io/badge/bevy-0.16-blue)](https://github.com/bevy/bevy)
+[![bevy_version](https://img.shields.io/badge/bevy-0.17-blue)](https://github.com/bevy/bevy)
 [![Latest version](https://img.shields.io/crates/v/bevy_immediate.svg)](https://crates.io/crates/bevy_immediate)
 [![Documentation](https://docs.rs/bevy_immediate/badge.svg)](https://docs.rs/bevy_immediate)
 [![License](https://img.shields.io/crates/l/bevy_immediate.svg)](https://crates.io/crates/bevy_immediate)
@@ -312,7 +312,9 @@ for idx in 0..20 {
 
 ## Hotpatching
 
-Install `dx` tool:  [Instructions & Limitations](https://bevy.org/news/bevy-0-17/#hot-patching-systems-in-a-running-app)
+Powered by [![Subsecond](https://img.shields.io/badge/Subsecond-Enabled-orange)](https://crates.io/crates/subsecond)
+
+Follow: [Instructions & Limitations](https://bevy.org/news/bevy-0-17/#hot-patching-systems-in-a-running-app)
 
 Launch examples with:
 `BEVY_ASSET_ROOT="." dx serve --hot-patch --features "bevy_immediate/hotpatching" --features "bevy/hotpatching" --example demo`
