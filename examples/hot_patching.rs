@@ -61,7 +61,7 @@ impl ImmediateAttach<CapsUi> for HotPatchingRoot {
             .on_spawn_text("Install dx tool and launch demo example with hotpatching");
 
         ui.ch_id(lid!())
-            .on_spawn_text("(See bevy_immediate README.md \"Hot-Patching example\")");
+            .on_spawn_text("(See bevy_immediate README.md \"Hotpatching\") section");
 
         lch!(ui).on_spawn_insert(|| Node {
             height: px(50.),
@@ -70,15 +70,14 @@ impl ImmediateAttach<CapsUi> for HotPatchingRoot {
 
         lch!(ui).on_spawn_text("COMMENT ME in code!");
 
-        // lch!(ui)
-        //     .on_spawn_text("UNCOMMENT ME!");
+        // lch!(ui).on_spawn_text("UNCOMMENT ME!");
 
         lch!(ui).on_spawn_insert(|| Node {
             height: px(50.),
             ..default()
         });
 
-        for idx in 0..4 {
+        for idx in 0..3 {
             ui.ch_id((lid!(), idx))
                 .on_spawn_insert(styles::button_bundle)
                 .add(|ui| {

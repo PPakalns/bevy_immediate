@@ -294,18 +294,18 @@ where
 }
 ```
 
-## New element creation
+## New entity creation
 
 For child entity creation that could appear, disappear: **unique id must be provided**.
 
 Examples:
 ```rs
-ui.ch_id(lid!());
 ui.ch_id("my_id");
+ui.ch_id(lid!());
 
-for idx in 0..20 {
-    ui.ch_id((lid!(), idx));
+for idx in 0..count {
     ui.ch_id(("my_loop", idx));
+    ui.ch_id(lid!(idx));
 }
 ```
 
@@ -333,7 +333,7 @@ If you do not want to think about unique ids.
 You can use helper macro `lid!()`. 
 But this still requires adding unique id counter inside loops: `ui.ch_id((lid!(), idx))`.
 
-See [New element creation](#New element creation)
+See [New entity creation](#New entity creation)
 
 ### How do I avoid collisions with resources or queries in my systems?
 
