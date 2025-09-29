@@ -45,12 +45,14 @@ macro_rules! lch {
 /// with macro location used as source for id value generation   
 ///
 /// Unique id is derived from line and column numbers
+///
+/// Contains large random constant to avoid manual collisions by mistake
 #[macro_export]
 macro_rules! lid {
     () => {
-        (line!(), column!())
+        (596784345354, line!(), column!())
     };
     ($id:ident) => {
-        (line!(), column!(), $id)
+        (596784345354, line!(), column!(), $id)
     };
 }

@@ -24,6 +24,9 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
   Contains extensions that implement necessary logic for constructing UI.
 - **Reusable widgets**  
   Implement widgets using functional or bevy native style.
+- **Hot-patching support**  
+  * Supported out of the box. See [hotpatching](#Hotpatching).
+  * Alternative: [hot_lib_reloader](https://docs.rs/hot-lib-reloader/latest/hot_lib_reloader/).
 - **Fast**  
   Only visits each entity once per tick and does minimal amount of changes. Heavy lifting is done by Bevy's retained UI.
 - **Parallelizable**  
@@ -34,9 +37,6 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
   Extend the API with your own small capabilities and traits that encapsulate complex logic.
 - **Integration-friendly**  
   Works with other libraries (e.g., reloadable CSS style with [bevy_flair](https://github.com/eckz/bevy_flair)).
-- **Hot reloading support**  
-  * Supported out of the box. See [hotpatching](#Hotpatching).
-  * Alternative: [hot_lib_reloader](https://docs.rs/hot-lib-reloader/latest/hot_lib_reloader/) works too as alternative.
 
 
 ⚠️ **Note:** This library is under active development. Expect some breaking changes, but they will be minimized.
@@ -44,9 +44,9 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
 ## Version compatibility
 
 | bevy_immediate | bevy | MSRV           |
-|------------|------| ----------------|
-| 0.2        | 0.17 | 1.88 |
-| 0.1        | 0.16 | 1.85 |
+|------------|------------| ----------------|
+| main       | 0.18.0-dev | 1.88 |
+| 0.1        | 0.16       | 1.85 |
 
 To use add `bevy_immediate` to your project dependencies in `Cargo.toml` file.
 
