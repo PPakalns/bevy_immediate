@@ -109,7 +109,7 @@ struct CurrentEntity {
 impl<'w, 's, Caps: CapSet> Imm<'w, 's, Caps> {
     /// Build new entity with auto generated id.
     ///
-    /// Use [`Self::ch_id`] if building entities inside loop or that may not always exist when parent entity exists.
+    /// Use [`Self::ch_id`] if building entities that may not always exist when parent entity exists.
     ///
     /// Read more [`ImmId`], [`ImmIdBuilder`].
     pub fn ch(&mut self) -> ImmEntity<'_, 'w, 's, Caps> {

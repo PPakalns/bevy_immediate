@@ -315,7 +315,8 @@ for idx in 0..count {
 }
 
 ui.ch(); // Has internal counter for id generation, but can not be used
-         // inside loops or for appearing, disappearing entities.
+         // for appearing, disappearing entities.
+         // Because between frames entities may get misidentified.
 ```
 
 `lid, lch` helper macros use current column, line numbers to generate auto id. But still inside loops you need to provide additional unique id.
