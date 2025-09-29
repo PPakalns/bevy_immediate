@@ -296,18 +296,29 @@ where
 
 ## New entity creation
 
-For child entity creation that could appear, disappear: **unique id must be provided**.
+New child entities can be created with `.ch`, `.ch_id`, `.ch_with_manual_id` family of functions.
+
+For child entity creation that could appear, disappear, that are created inside loop: **unique id must be provided**.
+
+Provided id is combined with parent id. **Id must be unique between siblings**.
 
 Examples:
 ```rs
 ui.ch_id("my_id");
 ui.ch_id(lid!());
+lch!(ui);
 
 for idx in 0..count {
     ui.ch_id(("my_loop", idx));
     ui.ch_id(lid!(idx));
+    lch!(ui, idx);
 }
+
+ui.ch(); // Has internal counter for id generation, but can not be used
+         // inside loops or for appearing, disappearing entities.
 ```
+
+`lid, lch` helper macros use current column, line numbers to generate auto id. But still inside loops you need to provide additional unique id.
 
 ## Hotpatching
 
@@ -329,11 +340,7 @@ Try to modify and save `./examples/hot_patching.rs` or any other example and see
 Make sure that you assign unique id using `ch_id` for ui nodes that
 can appear, disappear.
 
-If you do not want to think about unique ids. 
-You can use helper macro `lid!()`. 
-But this still requires adding unique id counter inside loops: `ui.ch_id((lid!(), idx))`.
-
-See [New entity creation](#New entity creation)
+See [New entity creation](#new-entity-creation)
 
 ### How do I avoid collisions with resources or queries in my systems?
 
