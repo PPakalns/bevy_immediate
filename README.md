@@ -76,7 +76,8 @@ Examples can be viewed: (`cargo run --example demo`).
 
 Examples are located in [`./examples/`](./examples/)
 
-<img width="768" height="447" alt="image" src="https://github.com/user-attachments/assets/a6aa921b-d87b-4779-91e7-0106773183d1" />
+<img width="1054" height="673" alt="image" src="https://github.com/user-attachments/assets/e2159a98-d6c9-4a10-a679-51e3ff5f4861" />
+
 
 ### Menu example
 
