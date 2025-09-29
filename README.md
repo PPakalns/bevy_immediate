@@ -7,7 +7,7 @@
 
 A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, combining immediate mode ergonomics with Bevy ECS-powered retained UI.  
 
-* Write complex UI logic as simple Rust code.  
+* Develop complex UI as simple Rust code.  
 * No macros, observers, triggers, events, signals.  
 * Focus on your UI, not the boilerplate.
 
@@ -21,7 +21,7 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
   Heavy lifting is done by Bevy ECS and `bevy_ui` retained mode UI.
 - **Custom extension support**  
   Add custom capabilities like `.clicked()`, `.selected(true)`, `.hovered()`. 
-  Extension use integrated with rust type system for IDE and compile check support.
+  Extension use integrated with rust type system for autocompletion and compile time check support.
 - **Inbuilt support for UI use case**  
   Contains extensions that implement necessary logic for constructing UI.
 - **Reusable widgets**  
@@ -36,7 +36,7 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
 - **Simple**  
   Define UI in straightforward functions, free from macro/observer/trigger boilerplate.
 - **Modular**  
-  Extend the API with your own small capabilities and traits that encapsulate complex logic.
+  Develop your UI by writing UI in small composable parts. Extend functionality with modular extensions.
 - **Integration-friendly**  
   Works with other libraries (e.g., reloadable CSS style with [bevy_flair](https://github.com/eckz/bevy_flair)).
 
