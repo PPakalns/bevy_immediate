@@ -164,7 +164,7 @@ impl ImmediateAttach<CapsUiWidget> for BevyScrollareaExampleRoot {
                                     // And fill content
                                     for idx in 0..30 {
                                         ui.ch().on_spawn_insert(no_wrap).on_spawn_text_fn(|| {
-                                            format!("{} Lorem ipsum color sit amet", idx)
+                                            format!("{} Lorem ipsum dolor sit amet", idx)
                                         });
                                     }
                                 });
