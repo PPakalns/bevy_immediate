@@ -14,19 +14,19 @@ exclude = ["/.github"]
 autoexamples = false
 
 [dependencies]
-bevy_ecs = "0.18.0-dev"
-bevy_ui = { version = "0.18.0-dev", optional = true }
-bevy_app = "0.18.0-dev"
-bevy_platform = "0.18.0-dev"
-bevy_picking = { version = "0.18.0-dev", optional = true }
-bevy_derive = "0.18.0-dev"
-bevy_color = { version = "0.18.0-dev", optional = true }
-bevy_internal = { version = "0.18.0-dev", default-features = false }
-bevy_input = { version = "0.18.0-dev", default-features = false, optional = true }
-bevy_input_focus = { version = "0.18.0-dev", default-features = false, optional = true }
+bevy_ecs = "0.17.0"
+bevy_ui = { version = "0.17.0", optional = true }
+bevy_app = "0.17.0"
+bevy_platform = "0.17.0"
+bevy_picking = { version = "0.17.0", optional = true }
+bevy_derive = "0.17.0"
+bevy_color = { version = "0.17.0", optional = true }
+bevy_internal = { version = "0.17.0", default-features = false }
+bevy_input = { version = "0.17.0", default-features = false, optional = true }
+bevy_input_focus = { version = "0.17.0", default-features = false, optional = true }
 
-bevy_ui_widgets = { version = "0.18.0-dev", default-features = false, optional = true }
-bevy_feathers = { version = "0.18.0-dev", default-features = false, optional = true }
+bevy_ui_widgets = { version = "0.17.0", default-features = false, optional = true }
+bevy_feathers = { version = "0.17.0", default-features = false, optional = true }
 
 log = "0.4"
 ahash = "0.8"
@@ -52,7 +52,7 @@ picking = [
 ]
 
 [dev-dependencies]
-bevy = { version = "0.18.0-dev", default-features = false, features = [
+bevy = { version = "0.17.0", default-features = false, features = [
   "bevy_ui",
   "bevy_ui_debug",
   "bevy_ui_render",
@@ -78,16 +78,16 @@ bevy = { version = "0.18.0-dev", default-features = false, features = [
 name = "demo"
 
 [patch.crates-io]
-bevy = { git = "https://github.com/bevyengine/bevy", rev = "9ec9e0cd42b10eb120c13b3cdbe419de9e709889" }
-bevy_ecs = { git = "https://github.com/bevyengine/bevy", rev = "9ec9e0cd42b10eb120c13b3cdbe419de9e709889" }
-bevy_ui = { git = "https://github.com/bevyengine/bevy", rev = "9ec9e0cd42b10eb120c13b3cdbe419de9e709889" }
-bevy_app = { git = "https://github.com/bevyengine/bevy", rev = "9ec9e0cd42b10eb120c13b3cdbe419de9e709889" }
-bevy_platform = { git = "https://github.com/bevyengine/bevy", rev = "9ec9e0cd42b10eb120c13b3cdbe419de9e709889" }
-bevy_picking = { git = "https://github.com/bevyengine/bevy", rev = "9ec9e0cd42b10eb120c13b3cdbe419de9e709889" }
-bevy_derive = { git = "https://github.com/bevyengine/bevy", rev = "9ec9e0cd42b10eb120c13b3cdbe419de9e709889" }
-bevy_color = { git = "https://github.com/bevyengine/bevy", rev = "9ec9e0cd42b10eb120c13b3cdbe419de9e709889" }
-bevy_internal = { git = "https://github.com/bevyengine/bevy", rev = "9ec9e0cd42b10eb120c13b3cdbe419de9e709889" }
-bevy_input = { git = "https://github.com/bevyengine/bevy", rev = "9ec9e0cd42b10eb120c13b3cdbe419de9e709889" }
-bevy_input_focus = { git = "https://github.com/bevyengine/bevy", rev = "9ec9e0cd42b10eb120c13b3cdbe419de9e709889" }
-bevy_ui_widgets = { git = "https://github.com/bevyengine/bevy", rev = "9ec9e0cd42b10eb120c13b3cdbe419de9e709889" }
-bevy_feathers = { git = "https://github.com/bevyengine/bevy", rev = "9ec9e0cd42b10eb120c13b3cdbe419de9e709889" }
+bevy = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
+bevy_ecs = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
+bevy_ui = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
+bevy_app = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
+bevy_platform = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
+bevy_picking = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
+bevy_derive = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
+bevy_color = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
+bevy_internal = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
+bevy_input = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
+bevy_input_focus = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
+bevy_ui_widgets = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
+bevy_feathers = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }

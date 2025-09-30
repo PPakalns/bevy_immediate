@@ -47,8 +47,8 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
 
 | bevy_immediate | bevy | MSRV           |
 |------------|------------| ----------------|
-| main       | 0.18.0-dev | 1.88 |
-| 0.1        | 0.16       | 1.85 |
+| main       | 0.17 (c822005) | 1.88 |
+| 0.1        | 0.16           | 1.85 |
 
 To use add `bevy_immediate` to your project dependencies in `Cargo.toml` file.
 
