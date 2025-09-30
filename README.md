@@ -11,7 +11,7 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
 * No macros, observers, triggers, events, signals.  
 * Focus on your UI, not the boilerplate.
 
-<img width="1054" height="673" alt="image" src="https://github.com/user-attachments/assets/e2159a98-d6c9-4a10-a679-51e3ff5f4861" />
+<img width="1151" height="693" alt="image" src="https://github.com/user-attachments/assets/d0acc571-74da-486a-9a58-235800ad2050" />
 
 ## Features
 
