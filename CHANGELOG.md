@@ -1,5 +1,9 @@
 # Changelog
 
+# 0.2.1
+
+* Documentation fixes
+
 # 0.2.0
 
 * Upgraded to bevy 0.17
