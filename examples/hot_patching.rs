@@ -61,7 +61,7 @@ impl ImmediateAttach<CapsUi> for HotPatchingRoot {
             .on_spawn_text("Install dx tool and launch demo example with hotpatching");
 
         ui.ch_id(lid!())
-            .on_spawn_text("(See bevy_immediate README.md \"Hotpatching\") section");
+            .on_spawn_text("(See bevy_immediate README.md \"Hotpatching\" section)");
 
         lch!(ui).on_spawn_insert(|| Node {
             height: px(50.),

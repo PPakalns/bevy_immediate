@@ -101,8 +101,6 @@ impl ImmediateAttach<CapsUiWidget> for BevyScrollareaExampleRoot {
         ui.ch().on_spawn_text(
             "Example showcases implementation of reusable scrollarea (scrollable, draggable):",
         );
-        ui.ch()
-            .on_spawn_text("ui.scrollarea(Node::default(), Node::default(), |ui_entity| { ... });");
 
         ui.ch()
             .on_spawn_insert(|| Node {
