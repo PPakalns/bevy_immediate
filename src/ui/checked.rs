@@ -1,5 +1,5 @@
 use bevy_ecs::system::EntityCommands;
-use bevy_ui::Checked;
+use bevy_ui::{Checkable, Checked};
 
 use crate::{
     CapSet, ImmCapability, ImmEntity, ImplCap,
@@ -18,6 +18,14 @@ impl ImmCapability for CapabilityUiChecked {
         if !app.is_plugin_added::<TrackValueChangePlugin<bool>>() {
             app.add_plugins(TrackValueChangePlugin::<bool>::default());
         }
+
+        #[cfg(feature = "bevy_ui_widgets")]
+        {
+            use crate::ui::radio_button_fix_plugin::RadioButtonFixPlugin;
+            if !app.is_plugin_added::<RadioButtonFixPlugin>() {
+                app.add_plugins(RadioButtonFixPlugin);
+            }
+        }
     }
 }
 
@@ -25,6 +33,15 @@ impl ImmCapability for CapabilityUiChecked {
 pub trait ImmUiChecked {
     /// Synchronise checked value
     fn checked(self, value: &mut bool) -> Self;
+
+    /// Synchronise checked value
+    ///
+    /// Useful for radio buttons.
+    ///
+    /// Component is checked if `current` equals `this`.
+    /// If entity becomes checked, `current` value is overriden by `this`.
+    /// If entity becomes unchecked, nothing happens.
+    fn checked_if_eq<T: PartialEq>(self, this: T, current: &mut T) -> Self;
 }
 
 impl<Cap> ImmUiChecked for ImmEntity<'_, '_, '_, Cap>
@@ -70,9 +87,21 @@ where
         }
 
         let mut commands = self.entity_commands();
-        commands.insert(NewValueChange::<bool>::default());
+        commands.insert((NewValueChange::<bool>::default(), Checkable));
         update_checked(&mut commands, *value);
 
+        self
+    }
+
+    fn checked_if_eq<T: PartialEq>(mut self, this: T, current: &mut T) -> Self {
+        let before = current == &this;
+        let mut after = before;
+
+        self = self.checked(&mut after);
+
+        if after != before && after {
+            *current = this;
+        }
         self
     }
 }

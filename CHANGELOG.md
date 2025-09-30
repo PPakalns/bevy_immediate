@@ -3,9 +3,12 @@
 # 0.2.0
 
 * Upgraded to bevy 0.17
-* Added additional capabilities and renamed some in `bevy_immediate::ui`
-* Added support for bevy_feathers capabilities. Use set `CapsUiFeathers`
-* Added support for couple of bevy_ui_widgets features. Use set `CapsUiWidget`
+* Added support for bevy_ui_widgets, bevy_feathers.
+* Added support for hotpatching.
+* Added examples to showcase bevy_feathers, bevy_ui_widgets.
+* Added example to showcase scrollareas.
+* Added example for hotpatching.
+* A lot of breaking changes. See examples to find out how to use this library correctly. 
 
 # 0.1.1
 

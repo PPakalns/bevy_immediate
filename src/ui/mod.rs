@@ -1,4 +1,3 @@
-#[cfg(feature = "picking")]
 use crate::capabilities::ImplCapsEmpty;
 use crate::impl_capability_set;
 
@@ -32,7 +31,7 @@ impl_capability_set!(
         base::CapabilityUiBase,
         layout_order::CapabilityUiLayoutOrder,
         look::CapabilityUiLook,
-        disabled::CapabilityUiLook,
+        disabled::CapabilityUiDisabled,
         interaction::CapabilityUiInteraction,
         text::CapabilityUiText,
         selected::CapabilityUiSelectable,
@@ -143,3 +142,8 @@ pub mod button_variant;
 
 /// Contains plugin implementation for value change entity event tracking
 pub mod track_value_change_plugin;
+
+/// Contains implementation to work around inconsistent
+/// radio button implementation in bevy
+#[cfg(feature = "bevy_ui_widgets")]
+pub mod radio_button_fix_plugin;

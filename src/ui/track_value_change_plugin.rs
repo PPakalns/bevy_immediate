@@ -1,13 +1,6 @@
 use std::marker::PhantomData;
 
-use bevy_ecs::{
-    component::Component,
-    lifecycle,
-    observer::On,
-    system::{Commands, Query},
-    world::Mut,
-};
-use bevy_ui_widgets::ValueChange;
+use bevy_ecs::{component::Component, lifecycle, observer::On, system::Commands, world::Mut};
 
 /// Add click tracking related logic
 pub struct TrackValueChangePlugin<T> {
@@ -27,7 +20,7 @@ where
     T: Sync + Send + 'static + Copy + Clone,
 {
     fn build(&self, app: &mut bevy_app::App) {
-        app.add_observer(track_slider_inserted::<T>);
+        app.add_observer(track_inserted::<T>);
     }
 }
 
@@ -61,20 +54,37 @@ impl<T> NewValueChange<T> {
 }
 
 // Insert on_click picking observer only once
-fn track_slider_inserted<T>(trigger: On<lifecycle::Add, NewValueChange<T>>, mut commands: Commands)
+#[allow(unused_mut)]
+fn track_inserted<T>(trigger: On<lifecycle::Add, NewValueChange<T>>, mut commands: Commands)
 where
     T: Sync + Send + 'static + Copy + Clone,
 {
+    #[allow(unused)]
     let entity = trigger.event().entity;
-    commands.entity(entity).observe(on_value_change::<T>);
+
+    #[cfg(feature = "bevy_ui_widgets")]
+    commands
+        .entity(entity)
+        .observe(bevy_ui_widgets_impl::on_value_change::<T>);
+
+    let _ = commands;
 }
 
-fn on_value_change<T>(trigger: On<ValueChange<T>>, mut query: Query<&mut NewValueChange<T>>)
-where
-    T: Sync + Send + 'static + Copy + Clone,
-{
-    let entity = trigger.event().source;
-    if let Ok(mut comp) = query.get_mut(entity) {
-        comp.value = Some(trigger.value);
+#[cfg(feature = "bevy_ui_widgets")]
+mod bevy_ui_widgets_impl {
+    use bevy_ecs::{observer::On, system::Query};
+
+    use crate::ui::track_value_change_plugin::NewValueChange;
+
+    pub fn on_value_change<T>(
+        trigger: On<bevy_ui_widgets::ValueChange<T>>,
+        mut query: Query<&mut NewValueChange<T>>,
+    ) where
+        T: Sync + Send + 'static + Copy + Clone,
+    {
+        let entity = trigger.event().source;
+        if let Ok(mut comp) = query.get_mut(entity) {
+            comp.value = Some(trigger.value);
+        }
     }
 }

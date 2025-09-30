@@ -128,6 +128,14 @@ pub fn node_container() -> Node {
     }
 }
 
+pub fn row_node_container() -> Node {
+    Node {
+        flex_direction: FlexDirection::Row,
+        padding: UiRect::all(Val::Px(0.)),
+        ..node_container()
+    }
+}
+
 pub fn text_style() -> impl Bundle + use<> {
     (TextColor(Color::srgb(0.9, 0.9, 0.9)), TextShadow::default())
 }

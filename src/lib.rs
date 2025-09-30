@@ -13,7 +13,7 @@ pub mod attach;
 mod capabilities;
 pub use capabilities::{
     CapSet, ImmCapAccessRequests, ImmCapAccessRequestsResource, ImmCapQueryParam, ImmCapability,
-    ImplCap,
+    ImplCap, ImplCapsEmpty,
 };
 
 /// Extensions to provide ergonomic functionality for working with

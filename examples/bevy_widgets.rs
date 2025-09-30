@@ -9,7 +9,6 @@ use bevy::{
         rounded_corners::RoundedCorners,
         theme::UiTheme,
     },
-    text::TextFont,
     utils::default,
 };
 use bevy_color::palettes::css::DARK_BLUE;
@@ -19,6 +18,9 @@ use bevy_ecs::{
     query::Without,
     resource::Resource,
     system::{Query, ResMut, SystemParam},
+};
+use bevy_feathers::controls::{
+    self, button, checkbox, color_slider, color_swatch, radio, slider, toggle_switch,
 };
 use bevy_immediate::{
     CapSet, Imm, ImmMarker,
@@ -30,10 +32,11 @@ use bevy_immediate::{
         text::ImmUiText,
     },
 };
-use bevy_ui::{BackgroundColor, Display, GridPlacement, Node, RepeatedGridTrack, Val};
-use bevy_ui_widgets::SliderStep;
+use bevy_ui::{BackgroundColor, Display, GridPlacement, Node, RepeatedGridTrack, Val, px};
+use bevy_ui_widgets::{RadioGroup, SliderStep};
+use feathers::controls::ColorChannel;
 
-use crate::styles::title_text_style;
+use crate::styles::{self, title_text_style};
 
 pub struct BevyWidgetExamplePlugin;
 
@@ -51,6 +54,7 @@ impl bevy_app::Plugin for BevyWidgetExamplePlugin {
         >::new());
 
         app.insert_resource(WidgetState::default());
+        app.insert_resource(RadioState::default());
     }
 }
 
@@ -72,6 +76,14 @@ struct Checkbox {
     disabled: bool,
 }
 
+#[derive(Default, Resource, Debug, Hash, PartialEq, Clone, Copy)]
+pub enum RadioState {
+    Dog,
+    #[default]
+    Cat,
+    Horse,
+}
+
 impl Default for WidgetState {
     fn default() -> Self {
         Self {
@@ -91,6 +103,7 @@ impl Default for WidgetState {
 #[derive(SystemParam)]
 pub struct Params<'w, 's, Caps: CapSet> {
     state: ResMut<'w, WidgetState>,
+    radio_state: ResMut<'w, RadioState>,
 
     // Needed for color swatch
     children: Query<'w, 's, &'static Children>,
@@ -101,13 +114,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
     type Params = Params<'static, 'static, CapsUiFeathers>;
 
     fn construct(ui: &mut Imm<CapsUiFeathers>, params: &mut Params<CapsUiFeathers>) {
-        let Params {
-            state,
-            children,
-            background,
-        } = params;
-
-        let WidgetState { values, hsva } = state.deref_mut();
+        let WidgetState { values, hsva } = params.state.deref_mut();
 
         fn button_rounded_corners_row(idx: usize, count: usize) -> RoundedCorners {
             if idx == 0 {
@@ -139,7 +146,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
                 let mut button = ui
                     .ch()
                     .on_spawn_insert(|| {
-                        feathers::controls::button(
+                        controls::button(
                             ButtonProps {
                                 variant: ButtonVariant::Normal,
                                 corners: RoundedCorners::Left,
@@ -162,7 +169,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
                 let mut button = ui
                     .ch()
                     .on_spawn_insert(|| {
-                        feathers::controls::button(
+                        controls::button(
                             ButtonProps {
                                 variant: ButtonVariant::Normal,
                                 corners: RoundedCorners::Right,
@@ -205,7 +212,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
                         let mut button = ui
                             .ch_id(("variant", variant_idx, idx))
                             .on_spawn_insert(|| {
-                                feathers::controls::button(
+                                button(
                                     ButtonProps {
                                         variant: variant.clone(),
                                         corners: button_rounded_corners_row(idx, column_count),
@@ -229,7 +236,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
                     let mut button = ui
                         .ch_id(("primary_change", idx))
                         .on_spawn_insert(|| {
-                            feathers::controls::button(
+                            button(
                                 ButtonProps {
                                     variant: Default::default(),
                                     corners: button_rounded_corners_row(idx, column_count),
@@ -252,7 +259,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
                 for (idx, state) in values.iter_mut().enumerate() {
                     let checkbox = ui
                         .ch_id(("checkbox", idx))
-                        .on_spawn_insert(|| feathers::controls::checkbox((), ()))
+                        .on_spawn_insert(|| checkbox((), ()))
                         .add(|ui| {
                             ui.ch().on_spawn_text_fn(|| format!("Checkbox {idx}"));
                         })
@@ -262,26 +269,19 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
 
                 for (idx, state) in values.iter_mut().enumerate() {
                     ui.ch_id(("toggle", idx))
-                        .on_spawn_insert(|| feathers::controls::toggle_switch(()))
+                        .on_spawn_insert(|| toggle_switch(()))
                         .interactions_disabled(state.disabled)
                         .checked(&mut state.value);
                 }
 
                 for (idx, state) in values.iter_mut().enumerate() {
-                    let mut radio_button = ui
-                        .ch_id(("radio", idx))
-                        .on_spawn_insert(|| feathers::controls::radio((), ()))
+                    ui.ch_id(("radio", idx))
+                        .on_spawn_insert(|| radio((), ()))
                         .add(|ui| {
                             ui.ch().on_spawn_text("Radio button");
                         })
                         .interactions_disabled(state.disabled)
-                        .checked(&mut state.value);
-
-                    // WARN: Widget doesn't update it's checked state. Need to check if widget was activated
-                    // Will be fixed in future bevy release where `.checked` will work independently.
-                    if radio_button.activated() {
-                        state.value = true;
-                    }
+                        .checked_if_eq(true, &mut state.value);
                 }
 
                 for (idx, state) in values.iter_mut().enumerate() {
@@ -314,13 +314,43 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
 
                 for (idx, state) in values.iter_mut().enumerate() {
                     ui.ch_id(("disabled", idx))
-                        .on_spawn_insert(|| feathers::controls::toggle_switch(()))
+                        .on_spawn_insert(|| toggle_switch(()))
                         .checked(&mut state.disabled);
                 }
             });
 
         ui.ch().on_spawn_insert(|| Node {
-            height: Val::Px(50.),
+            height: px(50.),
+            ..default()
+        });
+
+        ui.ch()
+            .on_spawn_insert(styles::row_node_container)
+            .add(|ui| {
+                ui.ch().on_spawn_text("Radio group:");
+                ui.ch().text(format!("{:?}", *params.radio_state));
+            });
+
+        ui.ch()
+            .on_spawn_insert(styles::row_node_container)
+            .on_spawn_insert(|| RadioGroup)
+            .add(|ui| {
+                for (name, state) in [
+                    ("Dog", RadioState::Dog),
+                    ("Cat", RadioState::Cat),
+                    ("Horse", RadioState::Horse),
+                ] {
+                    ui.ch_id(("radio", state))
+                        .on_spawn_insert(|| radio((), ()))
+                        .add(|ui| {
+                            ui.ch().on_spawn_text(name);
+                        })
+                        .checked_if_eq(state, &mut params.radio_state);
+                }
+            });
+
+        ui.ch().on_spawn_insert(|| Node {
+            height: px(50.),
             ..default()
         });
 
@@ -329,10 +359,10 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
         ui.ch().on_spawn_insert(Node::default).add(|ui| {
             ui.ch()
                 .on_spawn_insert(|| {
-                    feathers::controls::color_slider(
+                    color_slider(
                         ColorSliderProps {
                             value: 0.,
-                            channel: feathers::controls::ColorChannel::HslHue,
+                            channel: ColorChannel::HslHue,
                         },
                         SliderStep(5.),
                     )
@@ -342,10 +372,10 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
         ui.ch().on_spawn_insert(Node::default).add(|ui| {
             ui.ch()
                 .on_spawn_insert(|| {
-                    feathers::controls::color_slider(
+                    color_slider(
                         ColorSliderProps {
                             value: 0.,
-                            channel: feathers::controls::ColorChannel::HslSaturation,
+                            channel: ColorChannel::HslSaturation,
                         },
                         SliderStep(0.05),
                     )
@@ -356,10 +386,10 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
         ui.ch().on_spawn_insert(Node::default).add(|ui| {
             ui.ch()
                 .on_spawn_insert(|| {
-                    feathers::controls::color_slider(
+                    color_slider(
                         ColorSliderProps {
                             value: 0.,
-                            channel: feathers::controls::ColorChannel::HslLightness,
+                            channel: ColorChannel::HslLightness,
                         },
                         SliderStep(0.05),
                     )
@@ -369,10 +399,10 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
         ui.ch().on_spawn_insert(Node::default).add(|ui| {
             ui.ch()
                 .on_spawn_insert(|| {
-                    feathers::controls::color_slider(
+                    color_slider(
                         ColorSliderProps {
                             value: 0.,
-                            channel: feathers::controls::ColorChannel::Alpha,
+                            channel: ColorChannel::Alpha,
                         },
                         SliderStep(0.05),
                     )
@@ -383,7 +413,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
         ui.ch().on_spawn_insert(Node::default).add(|ui| {
             ui.ch()
                 .on_spawn_insert(|| {
-                    feathers::controls::slider(
+                    slider(
                         SliderProps {
                             value: 0.,
                             min: 0.,
@@ -400,14 +430,15 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
         // Background color must be updated not for entity, but for the first child
         let entity = ui
             .ch()
-            .on_spawn_insert(|| feathers::controls::color_swatch(()))
+            .on_spawn_insert(|| color_swatch(()))
             .background_color((*hsva).into());
 
-        if let Some(mut background) = children
+        if let Some(mut background) = params
+            .children
             .get(entity.entity())
             .ok()
             .and_then(|children| children.first())
-            .and_then(|child| background.get_mut(*child).ok())
+            .and_then(|child| params.background.get_mut(*child).ok())
         {
             // Additional check to avoid unnecessary updates
             if *background != (*hsva).into() {
