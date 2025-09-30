@@ -278,8 +278,9 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
                         .checked(&mut state.value);
 
                     // WARN: Widget doesn't update it's checked state. Need to check if widget was activated
+                    // Will be fixed in future bevy release where `.checked` will work independently.
                     if radio_button.activated() {
-                        state.value = !state.value;
+                        state.value = true;
                     }
                 }
 
