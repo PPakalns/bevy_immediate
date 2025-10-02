@@ -29,6 +29,7 @@ fn main() {
         .add_plugins(extension_use::ExtensionUseExamplePlugin)
         .add_plugins(power_user::PowerUserExamplePlugin)
         .add_plugins(hot_patching::HotPatchingExamplePlugin)
+        .add_plugins(tooltip::TooltipExamplePlugin)
         .run();
 }
 
@@ -61,3 +62,5 @@ mod power_user;
 mod hot_patching;
 
 mod styles;
+
+mod tooltip;

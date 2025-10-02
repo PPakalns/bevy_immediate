@@ -200,6 +200,25 @@ impl<'w, 's, Caps: CapSet> Imm<'w, 's, Caps> {
         entity
     }
 
+    /// Useful to spawn new unrooted entity trees
+    ///
+    /// In context of UI, useful for tooltips, popups.
+    pub fn unrooted<T: std::hash::Hash>(&mut self, id: T, f: impl FnOnce(&mut Imm<'w, 's, Caps>)) {
+        let id = ImmIdBuilder::Hierarchy(ImmId::new(id)).resolve(self);
+
+        // Create new unrooted context
+        let mut current = Current {
+            id,
+            entity: None,
+            idx: 0,
+        };
+
+        std::mem::swap(&mut self.current, &mut current);
+        f(self);
+
+        self.current = current;
+    }
+
     /// Entity that is currently being managed
     ///
     /// If building root of entity tree, this value may be [`None`]
@@ -234,13 +253,17 @@ impl<'w, 's, Caps: CapSet> Imm<'w, 's, Caps> {
     }
 
     /// Manage entity with provided [`ImmId`] and [`Entity`] attributes with provided closure
-    fn add<R>(&mut self, params: EntityParams, f: impl FnOnce(&mut Imm<'w, 's, Caps>) -> R) -> R {
-        self.add_dyn(params, Box::new(f))
+    fn add_child_entity<R>(
+        &mut self,
+        params: EntityParams,
+        f: impl FnOnce(&mut Imm<'w, 's, Caps>) -> R,
+    ) -> R {
+        self.add_child_entity_dyn(params, Box::new(f))
     }
 
     /// Manage entity with provided [`ImmId`] and [`Entity`] attributes with provided closure
     #[allow(clippy::type_complexity)]
-    fn add_dyn<R>(
+    fn add_child_entity_dyn<R>(
         &mut self,
         EntityParams {
             id,
@@ -328,14 +351,27 @@ impl<'r, 'w, 's, Caps: CapSet> ImmEntity<'r, 'w, 's, Caps> {
     /// If closure return value is needed, use `[Self::add_with_return]``
     #[allow(clippy::should_implement_trait)]
     pub fn add(self, f: impl FnOnce(&mut Imm<'w, 's, Caps>)) -> Self {
-        self.imm.add(self.e, f);
+        self.imm.add_child_entity(self.e, f);
         self
     }
 
     /// Build descendants of this entity and retrieve return value of inner closure.
     pub fn add_with_return<R>(self, f: impl FnOnce(&mut Imm<'w, 's, Caps>) -> R) -> (Self, R) {
-        let value = self.imm.add(self.e, f);
+        let value = self.imm.add_child_entity(self.e, f);
         (self, value)
+    }
+
+    /// Spawn new entity trees (unrooted)
+    ///
+    /// In UI useful for Tooltips, Popups, etc.
+    pub fn unrooted<T: std::hash::Hash>(
+        self,
+        id: T,
+        f: impl FnOnce(&mut Imm<'w, 's, Caps>),
+    ) -> Self {
+        self.add(|ui| {
+            ui.unrooted(id, f);
+        })
     }
 
     /// Retrieve system param ctx for immediate mode

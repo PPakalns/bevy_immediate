@@ -67,6 +67,7 @@ bevy = { version = "0.17.0", default-features = false, features = [
   "default_font",
   "bevy_picking",
   "ghost_nodes",
+  "debug",
 
   # UI widgets
   "experimental_bevy_ui_widgets",

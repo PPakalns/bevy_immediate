@@ -59,6 +59,7 @@ impl ImmediateAttach<CapsUi> for MenuUiRoot {
                     (CurrentExample::HelloWorld, "Hello World"),
                     (CurrentExample::BevyWidgets, "Bevy Ui Widgets"),
                     (CurrentExample::BevyScrollbar, "Bevy Ui Scrollareas"),
+                    (CurrentExample::Tooltip, "Tooltips"),
                     (CurrentExample::WidgetUse, "Widget usage"),
                     (CurrentExample::ExtensionUse, "Extension usage"),
                     (CurrentExample::PowerUser, "Power user"),
@@ -107,4 +108,5 @@ pub enum CurrentExample {
     PowerUser,
     BevyScrollbar,
     HotPatching,
+    Tooltip,
 }
