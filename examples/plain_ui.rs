@@ -12,6 +12,7 @@ use crate::{
     menu::{CurrentExample, MenuUiRoot},
     power_user::PowerUserExampleRoot,
     styles,
+    tooltip::TooltipExampleRoot,
     widget_use::WidgetUseExampleRoot,
 };
 
@@ -84,6 +85,9 @@ fn ui_system(ctx: ImmCtx<CapsUi>, example: ResMut<CurrentExample>) {
                 }
                 CurrentExample::HotPatching => {
                     content.on_spawn_insert(|| HotPatchingRoot);
+                }
+                CurrentExample::Tooltip => {
+                    content.on_spawn_insert(|| TooltipExampleRoot);
                 }
             }
         });
