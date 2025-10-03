@@ -1,5 +1,10 @@
 # Changelog
 
+# 0.2.2
+
+* Added ergonomic API to spawn unrooted entities. Useful for tooltips, popups.
+* Added support for tooltips. See tooltips example.
+
 # 0.2.1
 
 * Documentation fixes
