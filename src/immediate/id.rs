@@ -56,7 +56,7 @@ impl ImmIdBuilder {
                 // All entities that are not permanent children of parent should have
                 // non auto id
                 //
-                const AUTO_UNIQUE_PREFIX: i32 = 32423432;
+                const AUTO_UNIQUE_PREFIX: i32 = 813754928;
                 let id = sui.current.id.with((AUTO_UNIQUE_PREFIX, sui.current.idx));
                 sui.current.idx += 1;
                 id

@@ -1,6 +1,6 @@
 use bevy::{
     color::Color,
-    math::{Affine2, Vec2},
+    math::Vec2,
     text::TextColor,
     transform::TransformSystems,
     utils::default,
@@ -12,27 +12,23 @@ use bevy_ecs::{
     hierarchy::Children,
     query::With,
     schedule::IntoScheduleConfigs,
-    system::{Commands, Query, Res, Single},
+    system::{Query, Single},
 };
 use bevy_feathers::{
     controls::{ButtonProps, ButtonVariant, button},
-    palette::WHITE,
     rounded_corners::RoundedCorners,
 };
 use bevy_immediate::{
-    CapSet, Imm, ImmEntity, ImmId,
+    CapSet, Imm, ImmEntity,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
     ui::{CapsUiFeathers, ImplCapsUi, interaction::ImmUiInteraction, text::ImmUiText},
 };
-use bevy_input::ButtonInput;
 use bevy_ui::{
-    BackgroundColor, BorderColor, ComputedNode, ComputedUiRenderTargetInfo, ComputedUiTargetCamera,
-    Node, UiGlobalTransform, UiRect, UiScale, UiSystems, UiTargetCamera, UiTransform, Val, px,
-    ui_layout_system,
+    BackgroundColor, BorderColor, ComputedNode, ComputedUiRenderTargetInfo, Node,
+    RepeatedGridTrack, UiGlobalTransform, UiRect, UiSystems, Val, px,
     widget::{Text, TextShadow},
 };
-
-use crate::styles::node_container;
+use itertools::Itertools;
 
 pub struct TooltipExamplePlugin;
 
@@ -63,79 +59,134 @@ impl ImmediateAttach<CapsUiFeathers> for TooltipExampleRoot {
     fn construct(ui: &mut Imm<CapsUiFeathers>, _: &mut ()) {
         // Construct entity hierarchies
         // and attach necessary components
-        ui.ch().on_spawn_insert(node_container).add(|ui| {
-            for idx in 0..20 {
-                ui.ch_id(idx)
-                    .on_spawn_insert(|| {
-                        button(
-                            ButtonProps {
-                                variant: ButtonVariant::Normal,
-                                corners: RoundedCorners::All,
-                            },
-                            (),
-                            (),
-                        )
-                    })
-                    .add(|ui| {
-                        ui.ch().on_spawn_insert(|| {
-                            (
-                                TextColor(Color::srgb(0.9, 0.9, 0.9)),
-                                TextShadow::default(),
-                                Text("Hello world".into()),
-                            )
-                        });
-                    })
-                    .with_tooltip(|ui| {
-                        ui.ch_id(idx)
-                            .on_spawn_insert(|| {
-                                (
-                                    Node {
-                                        border: UiRect::all(px(2.)),
-                                        ..default()
-                                    },
-                                    BackgroundColor(bevy_color::palettes::css::DARK_GRAY.into()),
-                                    BorderColor::all(bevy_color::palettes::css::WHITE),
-                                )
-                            })
-                            .add(|ui| {
-                                ui.ch().on_spawn_text("Example");
-                            });
-                    });
-            }
+
+        ui.ch().on_spawn_insert(|| {
+            Text("Anchoring: Element (TT) positioning against target element (T)".into())
         });
+
+        ui.ch()
+            .on_spawn_insert(|| Node {
+                display: bevy_ui::Display::Grid,
+                grid_template_columns: vec![
+                    RepeatedGridTrack::auto(1),
+                    RepeatedGridTrack::fr(10, 1.),
+                ],
+                column_gap: px(8.),
+                row_gap: px(8.),
+                ..default()
+            })
+            .add(|ui| {
+                const ANCHORS: [Anchor; 3] = [Anchor::Start, Anchor::Middle, Anchor::End];
+                let anchors = || ANCHORS.into_iter().cartesian_product(ANCHORS);
+
+                ui.ch().on_spawn_insert(|| Text("TT \\ T".into()));
+
+                ui.ch().on_spawn_insert(|| Text(format!("Cursor")));
+
+                for (ty, tx) in anchors() {
+                    ui.ch()
+                        .on_spawn_insert(|| Text(format!("{:?} {:?}", tx.sign(), ty.sign())));
+                }
+
+                let button = |ui: &mut Imm<_>, x, y, tx, ty, cursor| {
+                    ui.ch_id((x, y, tx, ty, cursor))
+                        .on_spawn_insert(|| {
+                            button(
+                                ButtonProps {
+                                    variant: ButtonVariant::Normal,
+                                    corners: RoundedCorners::All,
+                                },
+                                (),
+                                (),
+                            )
+                        })
+                        .add(|ui| {
+                            ui.ch().on_spawn_insert(|| {
+                                (
+                                    TextColor(Color::srgb(0.9, 0.9, 0.9)),
+                                    TextShadow::default(),
+                                    Text("T".into()),
+                                )
+                            });
+                        })
+                        .with_tooltip_container(|mut container| {
+                            if cursor {
+                                container = container.on_spawn_insert(|| AnchorTarget::Cursor);
+                            }
+
+                            container
+                                .on_spawn_insert(|| AnchorOption {
+                                    anchor: Direction { x, y },
+                                    target_anchor: Direction { x: tx, y: ty },
+                                    ..default()
+                                })
+                                .add(|ui| {
+                                    ui.ch()
+                                        .on_spawn_insert(|| {
+                                            (
+                                                Node {
+                                                    border: UiRect::all(px(2.)),
+                                                    ..default()
+                                                },
+                                                BackgroundColor(
+                                                    bevy_color::palettes::css::DARK_GRAY.into(),
+                                                ),
+                                                BorderColor::all(bevy_color::palettes::css::WHITE),
+                                            )
+                                        })
+                                        .add(|ui| {
+                                            ui.ch().on_spawn_text("TT");
+                                        });
+                                });
+                        });
+                };
+
+                for (y, x) in anchors() {
+                    ui.ch()
+                        .on_spawn_insert(|| Text(format!("{:?} {:?}", x.sign(), y.sign())));
+
+                    button(ui, x, y, Anchor::Middle, Anchor::Middle, true);
+
+                    for (ty, tx) in anchors() {
+                        button(ui, x, y, tx, ty, false);
+                    }
+                }
+            });
     }
 }
 
-pub trait WithEntity<Caps: CapSet> {
-    fn with_tooltip(self, f: impl FnOnce(&mut Imm<'_, '_, Caps>)) -> Self;
+pub trait WithEntity<'w, 's, Caps: CapSet> {
+    fn with_tooltip(self, f: impl FnOnce(&mut Imm<'w, 's, Caps>)) -> Self;
+    fn with_tooltip_container(self, f: impl FnOnce(ImmEntity<'_, 'w, 's, Caps>)) -> Self;
 }
 
-impl<Caps> WithEntity<Caps> for ImmEntity<'_, '_, '_, Caps>
+impl<'w, 's, Caps> WithEntity<'w, 's, Caps> for ImmEntity<'_, 'w, 's, Caps>
 where
     Caps: ImplCapsUi,
 {
-    fn with_tooltip(mut self, f: impl FnOnce(&mut Imm<'_, '_, Caps>)) -> Self {
+    fn with_tooltip(self, f: impl FnOnce(&mut Imm<'w, 's, Caps>)) -> Self {
+        self.with_tooltip_container(|entity| {
+            entity.add(|ui| {
+                f(ui);
+            });
+        })
+    }
+
+    fn with_tooltip_container(mut self, f: impl FnOnce(ImmEntity<'_, 'w, 's, Caps>)) -> Self {
         if self.hovered() {
             let entity = self.entity();
             self = self.add(|ui| {
                 ui.unrooted("with_tooltip", |ui| {
-                    ui.ch()
-                        .on_spawn_insert(|| {
-                            (
-                                Node {
-                                    position_type: bevy_ui::PositionType::Absolute,
-                                    ..default()
-                                },
-                                TooltipPosition {
-                                    entity,
-                                    last_offset: Vec2::ZERO,
-                                },
-                                BackgroundColor(WHITE),
-                            )
-                        })
-                        .add(|ui| {
-                            f(ui);
-                        });
+                    let entity = ui.ch().on_spawn_insert(|| {
+                        (
+                            Node {
+                                position_type: bevy_ui::PositionType::Absolute,
+                                ..default()
+                            },
+                            AnchorTarget::Entity(entity),
+                        )
+                    });
+                    f(entity);
                 });
             });
         }
@@ -143,16 +194,105 @@ where
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Anchor {
+    Start,
+    Middle,
+    End,
+}
+
+impl Anchor {
+    fn sign(&self) -> i32 {
+        match self {
+            Anchor::Start => -1,
+            Anchor::Middle => 0,
+            Anchor::End => 1,
+        }
+    }
+}
+
+#[derive(Component, Clone, Copy, PartialEq)]
+pub struct AnchorOption {
+    // Anchor location for element to place
+    anchor: Direction<Anchor>,
+    // Anchor location for element that this element is placed against
+    target_anchor: Direction<Anchor>,
+    // Additional offset to location where element will be placed
+    // Offset is ignored for Middle anchor locations
+    offset: Direction<Val>,
+}
+
 #[derive(Component)]
-struct TooltipPosition {
-    entity: Entity,
-    last_offset: Vec2,
+pub struct AnchorMouse;
+
+impl Default for AnchorOption {
+    fn default() -> Self {
+        Self {
+            anchor: Direction {
+                x: Anchor::Start,
+                y: Anchor::Start,
+            },
+            target_anchor: Direction {
+                x: Anchor::Start,
+                y: Anchor::End,
+            },
+            offset: Direction {
+                x: Val::ZERO,
+                y: Val::ZERO,
+            },
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+struct Direction<T> {
+    x: T,
+    y: T,
+}
+
+impl<T> Direction<T> {
+    pub fn map<O>(&self, f: impl Fn(&T) -> O) -> Direction<O> {
+        Direction {
+            x: f(&self.x),
+            y: f(&self.y),
+        }
+    }
+}
+
+impl Direction<Anchor> {
+    fn sign_vec(&self) -> Vec2 {
+        self.map(|v| v.sign() as f32).into()
+    }
+}
+
+impl From<Direction<f32>> for Vec2 {
+    fn from(value: Direction<f32>) -> Self {
+        Vec2 {
+            x: value.x,
+            y: value.y,
+        }
+    }
+}
+
+#[derive(Component)]
+#[require(PlacementCache, AnchorOption)]
+pub enum AnchorTarget {
+    Entity(Entity),
+    Cursor,
+    Position(Vec2),
+}
+
+#[derive(Component, Default)]
+struct PlacementCache {
+    last_offset: Option<Vec2>,
 }
 
 fn position_tooltip(
     tooltip: Query<(
         Entity,
-        &mut TooltipPosition,
+        &AnchorTarget,
+        &mut PlacementCache,
+        &AnchorOption,
         &ComputedNode,
         &ComputedUiRenderTargetInfo,
         &mut Node,
@@ -162,28 +302,46 @@ fn position_tooltip(
     children: Query<&Children>,
     window: Single<&Window, With<PrimaryWindow>>,
 ) {
-    let Some(cursor) = window.cursor_position() else {
-        return;
-    };
+    for (
+        entity,
+        target,
+        mut placement_cache,
+        anchor_option,
+        tooltip_computed,
+        tooltip_target_info,
+        mut node,
+    ) in tooltip
+    {
+        let cursor = window.physical_cursor_position();
 
-    for (entity, mut tooltip, tooltip_computed, target_info, mut node) in tooltip {
-        let Ok(target_compute) = computed_nodes.get(tooltip.entity) else {
-            continue;
-        };
-        let Ok(target_global) = global_transform.get(tooltip.entity) else {
-            continue;
-        };
+        let target_position: Vec2 = match &*target {
+            AnchorTarget::Entity(entity) => (|| -> _ {
+                let target_compute = computed_nodes.get(*entity).ok()?;
+                let target_global = global_transform.get(*entity).ok()?;
 
-        let target_pos = target_global.translation - target_compute.size * 0.5;
+                let anchor_offset = Vec2::from(anchor_option.target_anchor.sign_vec());
+                let target_pos =
+                    target_global.translation + anchor_offset * 0.5 * target_compute.size;
+
+                Some(target_pos)
+            })()
+            .unwrap_or(Vec2::ZERO),
+            AnchorTarget::Cursor => cursor.unwrap_or(Vec2::ZERO),
+            AnchorTarget::Position(pos) => *pos,
+        };
+        let target_position = target_position.round();
+
+        let tooltip_anchor_offset = anchor_option.anchor.sign_vec() * 0.5 * tooltip_computed.size;
+        let final_position = target_position - tooltip_anchor_offset;
+
+        if placement_cache.last_offset == Some(final_position) {
+            continue;
+        }
+        placement_cache.last_offset = Some(final_position);
 
         {
-            let offset = (target_pos) / target_info.scale_factor();
-
-            if offset == tooltip.last_offset {
-                continue;
-            }
-
-            tooltip.last_offset = offset;
+            let offset =
+                (final_position - tooltip_computed.size * 0.5) / tooltip_target_info.scale_factor();
             node.left = px(offset.x);
             node.top = px(offset.y);
         }
@@ -194,8 +352,7 @@ fn position_tooltip(
 
         // Logic to avoid 1 frame delay
         // Global transform update is done immediatelly
-        let delta =
-            Affine2::from_translation(target_pos + tooltip_computed.size * 0.5) * current.inverse();
+        let delta = final_position - current.translation;
 
         update_global_transforms(entity, delta, &children, &mut global_transform);
     }
@@ -203,12 +360,14 @@ fn position_tooltip(
 
 fn update_global_transforms(
     current: Entity,
-    delta: Affine2,
+    delta: Vec2,
     children: &Query<&Children>,
     query: &mut Query<&mut UiGlobalTransform>,
 ) {
     if let Ok(mut global) = query.get_mut(current) {
-        *global = (**global * delta).into();
+        let mut transformation = **global;
+        transformation.translation += delta;
+        *global = transformation.into();
     }
 
     let Ok(current_children) = children.get(current) else {

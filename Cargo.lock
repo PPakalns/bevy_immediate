@@ -677,6 +677,7 @@ dependencies = [
  "bevy_platform",
  "bevy_ui",
  "bevy_ui_widgets",
+ "itertools",
  "log",
  "paste",
  "type-map",

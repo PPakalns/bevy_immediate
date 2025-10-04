@@ -387,14 +387,14 @@ impl<'r, 'w, 's, Caps: CapSet> ImmEntity<'r, 'w, 's, Caps> {
     /// Helper method to simplify entity retrieval
     pub fn cap_get_entity(
         &self,
-    ) -> Result<FilteredEntityRef<'_, '_>, bevy_ecs::query::QueryEntityError> {
+    ) -> Result<FilteredEntityRef<'_, 's>, bevy_ecs::query::QueryEntityError> {
         self.ctx().cap_entities.get(self.entity())
     }
 
     /// Helper method to simplify entity retrieval
     pub fn cap_get_entity_mut(
         &mut self,
-    ) -> Result<bevy_ecs::world::FilteredEntityMut<'_, '_>, bevy_ecs::query::QueryEntityError> {
+    ) -> Result<bevy_ecs::world::FilteredEntityMut<'_, 's>, bevy_ecs::query::QueryEntityError> {
         let entity = self.entity();
         self.ctx_mut().cap_entities.get_mut(entity)
     }

@@ -73,6 +73,7 @@ bevy = { version = "0.17.0", default-features = false, features = [
   "experimental_bevy_ui_widgets",
   "experimental_bevy_feathers",
 ] }
+itertools = "0.14"
 
 [profile.web-release]
 inherits = "release"

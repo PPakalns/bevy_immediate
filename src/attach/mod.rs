@@ -22,9 +22,9 @@ pub trait ImmediateAttach<Caps: CapSet>: Component {
     ///
     /// Function will be called during update or some time after `Self`
     /// has been added to entity.
-    fn construct(
-        imm: &mut Imm<'_, '_, Caps>,
-        params: &mut <Self::Params as SystemParam>::Item<'_, '_>,
+    fn construct<'w, 's>(
+        imm: &mut Imm<'w, 's, Caps>,
+        params: &mut <Self::Params as SystemParam>::Item<'w, 's>,
     );
 }
 
@@ -79,11 +79,22 @@ fn const_type_id<Caps: 'static, RootComponent: 'static>() -> ImmId {
     ImmId::new((root_type_id, cap_type_id))
 }
 
+#[derive(SystemParam)]
+struct AttachSysParam<'w, 's, Caps: CapSet, RootComponent: ImmediateAttach<Caps>> {
+    query: Query<'w, 's, Entity, With<RootComponent>>,
+    ctx: ImmCtx<'w, 's, Caps>,
+    params: StaticSystemParam<'w, 's, <RootComponent as ImmediateAttach<Caps>>::Params>,
+}
+
 fn run_system_each_frame<Caps: CapSet, RootComponent: ImmediateAttach<Caps>>(
-    query: Query<Entity, With<RootComponent>>,
-    mut ctx: ImmCtx<Caps>,
-    params: StaticSystemParam<RootComponent::Params>,
+    sys: AttachSysParam<Caps, RootComponent>,
 ) {
+    let AttachSysParam {
+        query,
+        mut ctx,
+        params,
+    } = sys;
+
     let id = const_type_id::<Caps, RootComponent>();
     let mut params = params.into_inner();
 
@@ -97,22 +108,17 @@ fn run_system_each_frame<Caps: CapSet, RootComponent: ImmediateAttach<Caps>>(
 #[allow(clippy::type_complexity)]
 fn run_system_on_insert<Caps: CapSet, RootComponent: ImmediateAttach<Caps>>(
     In(entity): In<Entity>,
-    query: Query<Option<&RootComponentBuilt<(Caps, RootComponent)>>, With<RootComponent>>,
-    ctx: ImmCtx<Caps>,
-    params: StaticSystemParam<RootComponent::Params>,
+    sys: AttachSysParam<Caps, RootComponent>,
 ) {
+    let AttachSysParam { query, ctx, params } = sys;
+
     let id = const_type_id::<Caps, RootComponent>();
     let mut params = params.into_inner();
 
-    let Ok(built) = query.get(entity) else {
+    if !query.contains(entity) {
         // Root component doesn't exist anymore for this entity
         return;
     };
-
-    if built.is_some() {
-        // UI already initialized
-        return;
-    }
 
     let mut imm = ctx.build_immediate_from(id.with(entity), entity);
     RootComponent::construct(&mut imm, &mut params);
@@ -120,21 +126,12 @@ fn run_system_on_insert<Caps: CapSet, RootComponent: ImmediateAttach<Caps>>(
 
 fn on_insert<Caps: CapSet, RootComponent: ImmediateAttach<Caps>>(
     trigger: On<lifecycle::Add, RootComponent>,
-    query: Query<(), With<RootComponentBuilt<(Caps, RootComponent)>>>,
     mut commands: Commands,
 ) {
     let entity = trigger.event().entity;
-    if !query.contains(entity) {
-        log::trace!(
-            "On insert system scheduled to build immediate tree for {}",
-            entity
-        );
-        commands.run_system_cached_with(run_system_on_insert::<Caps, RootComponent>, entity);
-    }
-}
-
-#[derive(bevy_ecs::component::Component)]
-#[component(storage = "SparseSet")]
-struct RootComponentBuilt<T> {
-    _ph: PhantomData<T>,
+    log::trace!(
+        "On insert system scheduled to build immediate tree for {}",
+        entity
+    );
+    commands.run_system_cached_with(run_system_on_insert::<Caps, RootComponent>, entity);
 }
