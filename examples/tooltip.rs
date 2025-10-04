@@ -118,6 +118,10 @@ impl ImmediateAttach<CapsUiFeathers> for TooltipExampleRoot {
                                 .on_spawn_insert(|| AnchorOption {
                                     anchor: Direction { x, y },
                                     target_anchor: Direction { x: tx, y: ty },
+                                    // padding: Direction {
+                                    //     x: px(10.),
+                                    //     y: px(10.),
+                                    // },
                                     ..default()
                                 })
                                 .add(|ui| {
@@ -213,13 +217,13 @@ impl Anchor {
 
 #[derive(Component, Clone, Copy, PartialEq)]
 pub struct AnchorOption {
-    // Anchor location for element to place
+    /// Anchor location for element to place
     anchor: Direction<Anchor>,
-    // Anchor location for element that this element is placed against
+    /// Anchor location for element that this element is placed against
     target_anchor: Direction<Anchor>,
-    // Additional offset to location where element will be placed
-    // Offset is ignored for Middle anchor locations
-    offset: Direction<Val>,
+    /// Additional padding to location where element will be placed
+    /// Padding is ignored for Middle anchor locations
+    padding: Direction<Val>,
 }
 
 #[derive(Component)]
@@ -236,7 +240,7 @@ impl Default for AnchorOption {
                 x: Anchor::Start,
                 y: Anchor::End,
             },
-            offset: Direction {
+            padding: Direction {
                 x: Val::ZERO,
                 y: Val::ZERO,
             },
@@ -279,7 +283,7 @@ impl From<Direction<f32>> for Vec2 {
 pub enum AnchorTarget {
     Entity(Entity),
     Cursor,
-    Position(Vec2),
+    PhysicalPosition(Vec2),
 }
 
 #[derive(Component, Default)]
@@ -327,11 +331,38 @@ fn position_tooltip(
             })()
             .unwrap_or(Vec2::ZERO),
             AnchorTarget::Cursor => cursor.unwrap_or(Vec2::ZERO),
-            AnchorTarget::Position(pos) => *pos,
+            AnchorTarget::PhysicalPosition(pos) => *pos,
         };
         let target_position = target_position.round();
 
-        let tooltip_anchor_offset = anchor_option.anchor.sign_vec() * 0.5 * tooltip_computed.size;
+        let tooltip_anchor_offset = {
+            let anchor_sign_vec = anchor_option.anchor.sign_vec();
+
+            let anchor_offset = anchor_sign_vec * 0.5 * tooltip_computed.size;
+
+            let x = anchor_option
+                .padding
+                .x
+                .resolve(
+                    tooltip_target_info.scale_factor(),
+                    tooltip_target_info.physical_size().x as f32,
+                    tooltip_target_info.physical_size().as_vec2(),
+                )
+                .unwrap_or(0.);
+
+            let y = anchor_option
+                .padding
+                .y
+                .resolve(
+                    tooltip_target_info.scale_factor(),
+                    tooltip_target_info.physical_size().y as f32,
+                    tooltip_target_info.physical_size().as_vec2(),
+                )
+                .unwrap_or(0.);
+
+            anchor_offset + anchor_sign_vec * Vec2 { x, y }
+        };
+
         let final_position = target_position - tooltip_anchor_offset;
 
         if placement_cache.last_offset == Some(final_position) {
