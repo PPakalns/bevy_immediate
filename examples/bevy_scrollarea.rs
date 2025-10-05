@@ -1,4 +1,4 @@
-use bevy::{math::Vec2, text::TextLayout, utils::default};
+use bevy::{math::Vec2, text::TextLayout, time::Time, utils::default};
 use bevy_color::Color;
 use bevy_ecs::{
     component::Component,
@@ -317,11 +317,18 @@ fn scroll_on_mouse(
 
         let mut delta = Vec2::new(scroll.x, scroll.y);
 
+        match scroll.unit {
+            bevy_input::mouse::MouseScrollUnit::Line => {
+                delta *= 28.;
+            }
+            bevy_input::mouse::MouseScrollUnit::Pixel => {}
+        }
+
         if keyboard_input.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight]) {
             std::mem::swap(&mut delta.x, &mut delta.y);
         }
 
-        scroll_position.0 = (scroll_position.0 - 14. * (delta / ui_scale.0))
+        scroll_position.0 = (scroll_position.0 - (delta / ui_scale.0))
             .min(max_range)
             .max(Vec2::ZERO);
     }
