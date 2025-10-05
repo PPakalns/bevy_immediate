@@ -327,6 +327,15 @@ fn scroll_on_mouse(
     }
 }
 
+fn scroll_on_drag_start(
+    drag_start: On<Pointer<DragStart>>,
+    mut scroll_position_query: Query<(&ComputedNode, &mut ScrollState), With<MyScrollableNode>>,
+) {
+    if let Ok((computed_node, mut state)) = scroll_position_query.get_mut(drag_start.entity) {
+        state.initial_pos = computed_node.scroll_position;
+    }
+}
+
 fn scroll_on_drag(
     drag: On<Pointer<Drag>>,
     ui_scale: Res<UiScale>,
@@ -335,22 +344,19 @@ fn scroll_on_drag(
         With<MyScrollableNode>,
     >,
 ) {
-    if let Ok((mut scroll_position, node, state)) = scroll_position_query.get_mut(drag.entity) {
-        let visible_size = node.size() * node.inverse_scale_factor;
-        let content_size = node.content_size() * node.inverse_scale_factor;
+    if let Ok((mut scroll_position, comp_node, state)) = scroll_position_query.get_mut(drag.entity)
+    {
+        let visible_size = comp_node.size();
+        let content_size = comp_node.content_size();
         let max_range = (content_size - visible_size).max(Vec2::ZERO);
 
-        scroll_position.0 = (state.initial_pos - drag.distance / ui_scale.0)
+        // Convert from screen coordinates to ui coordinates then back to physical coordinates
+        let distance = drag.distance / (comp_node.inverse_scale_factor * ui_scale.0);
+
+        scroll_position.0 = ((state.initial_pos - distance)
             .min(max_range)
-            .max(Vec2::ZERO);
-    }
-}
-fn scroll_on_drag_start(
-    drag_start: On<Pointer<DragStart>>,
-    mut scroll_position_query: Query<(&ComputedNode, &mut ScrollState), With<MyScrollableNode>>,
-) {
-    if let Ok((computed_node, mut state)) = scroll_position_query.get_mut(drag_start.entity) {
-        state.initial_pos = computed_node.scroll_position * computed_node.inverse_scale_factor;
+            .max(Vec2::ZERO))
+            * comp_node.inverse_scale_factor;
     }
 }
 

@@ -7,13 +7,20 @@ use bevy::{
     window::{PrimaryWindow, Window},
 };
 use bevy_app::{HierarchyPropagatePlugin, PostUpdate, Propagate};
+use bevy_color::palettes::css::LIGHT_GRAY;
 use bevy_ecs::{
     component::Component,
     entity::Entity,
-    hierarchy::Children,
+    event::PropagateEntityTrigger,
+    hierarchy::{ChildOf, Children},
+    observer::On,
     query::With,
+    resource::Resource,
     schedule::IntoScheduleConfigs,
-    system::{Query, Single},
+    system::{
+        Query, Res, ResMut, Single,
+        lifetimeless::{SRes, SResMut},
+    },
 };
 use bevy_feathers::{
     controls::{self, ButtonProps, ButtonVariant, button},
@@ -28,10 +35,13 @@ use bevy_immediate::{
         button_variant::ImmUiFeathersButtonVariant, interaction::ImmUiInteraction, text::ImmUiText,
     },
 };
-use bevy_picking::Pickable;
+use bevy_picking::{
+    Pickable,
+    events::{Drag, DragStart, Pointer, Press},
+};
 use bevy_ui::{
-    BackgroundColor, BorderColor, ComputedNode, ComputedUiRenderTargetInfo, FlexDirection, Node,
-    RepeatedGridTrack, UiGlobalTransform, UiRect, UiSystems, Val, px,
+    BackgroundColor, BorderColor, ComputedNode, ComputedUiRenderTargetInfo, FlexDirection,
+    GlobalZIndex, Node, RepeatedGridTrack, UiGlobalTransform, UiRect, UiScale, UiSystems, Val, px,
     widget::{Text, TextShadow},
 };
 use itertools::Itertools;
@@ -59,18 +69,119 @@ impl bevy_app::Plugin for TooltipExamplePlugin {
         app.add_plugins(HierarchyPropagatePlugin::<Pickable>::new(
             bevy_app::PostUpdate,
         ));
+
+        app.insert_resource(State {
+            open: vec![false, false, false, false],
+        });
+
+        app.add_observer(window_on_drag_start)
+            .add_observer(window_on_drag)
+            .add_observer(window_on_focus);
+        app.add_systems(
+            bevy_app::PostUpdate,
+            update_window_order.before(UiSystems::Prepare),
+        );
     }
+}
+
+#[derive(Resource)]
+pub struct State {
+    open: Vec<bool>,
 }
 
 #[derive(Component)]
 pub struct TooltipExampleRoot;
 
 impl ImmediateAttach<CapsUiFeathers> for TooltipExampleRoot {
-    type Params = (); // Access data from World using SystemParam
+    type Params = SResMut<State>; // Access data from World using SystemParam
 
-    fn construct(ui: &mut Imm<CapsUiFeathers>, _: &mut ()) {
+    fn construct(ui: &mut Imm<CapsUiFeathers>, state: &mut ResMut<State>) {
         // Construct entity hierarchies
         // and attach necessary components
+
+        ui.ch().on_spawn_insert(|| Text("Floating windows".into()));
+
+        ui.ch().on_spawn_insert(row_node_container).add(|ui| {
+            for open in state.open.iter_mut() {
+                let mut button = ui
+                    .ch()
+                    .on_spawn_insert(|| {
+                        button(
+                            ButtonProps {
+                                variant: ButtonVariant::Normal,
+                                corners: RoundedCorners::All,
+                            },
+                            (),
+                            (),
+                        )
+                    })
+                    .primary_button(*open)
+                    .add(|ui| {
+                        ui.ch()
+                            .on_spawn_insert(|| {
+                                (TextColor(Color::srgb(0.9, 0.9, 0.9)), TextShadow::default())
+                            })
+                            .on_spawn_text("Window");
+                    });
+                if button.activated() {
+                    *open = !*open;
+                }
+
+                if *open {
+                    button.unrooted("my_ui", |ui| {
+                        ui.ch()
+                            .on_spawn_insert(|| {
+                                (
+                                    Node {
+                                        flex_direction: FlexDirection::Column,
+                                        border: px(2.).into(),
+                                        ..default()
+                                    },
+                                    FloatingWindow { focus: true },
+                                    BackgroundColor(bevy_feathers::palette::BLACK),
+                                    BorderColor::all(LIGHT_GRAY),
+                                )
+                            })
+                            .add(|ui| {
+                                ui.ch()
+                                    .on_spawn_insert(|| Node {
+                                        flex_direction: FlexDirection::Row,
+                                        justify_content: bevy_ui::JustifyContent::SpaceBetween,
+                                        ..default()
+                                    })
+                                    .add(|ui| {
+                                        ui.ch().on_spawn_text("Title");
+
+                                        let mut close = ui
+                                            .ch()
+                                            .on_spawn_insert(|| {
+                                                controls::button(
+                                                    ButtonProps {
+                                                        variant: ButtonVariant::Primary,
+                                                        corners: RoundedCorners::None,
+                                                    },
+                                                    (),
+                                                    (),
+                                                )
+                                            })
+                                            .add(|ui| {
+                                                ui.ch().on_spawn_text("X");
+                                            });
+                                        if close.activated() {
+                                            *open = !*open;
+                                        }
+                                    });
+
+                                ui.ch().on_spawn_text("Text 1");
+                                ui.ch().on_spawn_text("Text 2");
+                                ui.ch().on_spawn_text("Text 3");
+                                ui.ch().on_spawn_text("Text 4");
+                                ui.ch().on_spawn_text("Text 5");
+                            });
+                    });
+                }
+            }
+        });
 
         ui.ch().on_spawn_insert(|| {
             Text("Anchoring: Element (TT) positioning against target element (T)".into())
@@ -103,7 +214,7 @@ impl ImmediateAttach<CapsUiFeathers> for TooltipExampleRoot {
                 let button = |ui: &mut Imm<_>, x, y, tx, ty, cursor| {
                     ui.ch_id((x, y, tx, ty, cursor))
                         .on_spawn_insert(|| {
-                            button(
+                            controls::button(
                                 ButtonProps {
                                     variant: ButtonVariant::Normal,
                                     corners: RoundedCorners::All,
@@ -179,7 +290,7 @@ impl ImmediateAttach<CapsUiFeathers> for TooltipExampleRoot {
                 let mut button = ui
                     .ch_id((x, y, tx, ty))
                     .on_spawn_insert(|| {
-                        button(
+                        controls::button(
                             ButtonProps {
                                 variant: ButtonVariant::Normal,
                                 corners: RoundedCorners::All,
@@ -622,3 +733,125 @@ fn update_global_transforms(
         update_global_transforms(child, delta, children, query);
     }
 }
+
+#[derive(Component)]
+#[require(FloatingWindowDrag, GlobalZIndex)]
+pub struct FloatingWindow {
+    pub focus: bool,
+}
+
+#[derive(Component, Default)]
+struct FloatingWindowDrag {
+    initial_pos: Vec2,
+    last_offset: Option<Vec2>,
+}
+
+fn window_on_drag_start(
+    mut drag_start: On<Pointer<DragStart>>,
+    mut scroll_position_query: Query<
+        (&UiGlobalTransform, &mut FloatingWindowDrag),
+        With<FloatingWindowDrag>,
+    >,
+) {
+    if let Ok((transform, mut state)) = scroll_position_query.get_mut(drag_start.entity) {
+        state.initial_pos = transform.translation;
+        state.last_offset = None;
+
+        drag_start.propagate(false);
+    }
+}
+
+fn window_on_drag(
+    mut drag: On<Pointer<Drag>>,
+    mut scroll_position_query: Query<
+        (&mut FloatingWindowDrag, &mut Node, &ComputedNode),
+        With<FloatingWindowDrag>,
+    >,
+    ui_scale: Res<UiScale>,
+    mut global_transform: Query<&mut UiGlobalTransform>,
+    children: Query<&Children>,
+) {
+    let Ok((mut state, mut node, comp_node)) = scroll_position_query.get_mut(drag.entity) else {
+        return;
+    };
+
+    drag.propagate(false);
+
+    let distance = drag.distance / (comp_node.inverse_scale_factor * ui_scale.0);
+    let target_position = state.initial_pos + distance;
+
+    if state.last_offset == Some(target_position) {
+        return;
+    }
+    state.last_offset = Some(target_position);
+
+    {
+        let offset = (target_position - comp_node.size * 0.5) * comp_node.inverse_scale_factor;
+        node.left = px(offset.x);
+        node.top = px(offset.y);
+    }
+
+    let Ok(current) = global_transform.get(drag.entity) else {
+        return;
+    };
+
+    // Logic to avoid 1 frame delay
+    // Global transform update is done immediatelly
+    let delta = target_position - current.translation;
+
+    update_global_transforms(drag.entity, delta, &children, &mut global_transform);
+}
+
+fn window_on_focus(
+    pointer: On<Pointer<Press>>,
+    mut windows: Query<&mut FloatingWindow>,
+    child_of: Query<&ChildOf>,
+) {
+    if pointer.original_event_target() != pointer.entity {
+        return;
+    }
+
+    let root_entity = child_of.root_ancestor(pointer.entity);
+
+    let Ok(mut window) = windows.get_mut(root_entity) else {
+        return;
+    };
+
+    window.focus = true;
+}
+
+fn update_window_order(mut windows: Query<(Entity, &mut FloatingWindow, &mut GlobalZIndex)>) {
+    let mut process = false;
+    for window in windows.iter_mut() {
+        if window.1.focus {
+            process = true;
+        }
+    }
+    if !process {
+        return;
+    }
+
+    let mut back = vec![];
+    let mut front = vec![];
+    for mut window in windows.iter_mut() {
+        if window.1.focus {
+            front.push(window.0);
+            window.1.focus = false;
+        } else {
+            back.push((window.2.0, window.0));
+        }
+    }
+    back.sort();
+    let mut z_index = WINDOW_Z_INDEX_BASE;
+    for entity in back.into_iter().map(|item| item.1).chain(front.into_iter()) {
+        let (_, _, mut global_z) = windows.get_mut(entity).unwrap();
+
+        if global_z.0 != z_index {
+            global_z.0 = z_index;
+        }
+
+        z_index += 1;
+    }
+}
+
+const WINDOW_Z_INDEX_BASE: i32 = 1000;
