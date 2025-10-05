@@ -25,21 +25,31 @@ fn button_system(
             &Hovered,
             &mut BackgroundColor,
             &mut BorderColor,
-            Option<&mut Selectable>,
+            Option<&Selectable>,
             Has<Pressed>,
         ),
+        (With<Button>, With<MyStyle>),
+    >,
+    changed: Query<
+        Entity,
         (
             Or<(Changed<Hovered>, Changed<Selectable>, Changed<Pressed>)>,
-            With<Button>,
-            With<MyStyle>,
+            (With<Button>, With<MyStyle>),
         ),
     >,
+    mut removed_pressed: RemovedComponents<Pressed>,
 ) {
     // Set interactable element
     // background and border colors
     // when inactive, pressed, hovered and when selected
 
-    for (hovered, mut color, mut border_color, selected, pressed) in interaction_query.iter_mut() {
+    for entity in changed.iter().chain(removed_pressed.read()) {
+        let Ok((hovered, mut color, mut border_color, selected, pressed)) =
+            interaction_query.get_mut(entity)
+        else {
+            continue;
+        };
+
         if pressed {
             color.0 = PRESSED_BUTTON;
             border_color.set_all(RED);
