@@ -1,13 +1,17 @@
 use bevy::{
     color::Color,
     math::Vec2,
+    render::render_resource::encase::private::StructMetadata,
     text::TextColor,
     transform::TransformSystems,
     utils::default,
     window::{PrimaryWindow, Window},
 };
 use bevy_app::{HierarchyPropagatePlugin, PostUpdate, Propagate};
-use bevy_color::palettes::css::LIGHT_GRAY;
+use bevy_color::{
+    Srgba,
+    palettes::css::{DARK_GRAY, LIGHT_GRAY},
+};
 use bevy_ecs::{
     component::Component,
     entity::Entity,
@@ -46,7 +50,10 @@ use bevy_ui::{
 };
 use itertools::Itertools;
 
-use crate::styles::row_node_container;
+use crate::{
+    bevy_widgets::BevyWidgetExampleRoot,
+    styles::{node_container, row_node_container},
+};
 
 pub struct TooltipExamplePlugin;
 
@@ -144,39 +151,62 @@ impl ImmediateAttach<CapsUiFeathers> for TooltipExampleRoot {
                             })
                             .add(|ui| {
                                 ui.ch()
-                                    .on_spawn_insert(|| Node {
-                                        flex_direction: FlexDirection::Row,
-                                        justify_content: bevy_ui::JustifyContent::SpaceBetween,
-                                        ..default()
+                                    .on_spawn_insert(|| {
+                                        (
+                                            Node {
+                                                flex_direction: FlexDirection::Row,
+                                                justify_content:
+                                                    bevy_ui::JustifyContent::SpaceBetween,
+                                                align_items: bevy_ui::AlignItems::Stretch,
+                                                ..default()
+                                            },
+                                            BackgroundColor(
+                                                Srgba::new(0.363, 0.363, 0.363, 1.0).into(),
+                                            ),
+                                        )
                                     })
                                     .add(|ui| {
-                                        ui.ch().on_spawn_text("Title");
-
-                                        let mut close = ui
-                                            .ch()
-                                            .on_spawn_insert(|| {
-                                                controls::button(
-                                                    ButtonProps {
-                                                        variant: ButtonVariant::Primary,
-                                                        corners: RoundedCorners::None,
-                                                    },
-                                                    (),
-                                                    (),
-                                                )
+                                        ui.ch()
+                                            .on_spawn_insert(|| Node {
+                                                flex_grow: 1.,
+                                                justify_content: bevy_ui::JustifyContent::Center,
+                                                ..default()
                                             })
                                             .add(|ui| {
-                                                ui.ch().on_spawn_text("X");
+                                                ui.ch().on_spawn_text("Title");
                                             });
-                                        if close.activated() {
-                                            *open = !*open;
-                                        }
+
+                                        ui.ch().on_spawn_insert(|| Node::DEFAULT).add(|ui| {
+                                            let mut close = ui
+                                                .ch()
+                                                .on_spawn_insert(|| {
+                                                    controls::button(
+                                                        ButtonProps {
+                                                            variant: ButtonVariant::Primary,
+                                                            corners: RoundedCorners::None,
+                                                        },
+                                                        (),
+                                                        (),
+                                                    )
+                                                })
+                                                .add(|ui| {
+                                                    ui.ch().on_spawn_text("X");
+                                                });
+                                            if close.activated() {
+                                                *open = !*open;
+                                            }
+                                        });
                                     });
 
-                                ui.ch().on_spawn_text("Text 1");
-                                ui.ch().on_spawn_text("Text 2");
-                                ui.ch().on_spawn_text("Text 3");
-                                ui.ch().on_spawn_text("Text 4");
-                                ui.ch().on_spawn_text("Text 5");
+                                ui.ch().on_spawn_insert(|| {
+                                    (
+                                        Node {
+                                            flex_direction: FlexDirection::Column,
+                                            ..node_container()
+                                        },
+                                        BevyWidgetExampleRoot,
+                                    )
+                                });
                             });
                     });
                 }
@@ -695,8 +725,9 @@ fn position_tooltip(
         placement_cache.last_offset = Some(final_position);
 
         {
-            let offset =
-                (final_position - tooltip_computed.size * 0.5) / tooltip_target_info.scale_factor();
+            let offset = ((final_position - tooltip_computed.size * 0.5)
+                / tooltip_target_info.scale_factor())
+            .round();
             node.left = px(offset.x);
             node.top = px(offset.y);
         }
@@ -786,7 +817,8 @@ fn window_on_drag(
     state.last_offset = Some(target_position);
 
     {
-        let offset = (target_position - comp_node.size * 0.5) * comp_node.inverse_scale_factor;
+        let offset =
+            ((target_position - comp_node.size * 0.5) * comp_node.inverse_scale_factor).round();
         node.left = px(offset.x);
         node.top = px(offset.y);
     }
