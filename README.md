@@ -11,6 +11,8 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
 * No macros, observers, triggers, events, signals.  
 * Focus on your UI, not the boilerplate.
 
+### 👉 [Web Demo](https://ppakalns.github.io/bevy_immediate/demo/) 👈 
+
 ![Demo screenshot](https://github.com/user-attachments/assets/d0acc571-74da-486a-9a58-235800ad2050)
 
 ## Features
