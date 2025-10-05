@@ -22,7 +22,7 @@ use bevy_ecs::{
     resource::Resource,
     schedule::IntoScheduleConfigs,
     system::{
-        Query, Res, ResMut, Single,
+        Commands, Query, Res, ResMut, Single,
         lifetimeless::{SRes, SResMut},
     },
 };
@@ -43,6 +43,7 @@ use bevy_picking::{
     Pickable,
     events::{Drag, DragStart, Pointer, Press},
 };
+use bevy_platform::collections::HashSet;
 use bevy_ui::{
     BackgroundColor, BorderColor, ComputedNode, ComputedUiRenderTargetInfo, FlexDirection,
     GlobalZIndex, Node, RepeatedGridTrack, UiGlobalTransform, UiRect, UiScale, UiSystems, Val, px,
@@ -88,6 +89,7 @@ impl bevy_app::Plugin for TooltipExamplePlugin {
             bevy_app::PostUpdate,
             update_window_order.before(UiSystems::Prepare),
         );
+        app.add_observer(update_should_close);
     }
 }
 
@@ -334,7 +336,7 @@ impl ImmediateAttach<CapsUiFeathers> for TooltipExampleRoot {
                             (
                                 TextColor(Color::srgb(0.9, 0.9, 0.9)),
                                 TextShadow::default(),
-                                Text("DropDown".into()),
+                                Text("Menu".into()),
                             )
                         });
                     });
@@ -352,7 +354,7 @@ impl ImmediateAttach<CapsUiFeathers> for TooltipExampleRoot {
                         });
                 });
                 let is_shown = button.dropdown_is_shown();
-                button = button.primary_button(is_shown);
+                button.primary_button(is_shown);
             }
         });
     }
@@ -441,7 +443,7 @@ fn dropdown_content(ui: &mut Imm<'_, '_, CapsUiFeathers>) {
                         });
                 });
                 let is_shown = button.dropdown_is_shown();
-                button = button.primary_button(is_shown);
+                button.primary_button(is_shown);
             }
         });
 }
@@ -501,11 +503,22 @@ where
                                 ..default()
                             },
                             AnchorTarget::Entity(entity),
+                            FocusParent(entity),
+                            FocusDetectShouldClose,
                         )
                     });
+
+                    if entity.cap_entity_contains::<FocusShouldClose>() {
+                        show = false;
+                    }
+
                     f(entity);
                 });
             });
+
+            if !show {
+                self.hash_remove_typ::<DropdownHash>();
+            }
         }
 
         self
@@ -541,6 +554,7 @@ where
                                 ..default()
                             },
                             AnchorTarget::Entity(entity),
+                            FocusParent(entity),
                             Propagate(Pickable {
                                 should_block_lower: false,
                                 is_hoverable: false,
@@ -887,3 +901,62 @@ fn update_window_order(mut windows: Query<(Entity, &mut FloatingWindow, &mut Glo
 }
 
 const WINDOW_Z_INDEX_BASE: i32 = 1000;
+
+/// If contents of entity are interacted with, focus should be kept
+/// for given focus parent entity and its parents recursively
+///
+/// Component should be attached to root entity
+#[derive(Component)]
+pub struct FocusParent(pub Entity);
+
+/// Add component to Ui tree root entity
+///
+/// This component will track if UI should be closed
+/// in situations where something else is pressed on screen.
+///
+/// [`FocusShouldClose`]  will be inserted if ui should close.
+#[derive(Component)]
+pub struct FocusDetectShouldClose;
+
+/// Informs that something else was focused and view should close
+#[derive(Component)]
+pub struct FocusShouldClose;
+
+fn update_should_close(
+    pointer: On<Pointer<Press>>,
+    should_close: Query<Entity, With<FocusDetectShouldClose>>,
+    focus_parents: Query<&FocusParent>,
+    child_of: Query<&ChildOf>,
+    mut commands: Commands,
+) {
+    if pointer.original_event_target() != pointer.entity {
+        return;
+    }
+
+    // No elements to close
+    if should_close.is_empty() {
+        return;
+    }
+
+    let mut keep_open = HashSet::new();
+
+    let mut current_entity = Some(pointer.entity);
+    while let Some(entity) = current_entity.take() {
+        let root_entity = child_of.root_ancestor(entity);
+
+        if should_close.contains(root_entity) {
+            keep_open.insert(root_entity);
+        }
+
+        if let Ok(focus_parent) = focus_parents.get(root_entity) {
+            current_entity = Some(focus_parent.0);
+        }
+    }
+
+    for entity in should_close.iter() {
+        if keep_open.contains(&entity) {
+            continue;
+        }
+        commands.entity(entity).insert(FocusShouldClose);
+    }
+}
