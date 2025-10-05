@@ -1,0 +1,49 @@
+on:
+  workflow_dispatch
+
+name: Build and deploy examples
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+
+      - name: Install dependencies
+        run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
+
+      - name: Install bevy_cli
+        run: cargo install --git https://github.com/TheBevyFlock/bevy_cli bevy_cli --force
+
+      - name: Build demo
+        # The first run may prompt to install dependencies, hence the `--yes` flag.
+        run: bevy build --release --yes --example demo web --bundle
+
+      - name: Upload the artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'target/bevy_web/web-release/'
+
+  deploy:
+    needs: [ build ]
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{steps.deployment.outputs.page_url}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

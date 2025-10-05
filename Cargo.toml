@@ -73,6 +73,15 @@ bevy = { version = "0.17.0", default-features = false, features = [
   "experimental_bevy_feathers",
 ] }
 
+[profile.web-release]
+inherits = "release"
+opt-level = 'z'
+lto = true
+codegen-units = 1
+
+[package.metadata.bevy_cli.web.release]
+# Enable wasm-opt with custom flags
+wasm-opt = ["-Oz", "--enable-bulk-memory"]
 
 [[example]]
 name = "demo"
