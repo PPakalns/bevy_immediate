@@ -4,7 +4,6 @@ use crate::impl_capability_set;
 /// Defines capability set for Ui
 pub struct CapsUi;
 
-#[cfg(feature = "picking")]
 impl_capability_set!(
     CapsUi,
     ImplCapsUi > ImplCapsEmpty,
@@ -17,25 +16,8 @@ impl_capability_set!(
         text::CapabilityUiText,
         selected::CapabilityUiSelectable,
         checked::CapabilityUiChecked,
-        // picking
         clicked::CapabilityUiClicked,
         activated::CapabilityUiActivated,
-    )
-);
-
-#[cfg(not(feature = "picking"))]
-impl_capability_set!(
-    CapsUi,
-    ImplCapsUi > ImplCapsEmpty,
-    (
-        base::CapabilityUiBase,
-        layout_order::CapabilityUiLayoutOrder,
-        look::CapabilityUiLook,
-        disabled::CapabilityUiDisabled,
-        interaction::CapabilityUiInteraction,
-        text::CapabilityUiText,
-        selected::CapabilityUiSelectable,
-        checked::CapabilityUiChecked,
     )
 );
 
@@ -57,7 +39,6 @@ impl_capability_set!(
         text::CapabilityUiText,
         selected::CapabilityUiSelectable,
         checked::CapabilityUiChecked,
-        // picking
         clicked::CapabilityUiClicked,
         activated::CapabilityUiActivated,
         //
@@ -81,7 +62,6 @@ impl_capability_set!(
         text::CapabilityUiText,
         selected::CapabilityUiSelectable,
         checked::CapabilityUiChecked,
-        // picking
         clicked::CapabilityUiClicked,
         activated::CapabilityUiActivated,
         // bevy_ui_widgets
@@ -107,7 +87,7 @@ pub mod look;
 /// Implements functions to manage disabled node state
 pub mod disabled;
 
-/// Implements functionality to access [`bevy_ui::Interaction`]
+/// Implements functionality to calculate interaciton state
 pub mod interaction;
 
 /// Implements capabilities for working with nodes that contain [`bevy_ui::widget::Text`]
@@ -120,12 +100,10 @@ pub mod selected;
 pub mod checked;
 
 /// Implements capabilities for detecting activated entity
-#[cfg(feature = "picking")]
 pub mod activated;
 
 /// Module implments `Pointer<Click>` related
 /// functionality like `.clicked()`
-#[cfg(feature = "picking")]
 pub mod clicked;
 
 /// Module implements functionality for setting SliderValue

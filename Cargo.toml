@@ -34,15 +34,13 @@ type-map = "0.5"
 paste = "1.0"
 
 [features]
-default = ["ui", "picking", "bevy_ui_widgets", "bevy_feathers"]
+default = ["ui", "bevy_ui_widgets", "bevy_feathers"]
 
 hotpatching = ["bevy_ecs/hotpatching"]
 
-ui = ["dep:bevy_ui", "dep:bevy_color"]
-bevy_feathers = ["dep:bevy_feathers", "bevy_ui_widgets", "dep:bevy_color"]
-bevy_ui_widgets = ["dep:bevy_ui_widgets", "picking"]
-picking = [
-  "ui",
+ui = [
+  "dep:bevy_ui",
+  "dep:bevy_color",
   "dep:bevy_input",
   "dep:bevy_picking",
   "dep:bevy_input_focus",
@@ -50,6 +48,8 @@ picking = [
   "bevy_internal/bevy_input_focus",
   "bevy_internal/bevy_ui_picking_backend",
 ]
+bevy_feathers = ["bevy_ui_widgets", "dep:bevy_feathers", "dep:bevy_color"]
+bevy_ui_widgets = ["ui", "dep:bevy_ui_widgets"]
 
 [dev-dependencies]
 bevy = { version = "0.17.0", default-features = false, features = [

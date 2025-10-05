@@ -43,6 +43,7 @@ where
 
         entity_mapping::init::<Caps>(app);
         upkeep::init::<Caps>(app);
+        cached_hash::init::<Caps>(app);
 
         let mut capabilities = ImmCapAccessRequests::<Caps>::default();
         Caps::initialize(app, &mut capabilities);
@@ -73,6 +74,7 @@ mod id;
 use crate::utils::ImmTypeMap;
 pub use id::{ImmId, ImmIdBuilder, imm_id};
 
+mod cached_hash;
 mod entity_mapping;
 mod upkeep;
 
@@ -626,6 +628,59 @@ impl<'r, 'w, 's, Caps: CapSet> ImmEntity<'r, 'w, 's, Caps> {
     /// Get [`Entity`] for parent entity of this entity
     pub fn parent_entity(&self) -> Option<Entity> {
         self.imm.current_entity()
+    }
+
+    /// Function to implement change detection using stored hashed value
+    ///
+    /// Hash values are stored for each entity separately.
+    ///
+    /// This function returns true if hash for `key` was
+    /// provided for the first time or if hash value changed.
+    ///
+    /// Hash is stored until entity is despawned
+    pub fn hash_store(&mut self, key: ImmId, value: ImmId) -> bool {
+        let entity = self.entity();
+        self.imm.ctx.cached_hash.cache(entity, key, value)
+    }
+
+    /// Function to implement change detection using stored hashed value
+    ///
+    /// Hash values are stored for each entity separately.
+    ///
+    /// This function returns true if hash for `Marker` was
+    /// provided for the first time or if hash value changed.
+    ///
+    /// Hash is stored until entity is despawned
+    pub fn hash_store_typ<UniqueMarker: 'static>(&mut self, value: ImmId) -> bool {
+        let entity = self.entity();
+        self.imm
+            .ctx
+            .cached_hash
+            .cache_typ::<UniqueMarker>(entity, value)
+    }
+
+    /// Function to retrieve currently stored hash value with given key for entity.
+    pub fn hash_get(&self, key: ImmId) -> Option<ImmId> {
+        let entity = self.entity();
+        self.imm.ctx.cached_hash.get(entity, key)
+    }
+
+    /// Function to retrieve currently stored hash value with given `UniqueMarker` type for entity.
+    pub fn hash_get_typ<UniqueMarker: 'static>(&self) -> Option<ImmId> {
+        let entity = self.entity();
+        self.imm.ctx.cached_hash.get_typ::<UniqueMarker>(entity)
+    }
+
+    /// Function to retrieve currently stored hash value with given key for entity.
+    pub fn hash_remove(&mut self, key: ImmId) -> Option<ImmId> {
+        let entity = self.entity();
+        self.imm.ctx.cached_hash.remove(entity, key)
+    }
+
+    /// Function to retrieve currently stored hash value with given `UniqueMarker` type for entity.
+    pub fn hash_remove_typ<UniqueMarker: 'static>(&mut self) -> Option<ImmId> {
+        let entity = self.entity();
+        self.imm.ctx.cached_hash.remove_typ::<UniqueMarker>(entity)
     }
 }
 

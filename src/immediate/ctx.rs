@@ -2,15 +2,15 @@ use bevy_ecs::{
     entity::Entity,
     hierarchy::ChildOf,
     query::With,
-    system::{Commands, Query, Res, SystemChangeTick},
+    system::{Commands, Query, Res, ResMut, SystemChangeTick},
 };
 
 use crate::{
     CapSet, Imm, ImmCapAccessRequestsResource, ImmCapQueryParam, ImmId,
     capabilities::ImmCapResourcesParam,
     immediate::{
-        Current, CurrentEntity, ImmMarker, entity_mapping::ImmediateModeEntityMapping,
-        upkeep::ImmediateModeStateResource,
+        Current, CurrentEntity, ImmMarker, cached_hash::CachedHash,
+        entity_mapping::ImmediateModeEntityMapping, upkeep::ImmediateModeStateResource,
     },
 };
 
@@ -38,6 +38,7 @@ pub struct ImmCtx<'w, 's, Caps: CapSet> {
     pub(super) state: Res<'w, ImmediateModeStateResource<Caps>>,
     pub(super) mapping: Res<'w, ImmediateModeEntityMapping<Caps>>,
     pub(super) entity_query: Query<'w, 's, ImmEntityQuery<Caps>, (With<ImmMarker<Caps>>, ())>,
+    pub(super) cached_hash: ResMut<'w, CachedHash<Caps>>,
 
     #[cfg(feature = "hotpatching")]
     pub(super) hotpatching: Res<'w, super::hotpatching::HotpatchingCounter>,

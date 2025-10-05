@@ -2,6 +2,8 @@ use bevy::color::Color;
 use bevy::{color::palettes::basic::*, prelude::*};
 use bevy_immediate::ui::selected::Selectable;
 use bevy_input_focus::{InputFocus, InputFocusVisible};
+use bevy_picking::hover::{Hovered, PickingInteraction};
+use bevy_ui::Pressed;
 
 pub struct DemoStylePlugin;
 
@@ -20,13 +22,14 @@ pub struct MyStyle;
 fn button_system(
     mut interaction_query: Query<
         (
-            &Interaction,
+            &Hovered,
             &mut BackgroundColor,
             &mut BorderColor,
             Option<&mut Selectable>,
+            Has<Pressed>,
         ),
         (
-            Or<(Changed<Interaction>, Changed<Selectable>)>,
+            Or<(Changed<Hovered>, Changed<Selectable>, Changed<Pressed>)>,
             With<Button>,
             With<MyStyle>,
         ),
@@ -36,38 +39,28 @@ fn button_system(
     // background and border colors
     // when inactive, pressed, hovered and when selected
 
-    for (interaction, mut color, mut border_color, selected) in &mut interaction_query {
-        match *interaction {
-            Interaction::Pressed => {
-                color.0 = PRESSED_BUTTON;
-                border_color.set_all(RED);
-            }
-            Interaction::Hovered => {
-                color.0 = HOVERED_BUTTON;
-                border_color.set_all(Color::WHITE);
-            }
-            Interaction::None => {
-                color.0 = NORMAL_BUTTON;
-                border_color.set_all(Color::BLACK);
-            }
+    for (hovered, mut color, mut border_color, selected, pressed) in interaction_query.iter_mut() {
+        if pressed {
+            color.0 = PRESSED_BUTTON;
+            border_color.set_all(RED);
+        } else if hovered.get() {
+            color.0 = HOVERED_BUTTON;
+            border_color.set_all(Color::WHITE);
+        } else {
+            color.0 = NORMAL_BUTTON;
+            border_color.set_all(Color::BLACK);
         }
-        if selected.map(|s| s.selected) == Some(true) {
-            let BorderColor {
-                top,
-                right,
-                bottom,
-                left,
-            } = &mut *border_color;
 
+        if selected.map(|s| s.selected) == Some(true) {
             fn assign_color(color: &mut Color) {
                 *color = color.mix(&SELECTED, 0.5);
             }
 
             assign_color(&mut color.0);
-            assign_color(top);
-            assign_color(right);
-            assign_color(bottom);
-            assign_color(left);
+            assign_color(&mut border_color.top);
+            assign_color(&mut border_color.right);
+            assign_color(&mut border_color.bottom);
+            assign_color(&mut border_color.left);
         }
     }
 }
@@ -167,6 +160,11 @@ pub fn container_with_background() -> MyStyleBundle {
 pub fn button_bundle() -> MyButtonBundle {
     MyButtonBundle {
         button: Button,
+        // Has Implementation for adding, removing Pressed
+        widget_button: bevy_ui_widgets::Button,
+        // For bevy_picking to track entity hovered state
+        picking: Hovered::default(),
+
         my_style: MyStyle,
         style: MyStyleBundle {
             node: Node {
@@ -195,7 +193,9 @@ pub struct MyStyleBundle {
 #[derive(Bundle)]
 pub struct MyButtonBundle {
     pub button: Button,
+    pub picking: Hovered,
     pub my_style: MyStyle,
     pub style: MyStyleBundle,
     pub interact: Interaction,
+    pub widget_button: bevy_ui_widgets::Button,
 }

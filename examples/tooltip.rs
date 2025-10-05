@@ -6,6 +6,7 @@ use bevy::{
     utils::default,
     window::{PrimaryWindow, Window},
 };
+use bevy_app::{HierarchyPropagatePlugin, PostUpdate, Propagate};
 use bevy_ecs::{
     component::Component,
     entity::Entity,
@@ -15,20 +16,27 @@ use bevy_ecs::{
     system::{Query, Single},
 };
 use bevy_feathers::{
-    controls::{ButtonProps, ButtonVariant, button},
+    controls::{self, ButtonProps, ButtonVariant, button},
     rounded_corners::RoundedCorners,
 };
 use bevy_immediate::{
     CapSet, Imm, ImmEntity,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
-    ui::{CapsUiFeathers, ImplCapsUi, interaction::ImmUiInteraction, text::ImmUiText},
+    imm_id,
+    ui::{
+        CapsUiFeathers, ImplCapsUi, activated::ImmUiActivated,
+        button_variant::ImmUiFeathersButtonVariant, interaction::ImmUiInteraction, text::ImmUiText,
+    },
 };
+use bevy_picking::Pickable;
 use bevy_ui::{
-    BackgroundColor, BorderColor, ComputedNode, ComputedUiRenderTargetInfo, Node,
+    BackgroundColor, BorderColor, ComputedNode, ComputedUiRenderTargetInfo, FlexDirection, Node,
     RepeatedGridTrack, UiGlobalTransform, UiRect, UiSystems, Val, px,
     widget::{Text, TextShadow},
 };
 use itertools::Itertools;
+
+use crate::styles::row_node_container;
 
 pub struct TooltipExamplePlugin;
 
@@ -47,6 +55,10 @@ impl bevy_app::Plugin for TooltipExamplePlugin {
                 .after(UiSystems::Layout)
                 .before(TransformSystems::Propagate),
         );
+
+        app.add_plugins(HierarchyPropagatePlugin::<Pickable>::new(
+            bevy_app::PostUpdate,
+        ));
     }
 }
 
@@ -156,15 +168,215 @@ impl ImmediateAttach<CapsUiFeathers> for TooltipExampleRoot {
                     }
                 }
             });
+
+        ui.ch().on_spawn_text("Dropdown");
+
+        ui.ch().on_spawn_insert(row_node_container).add(|ui| {
+            for (x, y, tx, ty) in [
+                (Anchor::Start, Anchor::End, Anchor::Start, Anchor::Start),
+                (Anchor::Start, Anchor::Start, Anchor::Start, Anchor::End),
+            ] {
+                let mut button = ui
+                    .ch_id((x, y, tx, ty))
+                    .on_spawn_insert(|| {
+                        button(
+                            ButtonProps {
+                                variant: ButtonVariant::Normal,
+                                corners: RoundedCorners::All,
+                            },
+                            (),
+                            (),
+                        )
+                    })
+                    .add(|ui| {
+                        ui.ch().on_spawn_insert(|| {
+                            (
+                                TextColor(Color::srgb(0.9, 0.9, 0.9)),
+                                TextShadow::default(),
+                                Text("DropDown".into()),
+                            )
+                        });
+                    });
+
+                let trigger_dropdown = button.activated();
+                button = button.with_dropdown_container(trigger_dropdown, |container| {
+                    container
+                        .on_spawn_insert(|| AnchorOption {
+                            anchor: Direction { x, y },
+                            target_anchor: Direction { x: tx, y: ty },
+                            ..default()
+                        })
+                        .add(|ui| {
+                            dropdown_content(ui);
+                        });
+                });
+                let is_shown = button.dropdown_is_shown();
+                button = button.primary_button(is_shown);
+            }
+        });
     }
 }
 
-pub trait WithEntity<'w, 's, Caps: CapSet> {
+fn dropdown_content(ui: &mut Imm<'_, '_, CapsUiFeathers>) {
+    ui.ch()
+        .on_spawn_insert(|| {
+            (
+                Node {
+                    flex_direction: FlexDirection::Column,
+                    border: UiRect::all(px(2.)),
+                    padding: px(4.).into(),
+                    row_gap: px(4.),
+                    ..default()
+                },
+                BackgroundColor(bevy_color::palettes::css::BLACK.into()),
+                BorderColor::all(bevy_color::palettes::css::DARK_GRAY),
+            )
+        })
+        .add(|ui| {
+            for _ in 0..10 {
+                let mut button = ui
+                    .ch()
+                    .on_spawn_insert(|| {
+                        controls::button(
+                            ButtonProps {
+                                variant: ButtonVariant::Normal,
+                                corners: RoundedCorners::None,
+                            },
+                            (),
+                            (),
+                        )
+                    })
+                    .add(|ui| {
+                        ui.ch().on_spawn_text("Example");
+                    });
+
+                let trigger_dropdown = button.activated();
+                button = button.with_dropdown_container(trigger_dropdown, |container| {
+                    container
+                        .on_spawn_insert(|| AnchorOption {
+                            anchor: Direction {
+                                x: Anchor::Start,
+                                y: Anchor::Start,
+                            },
+                            target_anchor: Direction {
+                                x: Anchor::End,
+                                y: Anchor::Start,
+                            },
+                            ..default()
+                        })
+                        .add(|ui| {
+                            ui.ch()
+                                .on_spawn_insert(|| {
+                                    (
+                                        Node {
+                                            flex_direction: FlexDirection::Column,
+                                            border: UiRect::all(px(2.)),
+                                            padding: px(4.).into(),
+                                            row_gap: px(4.),
+                                            ..default()
+                                        },
+                                        BackgroundColor(bevy_color::palettes::css::BLACK.into()),
+                                        BorderColor::all(bevy_color::palettes::css::DARK_GRAY),
+                                    )
+                                })
+                                .add(|ui| {
+                                    for _ in 0..3 {
+                                        ui.ch()
+                                            .on_spawn_insert(|| {
+                                                controls::button(
+                                                    ButtonProps {
+                                                        variant: ButtonVariant::Normal,
+                                                        corners: RoundedCorners::None,
+                                                    },
+                                                    (),
+                                                    (),
+                                                )
+                                            })
+                                            .add(|ui| {
+                                                ui.ch().on_spawn_text("Final button");
+                                            });
+                                    }
+                                });
+                        });
+                });
+                let is_shown = button.dropdown_is_shown();
+                button = button.primary_button(is_shown);
+            }
+        });
+}
+
+pub trait ImmUiDropdown<'w, 's, Caps: CapSet> {
+    fn dropdown_is_shown(&self) -> bool;
+    fn with_dropdown(self, triggered: bool, f: impl FnOnce(&mut Imm<'w, 's, Caps>)) -> Self;
+    fn with_dropdown_container(
+        self,
+        triggered: bool,
+        f: impl FnOnce(ImmEntity<'_, 'w, 's, Caps>),
+    ) -> Self;
+}
+
+struct DropdownHash;
+
+impl<'w, 's, Caps> ImmUiDropdown<'w, 's, Caps> for ImmEntity<'_, 'w, 's, Caps>
+where
+    Caps: ImplCapsUi,
+{
+    fn dropdown_is_shown(&self) -> bool {
+        self.hash_get_typ::<DropdownHash>().is_some()
+    }
+
+    fn with_dropdown(self, triggered: bool, f: impl FnOnce(&mut Imm<'w, 's, Caps>)) -> Self {
+        self.with_dropdown_container(triggered, |entity| {
+            entity.add(|ui| {
+                f(ui);
+            });
+        })
+    }
+
+    fn with_dropdown_container(
+        mut self,
+        triggered: bool,
+        f: impl FnOnce(ImmEntity<'_, 'w, 's, Caps>),
+    ) -> Self {
+        let mut show = self.dropdown_is_shown();
+
+        if triggered {
+            show = !show;
+            if show {
+                self.hash_store_typ::<DropdownHash>(imm_id(()));
+            } else {
+                self.hash_remove_typ::<DropdownHash>();
+            }
+        }
+
+        if show {
+            let entity = self.entity();
+            self = self.add(|ui| {
+                ui.unrooted("with_dropdown", |ui| {
+                    let entity = ui.ch().on_spawn_insert(|| {
+                        (
+                            Node {
+                                position_type: bevy_ui::PositionType::Absolute,
+                                ..default()
+                            },
+                            AnchorTarget::Entity(entity),
+                        )
+                    });
+                    f(entity);
+                });
+            });
+        }
+
+        self
+    }
+}
+
+pub trait ImmUiTooltip<'w, 's, Caps: CapSet> {
     fn with_tooltip(self, f: impl FnOnce(&mut Imm<'w, 's, Caps>)) -> Self;
     fn with_tooltip_container(self, f: impl FnOnce(ImmEntity<'_, 'w, 's, Caps>)) -> Self;
 }
 
-impl<'w, 's, Caps> WithEntity<'w, 's, Caps> for ImmEntity<'_, 'w, 's, Caps>
+impl<'w, 's, Caps> ImmUiTooltip<'w, 's, Caps> for ImmEntity<'_, 'w, 's, Caps>
 where
     Caps: ImplCapsUi,
 {
@@ -188,6 +400,10 @@ where
                                 ..default()
                             },
                             AnchorTarget::Entity(entity),
+                            Propagate(Pickable {
+                                should_block_lower: false,
+                                is_hoverable: false,
+                            }),
                         )
                     });
                     f(entity);
@@ -226,19 +442,16 @@ pub struct AnchorOption {
     padding: Direction<Val>,
 }
 
-#[derive(Component)]
-pub struct AnchorMouse;
-
 impl Default for AnchorOption {
     fn default() -> Self {
         Self {
             anchor: Direction {
                 x: Anchor::Start,
-                y: Anchor::Start,
+                y: Anchor::End,
             },
             target_anchor: Direction {
-                x: Anchor::Start,
-                y: Anchor::End,
+                x: Anchor::Middle,
+                y: Anchor::Start,
             },
             padding: Direction {
                 x: Val::ZERO,
