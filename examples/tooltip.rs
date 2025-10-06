@@ -1,3 +1,5 @@
+use std::alloc::Layout;
+
 use bevy::{
     color::Color,
     math::Vec2,
@@ -46,7 +48,8 @@ use bevy_picking::{
 use bevy_platform::collections::HashSet;
 use bevy_ui::{
     BackgroundColor, BorderColor, ComputedNode, ComputedUiRenderTargetInfo, FlexDirection,
-    GlobalZIndex, Node, RepeatedGridTrack, UiGlobalTransform, UiRect, UiScale, UiSystems, Val, px,
+    GlobalZIndex, LayoutConfig, Node, RepeatedGridTrack, UiGlobalTransform, UiRect, UiScale,
+    UiSystems, Val, px, ui_layout_system,
     widget::{Text, TextShadow},
 };
 use itertools::Itertools;
@@ -69,7 +72,7 @@ impl bevy_app::Plugin for TooltipExamplePlugin {
 
         app.add_systems(
             bevy_app::PostUpdate,
-            position_tooltip
+            position_anchor
                 .after(UiSystems::Layout)
                 .before(TransformSystems::Propagate),
         );
@@ -661,11 +664,12 @@ struct PlacementCache {
     last_offset: Option<Vec2>,
 }
 
-fn position_tooltip(
-    tooltip: Query<(
+fn position_anchor(
+    elements_to_anchor: Query<(
         Entity,
         &AnchorTarget,
         &mut PlacementCache,
+        Option<&LayoutConfig>,
         &AnchorOption,
         &ComputedNode,
         &ComputedUiRenderTargetInfo,
@@ -680,11 +684,12 @@ fn position_tooltip(
         entity,
         target,
         mut placement_cache,
+        layout_config,
         anchor_option,
-        tooltip_computed,
-        tooltip_target_info,
+        comp_node,
+        comp_target_info,
         mut node,
-    ) in tooltip
+    ) in elements_to_anchor
     {
         let cursor = window.physical_cursor_position();
 
@@ -705,18 +710,18 @@ fn position_tooltip(
         };
         let target_position = target_position.round();
 
-        let tooltip_anchor_offset = {
+        let element_anchor_offset = {
             let anchor_sign_vec = anchor_option.anchor.sign_vec();
 
-            let anchor_offset = anchor_sign_vec * 0.5 * tooltip_computed.size;
+            let anchor_offset = anchor_sign_vec * 0.5 * comp_node.size;
 
             let x = anchor_option
                 .padding
                 .x
                 .resolve(
-                    tooltip_target_info.scale_factor(),
-                    tooltip_target_info.physical_size().x as f32,
-                    tooltip_target_info.physical_size().as_vec2(),
+                    comp_target_info.scale_factor(),
+                    comp_target_info.physical_size().x as f32,
+                    comp_target_info.physical_size().as_vec2(),
                 )
                 .unwrap_or(0.);
 
@@ -724,40 +729,67 @@ fn position_tooltip(
                 .padding
                 .y
                 .resolve(
-                    tooltip_target_info.scale_factor(),
-                    tooltip_target_info.physical_size().y as f32,
-                    tooltip_target_info.physical_size().as_vec2(),
+                    comp_target_info.scale_factor(),
+                    comp_target_info.physical_size().y as f32,
+                    comp_target_info.physical_size().as_vec2(),
                 )
                 .unwrap_or(0.);
 
             anchor_offset + anchor_sign_vec * Vec2 { x, y }
         };
 
-        let final_position = target_position - tooltip_anchor_offset;
+        let final_position = target_position - element_anchor_offset;
 
         if placement_cache.last_offset == Some(final_position) {
             continue;
         }
         placement_cache.last_offset = Some(final_position);
 
-        {
-            let offset = ((final_position - tooltip_computed.size * 0.5)
-                / tooltip_target_info.scale_factor())
-            .round();
-            node.left = px(offset.x);
-            node.top = px(offset.y);
+        apply_position(
+            entity,
+            final_position,
+            &mut node,
+            comp_node,
+            layout_config,
+            &children,
+            &mut global_transform,
+        );
+    }
+}
+
+fn apply_position(
+    entity: Entity,
+    mut final_position: Vec2,
+    node: &mut Node,
+    comp_node: &ComputedNode,
+    layout_config: Option<&LayoutConfig>,
+    children: &Query<&Children>,
+    mut global_transform: &mut Query<&mut UiGlobalTransform>,
+) {
+    {
+        let mut offset = final_position - comp_node.size * 0.5;
+
+        // This is needed to avoid 1px broken layouts where something doesn't align up correctly
+        if layout_config.map(|lc| lc.use_rounding).unwrap_or(true) {
+            let offset_rounded = offset.round();
+            final_position += offset_rounded - offset; // Get final position in correct place
+            offset = offset_rounded;
         }
 
-        let Ok(current) = global_transform.get(entity) else {
-            continue;
-        };
-
-        // Logic to avoid 1 frame delay
-        // Global transform update is done immediatelly
-        let delta = final_position - current.translation;
-
-        update_global_transforms(entity, delta, &children, &mut global_transform);
+        let offset_px = offset * comp_node.inverse_scale_factor;
+        node.left = px(offset_px.x);
+        node.top = px(offset_px.y);
     }
+
+    let Ok(current) = global_transform.get(entity) else {
+        return;
+    };
+
+    // Logic to avoid 1 frame delay
+    // Global transform update is done immediatelly
+    let delta = final_position - current.translation;
+
+    update_global_transforms(entity, delta, &children, &mut global_transform);
 }
 
 fn update_global_transforms(
@@ -809,14 +841,21 @@ fn window_on_drag_start(
 fn window_on_drag(
     mut drag: On<Pointer<Drag>>,
     mut scroll_position_query: Query<
-        (&mut FloatingWindowDrag, &mut Node, &ComputedNode),
+        (
+            &mut FloatingWindowDrag,
+            &mut Node,
+            &ComputedNode,
+            Option<&LayoutConfig>,
+        ),
         With<FloatingWindowDrag>,
     >,
     ui_scale: Res<UiScale>,
     mut global_transform: Query<&mut UiGlobalTransform>,
     children: Query<&Children>,
 ) {
-    let Ok((mut state, mut node, comp_node)) = scroll_position_query.get_mut(drag.entity) else {
+    let Ok((mut state, mut node, comp_node, layout_config)) =
+        scroll_position_query.get_mut(drag.entity)
+    else {
         return;
     };
 
@@ -830,22 +869,15 @@ fn window_on_drag(
     }
     state.last_offset = Some(target_position);
 
-    {
-        let offset =
-            ((target_position - comp_node.size * 0.5) * comp_node.inverse_scale_factor).round();
-        node.left = px(offset.x);
-        node.top = px(offset.y);
-    }
-
-    let Ok(current) = global_transform.get(drag.entity) else {
-        return;
-    };
-
-    // Logic to avoid 1 frame delay
-    // Global transform update is done immediatelly
-    let delta = target_position - current.translation;
-
-    update_global_transforms(drag.entity, delta, &children, &mut global_transform);
+    apply_position(
+        drag.entity,
+        target_position,
+        &mut node,
+        comp_node,
+        layout_config,
+        &children,
+        &mut global_transform,
+    );
 }
 
 fn window_on_focus(
