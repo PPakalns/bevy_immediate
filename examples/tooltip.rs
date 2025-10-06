@@ -87,7 +87,7 @@ impl bevy_app::Plugin for TooltipExamplePlugin {
             .add_observer(window_on_focus);
         app.add_systems(
             bevy_app::PostUpdate,
-            update_window_order.before(UiSystems::Prepare),
+            update_ui_layer_order.before(UiSystems::Prepare),
         );
         app.add_observer(update_should_close);
     }
@@ -146,7 +146,7 @@ impl ImmediateAttach<CapsUiFeathers> for TooltipExampleRoot {
                                         border: px(2.).into(),
                                         ..default()
                                     },
-                                    FloatingWindow { focus: true },
+                                    FloatingWindow,
                                     BackgroundColor(bevy_feathers::palette::BLACK),
                                     BorderColor::all(LIGHT_GRAY),
                                 )
@@ -502,6 +502,7 @@ where
                                 position_type: bevy_ui::PositionType::Absolute,
                                 ..default()
                             },
+                            UiZOrderLayer::Dropdown,
                             AnchorTarget::Entity(entity),
                             FocusParent(entity),
                             FocusDetectShouldClose,
@@ -554,6 +555,7 @@ where
                                 ..default()
                             },
                             AnchorTarget::Entity(entity),
+                            UiZOrderLayer::Tooltip,
                             FocusParent(entity),
                             Propagate(Pickable {
                                 should_block_lower: false,
@@ -780,10 +782,8 @@ fn update_global_transforms(
 }
 
 #[derive(Component)]
-#[require(FloatingWindowDrag, GlobalZIndex)]
-pub struct FloatingWindow {
-    pub focus: bool,
-}
+#[require(FloatingWindowDrag, UiZOrderLayer::Window)]
+pub struct FloatingWindow;
 
 #[derive(Component, Default)]
 struct FloatingWindowDrag {
@@ -850,7 +850,7 @@ fn window_on_drag(
 
 fn window_on_focus(
     pointer: On<Pointer<Press>>,
-    mut windows: Query<&mut FloatingWindow>,
+    mut windows: Query<&mut UiBringForward, With<FloatingWindow>>,
     child_of: Query<&ChildOf>,
 ) {
     if pointer.original_event_target() != pointer.entity {
@@ -863,40 +863,86 @@ fn window_on_focus(
         return;
     };
 
-    window.focus = true;
+    window.forward = true;
 }
 
-fn update_window_order(mut windows: Query<(Entity, &mut FloatingWindow, &mut GlobalZIndex)>) {
-    let mut process = false;
-    for window in windows.iter_mut() {
-        if window.1.focus {
-            process = true;
+#[derive(Component)]
+pub struct UiBringForward {
+    forward: bool,
+}
+
+#[derive(Component, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[require(UiBringForward { forward: true }, GlobalZIndex)]
+pub enum UiZOrderLayer {
+    Window,
+    Dropdown,
+    Popup,
+    Tooltip,
+}
+
+impl UiZOrderLayer {
+    pub fn base(&self) -> i32 {
+        match self {
+            UiZOrderLayer::Window => 1000,
+            UiZOrderLayer::Dropdown => 2000,
+            UiZOrderLayer::Popup => 3000,
+            UiZOrderLayer::Tooltip => 4000,
         }
     }
+}
+
+fn update_ui_layer_order(
+    mut layer_roots: Query<(
+        Entity,
+        &mut UiBringForward,
+        &mut GlobalZIndex,
+        &UiZOrderLayer,
+    )>,
+) {
+    let mut process = false;
+    for layer in layer_roots.iter_mut() {
+        if layer.1.forward {
+            process = true;
+            break;
+        }
+    }
+
+    // Everything in correct order
     if !process {
         return;
     }
 
-    let mut back = vec![];
-    let mut front = vec![];
-    for mut window in windows.iter_mut() {
-        if window.1.focus {
-            front.push(window.0);
-            window.1.focus = false;
+    // Sort layers by
+    // UiZOrderLayer, (false - keep order, true - bring forward), current global z index, entity
+    let mut layers: Vec<(UiZOrderLayer, bool, i32, Entity)> = vec![];
+
+    for mut layer in layer_roots.iter_mut() {
+        if layer.1.forward {
+            layers.push((*layer.3, true, layer.2.0, layer.0));
+            layer.1.forward = false;
         } else {
-            back.push((window.2.0, window.0));
+            layers.push((*layer.3, false, layer.2.0, layer.0));
         }
     }
-    back.sort();
-    let mut z_index = WINDOW_Z_INDEX_BASE;
-    for entity in back.into_iter().map(|item| item.1).chain(front.into_iter()) {
-        let (_, _, mut global_z) = windows.get_mut(entity).unwrap();
 
-        if global_z.0 != z_index {
-            global_z.0 = z_index;
+    layers.sort_unstable();
+
+    let mut current_layer = None;
+    let mut current_z_index = 0;
+
+    for (layer, _, _, entity) in layers.into_iter() {
+        let (_, _, mut global_z, _) = layer_roots.get_mut(entity).unwrap();
+
+        if current_layer != Some(layer) {
+            current_layer = Some(layer);
+            current_z_index = layer.base();
         }
 
-        z_index += 1;
+        if global_z.0 != current_z_index {
+            global_z.0 = current_z_index;
+        }
+
+        current_z_index += 1;
     }
 }
 
