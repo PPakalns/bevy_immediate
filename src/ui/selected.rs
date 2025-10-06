@@ -30,10 +30,9 @@ where
 {
     fn selected(mut self, selected: bool) -> Self {
         if let Ok(Some(mut comp)) = self.cap_get_component_mut::<Selectable>() {
-            if comp.selected == selected {
-                return self;
+            if comp.selected != selected {
+                comp.selected = selected;
             }
-            comp.selected = selected;
             return self;
         }
 

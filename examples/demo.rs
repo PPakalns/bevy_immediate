@@ -9,6 +9,7 @@ fn main() {
             }),
             ..default()
         }))
+        .add_plugins(bevy_framepace::FramepacePlugin)
         // Reusable code for demo examples and effects
         .add_plugins(styles::DemoStylePlugin)
         // Setup camera
@@ -24,12 +25,14 @@ fn main() {
         .add_plugins(widget_use::WidgetUseExamplePlugin)
         .add_plugins(widget_native::WidgetNativeExamplePlugin)
         .add_plugins(widget_functional::WidgetFunctionalExamplePlugin)
-        .add_plugins(menu::MenuExamplePlugin)
+        .add_plugins(main_menu::MainMenuExamplePlugin)
         .add_plugins(extension::ExtensionExamplePlugin)
         .add_plugins(extension_use::ExtensionUseExamplePlugin)
         .add_plugins(power_user::PowerUserExamplePlugin)
         .add_plugins(hot_patching::HotPatchingExamplePlugin)
         .add_plugins(tooltip::TooltipExamplePlugin)
+        .add_plugins(anchored::AnchoredUiExamplePlugin)
+        .add_plugins(floating_window::FloatingWindowExamplePlugin)
         .run();
 }
 
@@ -51,7 +54,7 @@ mod widget_native;
 
 mod widget_use;
 
-mod menu;
+mod main_menu;
 
 mod extension;
 
@@ -61,6 +64,10 @@ mod power_user;
 
 mod hot_patching;
 
-mod styles;
-
 mod tooltip;
+
+mod floating_window;
+
+mod anchored;
+
+mod styles;

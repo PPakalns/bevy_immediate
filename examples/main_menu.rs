@@ -13,9 +13,9 @@ use bevy_ui::{FlexDirection, Node, Val};
 
 use crate::styles::{self, button_bundle, fill_parent_node, text_style};
 
-pub struct MenuExamplePlugin;
+pub struct MainMenuExamplePlugin;
 
-impl bevy_app::Plugin for MenuExamplePlugin {
+impl bevy_app::Plugin for MainMenuExamplePlugin {
     fn build(&self, app: &mut bevy_app::App) {
         app.insert_resource(CurrentExample::BevyWidgets);
 
@@ -55,15 +55,17 @@ impl ImmediateAttach<CapsUi> for MenuUiRoot {
                     ..default()
                 });
 
-                for (example, title) in [
-                    (CurrentExample::HelloWorld, "Hello World"),
-                    (CurrentExample::BevyWidgets, "Bevy Ui Widgets"),
-                    (CurrentExample::BevyScrollbar, "Bevy Ui Scrollareas"),
-                    (CurrentExample::Tooltip, "Tooltips"),
-                    (CurrentExample::WidgetUse, "Widget usage"),
-                    (CurrentExample::ExtensionUse, "Extension usage"),
-                    (CurrentExample::PowerUser, "Power user"),
-                    (CurrentExample::HotPatching, "Hot patching"),
+                for example in [
+                    CurrentExample::HelloWorld,
+                    CurrentExample::BevyWidgets,
+                    CurrentExample::BevyScrollbar,
+                    CurrentExample::Tooltip,
+                    CurrentExample::Anchored,
+                    CurrentExample::FloatingWindows,
+                    CurrentExample::WidgetUse,
+                    CurrentExample::ExtensionUse,
+                    CurrentExample::PowerUser,
+                    CurrentExample::HotPatching,
                 ] {
                     let mut button = ui
                         .ch()
@@ -72,7 +74,7 @@ impl ImmediateAttach<CapsUi> for MenuUiRoot {
                         .add(|ui| {
                             ui.ch()
                                 .on_spawn_insert(styles::text_style)
-                                .on_spawn_text(title);
+                                .on_spawn_text_fn(|| example.title().to_string());
                         });
 
                     if button.clicked() {
@@ -99,14 +101,33 @@ impl ImmediateAttach<CapsUi> for MenuUiRoot {
     }
 }
 
-#[derive(Resource, Hash, Clone, Copy, PartialEq, Eq)]
+#[derive(Resource, Hash, Clone, Copy, PartialEq, Eq, strum::EnumIter)]
 pub enum CurrentExample {
     HelloWorld,
     BevyWidgets,
+    BevyScrollbar,
+    Tooltip,
+    Anchored,
+    FloatingWindows,
     WidgetUse,
     ExtensionUse,
     PowerUser,
-    BevyScrollbar,
     HotPatching,
-    Tooltip,
+}
+
+impl CurrentExample {
+    pub fn title(&self) -> &'static str {
+        match self {
+            CurrentExample::HelloWorld => "Hello World",
+            CurrentExample::BevyWidgets => "Bevy Widgets",
+            CurrentExample::BevyScrollbar => "Bevy Scrollareas",
+            CurrentExample::Tooltip => "Tooltips",
+            CurrentExample::Anchored => "Anchored UI",
+            CurrentExample::FloatingWindows => "Floating windows",
+            CurrentExample::WidgetUse => "Widget usage",
+            CurrentExample::ExtensionUse => "Extension usage",
+            CurrentExample::PowerUser => "Power user",
+            CurrentExample::HotPatching => "Hot patching",
+        }
+    }
 }

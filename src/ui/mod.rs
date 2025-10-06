@@ -18,6 +18,7 @@ impl_capability_set!(
         checked::CapabilityUiChecked,
         clicked::CapabilityUiClicked,
         activated::CapabilityUiActivated,
+        anchored::CapabilityUiAnchored,
     )
 );
 
@@ -41,6 +42,7 @@ impl_capability_set!(
         checked::CapabilityUiChecked,
         clicked::CapabilityUiClicked,
         activated::CapabilityUiActivated,
+        anchored::CapabilityUiAnchored,
         //
         slider_value::CapabilityUiSliderValue,
     )
@@ -64,6 +66,7 @@ impl_capability_set!(
         checked::CapabilityUiChecked,
         clicked::CapabilityUiClicked,
         activated::CapabilityUiActivated,
+        anchored::CapabilityUiAnchored,
         // bevy_ui_widgets
         slider_value::CapabilityUiSliderValue,
         // bevy_feathers
@@ -106,6 +109,9 @@ pub mod activated;
 /// functionality like `.clicked()`
 pub mod clicked;
 
+/// Contains plugin implementation for value change entity event tracking
+pub mod track_value_change_plugin;
+
 /// Module implements functionality for setting SliderValue
 #[cfg(feature = "bevy_ui_widgets")]
 pub mod slider_value;
@@ -118,10 +124,17 @@ pub mod slider_base_color;
 #[cfg(feature = "bevy_feathers")]
 pub mod button_variant;
 
-/// Contains plugin implementation for value change entity event tracking
-pub mod track_value_change_plugin;
+pub mod anchored;
 
 /// Contains implementation to work around inconsistent
 /// radio button implementation in bevy
 #[cfg(feature = "bevy_ui_widgets")]
 pub mod radio_button_fix_plugin;
+
+pub mod floating_window_plugin;
+
+pub mod anchored_entity_plugin;
+
+pub mod floating_entity_plugin;
+
+pub mod floating_entity_focus_plugin;

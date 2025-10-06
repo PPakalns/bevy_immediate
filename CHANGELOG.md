@@ -1,9 +1,13 @@
 # Changelog
 
-# 0.2.2
+# 0.3
 
-* Added ergonomic API to spawn unrooted entities. Useful for tooltips, popups.
-* Added support for tooltips. See tooltips example.
+* `.hovered()`, `.pressed()` is now calculated using `bevy_picking`.
+* Added support for tooltips, dropdowns, menus, floating windows, (draggable, resizable).
+* Added immediate mode entity local hash store to simplify storing local state 
+  or to implement change detection based on hash value change.
+* Added ergonomic API to spawn unrooted entities. Useful for dropdowns, tooltips, popups, floating windows.
+* Added plugins for entity anchoring and window focus management.
 
 # 0.2.1
 

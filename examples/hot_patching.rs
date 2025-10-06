@@ -33,6 +33,8 @@ impl ImmediateAttach<CapsUi> for HotPatchingRoot {
         // If `hotpatching` feature is enabled for `bevy_immediate` and `bevy` crates
         //
         // it will trigger recreation of UI.
+        //
+        // To execute demo with hotpatching: See bevy_immediate README.md "Hotpatching" section.
 
         // 2.
         // If `hotpatching` feature **is not** enabled for this crate.
@@ -51,16 +53,14 @@ impl ImmediateAttach<CapsUi> for HotPatchingRoot {
         // This library will try to develop a better way in future:
         // * like inserting compilation time as id :)
 
-        // To execute demo with hotpatching: See bevy_immediate README.md "Hotpatching" section.
-
         lch!(ui)
             .on_spawn_insert(title_text_style)
             .on_spawn_text("Hot patching ");
 
-        ui.ch_id(lid!())
+        ui.ch()
             .on_spawn_text("Install dx tool and launch demo example with hotpatching");
 
-        ui.ch_id(lid!())
+        ui.ch()
             .on_spawn_text("(See bevy_immediate README.md \"Hotpatching\" section)");
 
         lch!(ui).on_spawn_insert(|| Node {
@@ -68,20 +68,21 @@ impl ImmediateAttach<CapsUi> for HotPatchingRoot {
             ..default()
         });
 
-        lch!(ui).on_spawn_text("COMMENT ME in code!");
+        ui.ch().on_spawn_text("COMMENT ME in code!");
 
         // lch!(ui).on_spawn_text("UNCOMMENT ME!");
 
-        lch!(ui).on_spawn_insert(|| Node {
+        ui.ch().on_spawn_insert(|| Node {
             height: px(50.),
             ..default()
         });
 
+        ui.ch().on_spawn_text("Change loop counter in code:");
         for idx in 0..3 {
-            ui.ch_id((lid!(), idx))
+            ui.ch_id(lid!(idx))
                 .on_spawn_insert(styles::button_bundle)
                 .add(|ui| {
-                    ui.ch().on_spawn_text("Example 2");
+                    ui.ch().on_spawn_text("Button");
                 });
         }
     }

@@ -4,12 +4,14 @@ use bevy_input_focus::tab_navigation::TabGroup;
 use bevy_ui::Node;
 
 use crate::{
+    anchored::AnchoredUiExampleRoot,
     bevy_scrollarea::BevyScrollareaExampleRoot,
     bevy_widgets::BevyWidgetExampleRoot,
     extension_use::ExtensionUseExampleRoot,
+    floating_window::FloatingWindowRoot,
     hello_world::HelloWorldRoot,
     hot_patching::HotPatchingRoot,
-    menu::{CurrentExample, MenuUiRoot},
+    main_menu::{CurrentExample, MenuUiRoot},
     power_user::PowerUserExampleRoot,
     styles,
     tooltip::TooltipExampleRoot,
@@ -25,7 +27,7 @@ impl bevy_app::Plugin for PlainUiExamplePlugin {
         // Initialize plugin (it can be initialized multiple times)
         app.add_plugins(BevyImmediatePlugin::<CapsUi>::new());
 
-        // Build your ui as a simple system
+        // Build your UI as a simple system
         app.add_systems(bevy_app::Update, ui_system);
     }
 }
@@ -65,7 +67,7 @@ fn ui_system(ctx: ImmCtx<CapsUi>, example: ResMut<CurrentExample>) {
 
             match *example {
                 CurrentExample::WidgetUse => {
-                    // We insert UI widget as an entity with ui widget root component
+                    // We insert UI widget as an entity with UI widget root component
                     content.on_spawn_insert(|| WidgetUseExampleRoot);
                 }
                 CurrentExample::HelloWorld => {
@@ -88,6 +90,12 @@ fn ui_system(ctx: ImmCtx<CapsUi>, example: ResMut<CurrentExample>) {
                 }
                 CurrentExample::Tooltip => {
                     content.on_spawn_insert(|| TooltipExampleRoot);
+                }
+                CurrentExample::FloatingWindows => {
+                    content.on_spawn_insert(|| FloatingWindowRoot);
+                }
+                CurrentExample::Anchored => {
+                    content.on_spawn_insert(|| AnchoredUiExampleRoot);
                 }
             }
         });

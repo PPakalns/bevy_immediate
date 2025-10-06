@@ -1,15 +1,19 @@
 use bevy::color::Color;
 use bevy::{color::palettes::basic::*, prelude::*};
+use bevy_immediate::ui::floating_window_plugin::WindowResizeDragDirection;
 use bevy_immediate::ui::selected::Selectable;
 use bevy_input_focus::{InputFocus, InputFocusVisible};
-use bevy_picking::hover::{Hovered, PickingInteraction};
+use bevy_picking::hover::Hovered;
 use bevy_ui::Pressed;
 
 pub struct DemoStylePlugin;
 
 impl bevy_app::Plugin for DemoStylePlugin {
     fn build(&self, app: &mut bevy_app::App) {
-        app.add_systems(Update, (button_system, focus_system));
+        app.add_systems(
+            Update,
+            (button_system, focus_system, resizable_style_system),
+        );
     }
 }
 
@@ -131,6 +135,16 @@ pub fn node_container() -> Node {
     }
 }
 
+pub fn compact_node_container() -> Node {
+    Node {
+        flex_direction: FlexDirection::Column,
+        padding: UiRect::all(Val::Px(2.)),
+        column_gap: Val::Px(2.),
+        row_gap: Val::Px(2.),
+        ..default()
+    }
+}
+
 pub fn row_node_container() -> Node {
     Node {
         flex_direction: FlexDirection::Row,
@@ -188,8 +202,15 @@ pub fn button_bundle() -> MyButtonBundle {
             border_radius: BorderRadius::all(Val::Px(5.)),
             background_color: BackgroundColor(NORMAL_BUTTON),
         },
-        interact: Interaction::None,
     }
+}
+
+pub fn compact_button_bundle() -> MyButtonBundle {
+    let mut bundle = button_bundle();
+    bundle.style.node.border = UiRect::all(Val::Px(2.));
+    bundle.style.node.padding = UiRect::all(Val::Px(2.));
+    bundle.style.border_radius = BorderRadius::all(Val::Px(2.));
+    bundle
 }
 
 #[derive(Bundle)]
@@ -206,6 +227,41 @@ pub struct MyButtonBundle {
     pub picking: Hovered,
     pub my_style: MyStyle,
     pub style: MyStyleBundle,
-    pub interact: Interaction,
     pub widget_button: bevy_ui_widgets::Button,
+}
+
+#[allow(clippy::type_complexity)]
+fn resizable_style_system(
+    mut q_elements: Query<(&Hovered, Has<Pressed>), With<WindowResizeDragDirection>>,
+    q_changed: Query<
+        Entity,
+        (
+            Or<(Changed<Hovered>, Changed<Pressed>)>,
+            With<WindowResizeDragDirection>,
+        ),
+    >,
+    mut removed_pressed: RemovedComponents<Pressed>,
+    mut commands: Commands,
+) {
+    // Set interactable element
+    // background and border colors
+    // when inactive, pressed, hovered and when selected
+
+    for entity in q_changed.iter().chain(removed_pressed.read()) {
+        let Ok((hovered, pressed)) = q_elements.get_mut(entity) else {
+            continue;
+        };
+
+        if pressed {
+            commands
+                .entity(entity)
+                .insert(BackgroundColor(WHITE.with_alpha(0.8).into()));
+        } else if hovered.get() {
+            commands
+                .entity(entity)
+                .insert(BackgroundColor(WHITE.with_alpha(0.4).into()));
+        } else {
+            commands.entity(entity).remove::<BackgroundColor>();
+        }
+    }
 }

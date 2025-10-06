@@ -2,7 +2,7 @@ use bevy_ui::InteractionDisabled;
 
 use crate::{CapSet, ImmCapability, ImmEntity, ImplCap};
 
-/// Implements capability to modify ui node look
+/// Implements capability to modify UI node look
 pub struct CapabilityUiDisabled;
 
 impl ImmCapability for CapabilityUiDisabled {

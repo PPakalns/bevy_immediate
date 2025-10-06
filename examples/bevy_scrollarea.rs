@@ -21,8 +21,9 @@ use bevy_picking::{
     hover::Hovered,
 };
 use bevy_ui::{
-    BackgroundColor, BorderRadius, ComputedNode, Display, FlexDirection, GridPlacement, Node,
-    Overflow, OverflowAxis, PositionType, RepeatedGridTrack, ScrollPosition, UiRect, UiScale, px,
+    BackgroundColor, BorderRadius, ComputedNode, Display, FlexDirection, FlexWrap, GridPlacement,
+    Node, Overflow, OverflowAxis, PositionType, RepeatedGridTrack, ScrollPosition, UiRect, UiScale,
+    px, vh, vw,
 };
 use bevy_ui_widgets::{
     ControlOrientation, CoreScrollbarDragState, CoreScrollbarThumb, Scrollbar, ScrollbarPlugin,
@@ -98,16 +99,26 @@ impl ImmediateAttach<CapsUiWidget> for BevyScrollareaExampleRoot {
             height: px(20.),
             ..default()
         });
-        ui.ch().on_spawn_text(
-            "Example showcases implementation of reusable scrollarea (scrollable, draggable):",
-        );
+        ui.ch()
+            .on_spawn_insert(|| TextLayout {
+                linebreak: bevy::text::LineBreak::WordBoundary,
+                ..default()
+            })
+            .on_spawn_text(
+                "Example showcases implementation of reusable scrollarea (scrollable, draggable):",
+            );
 
         ui.ch()
             .on_spawn_insert(|| Node {
-                flex_direction: FlexDirection::Row,
-                flex_wrap: bevy_ui::FlexWrap::Wrap,
+                display: Display::Grid,
+                flex_wrap: FlexWrap::Wrap,
+                grid_template_columns: vec![RepeatedGridTrack::fr(2, 1.)],
+                grid_template_rows: vec![RepeatedGridTrack::fr(2, 1.)],
                 column_gap: px(20.),
                 row_gap: px(20.),
+
+                min_height: px(200.),
+                min_width: px(200.),
 
                 ..default()
             })
@@ -135,8 +146,10 @@ impl ImmediateAttach<CapsUiWidget> for BevyScrollareaExampleRoot {
                 {
                     ui.ch_id(("overflow", idx)).scrollarea(
                         Node {
-                            width: px(300),
-                            height: px(300),
+                            min_height: px(100),
+                            min_width: px(100),
+                            // max_height: vh(20.),
+                            // max_width: vw(20.),
                             ..default()
                         },
                         Node {
@@ -162,7 +175,7 @@ impl ImmediateAttach<CapsUiWidget> for BevyScrollareaExampleRoot {
                                     // And fill content
                                     for idx in 0..30 {
                                         ui.ch().on_spawn_insert(no_wrap).on_spawn_text_fn(|| {
-                                            format!("{} Lorem ipsum dolor sit amet", idx)
+                                            format!("{idx} Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")
                                         });
                                     }
                                 });
@@ -357,7 +370,7 @@ fn scroll_on_drag(
         let content_size = comp_node.content_size();
         let max_range = (content_size - visible_size).max(Vec2::ZERO);
 
-        // Convert from screen coordinates to ui coordinates then back to physical coordinates
+        // Convert from screen coordinates to UI coordinates then back to physical coordinates
         let distance = drag.distance / (comp_node.inverse_scale_factor * ui_scale.0);
 
         scroll_position.0 = ((state.initial_pos - distance)

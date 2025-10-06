@@ -29,6 +29,7 @@ impl_capability_set!(
         bevy_immediate::ui::checked::CapabilityUiChecked,
         bevy_immediate::ui::clicked::CapabilityUiClicked,
         bevy_immediate::ui::activated::CapabilityUiActivated,
+        bevy_immediate::ui::anchored::CapabilityUiAnchored,
         //
         // Add your own capabilities
         crate::extension::CapUiToggle

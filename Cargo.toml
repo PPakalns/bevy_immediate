@@ -20,7 +20,10 @@ bevy_platform = { version = "0.17.2", default-features = false }
 bevy_derive = { version = "0.17.2", default-features = false }
 bevy_internal = { version = "0.17.2", default-features = false }
 
+bevy_math = { version = "0.17.2", default-features = false, optional = true }
+bevy_window = { version = "0.17.2", default-features = false, optional = true }
 bevy_ui = { version = "0.17.2", default-features = false, optional = true }
+bevy_transform = { version = "0.17.2", default-features = false, optional = true }
 bevy_picking = { version = "0.17.2", default-features = false, optional = true }
 bevy_color = { version = "0.17.2", default-features = false, optional = true }
 bevy_input = { version = "0.17.2", default-features = false, optional = true }
@@ -44,6 +47,9 @@ ui = [
   "dep:bevy_input",
   "dep:bevy_picking",
   "dep:bevy_input_focus",
+  "dep:bevy_transform",
+  "dep:bevy_math",
+  "dep:bevy_window",
   "bevy_internal/bevy_picking",
   "bevy_internal/bevy_input_focus",
   "bevy_internal/bevy_ui_picking_backend",
@@ -73,6 +79,8 @@ bevy = { version = "0.17.2", default-features = false, features = [
   "experimental_bevy_feathers",
 ] }
 itertools = "0.14"
+strum = { version = "0.27.2", features = ["derive"] }
+bevy_framepace = "0.20"
 
 [profile.web-release]
 inherits = "release"
@@ -87,7 +95,12 @@ wasm-opt = ["-Oz", "--enable-bulk-memory"]
 [[example]]
 name = "demo"
 
-# [patch.crates-io]
+[patch.crates-io]
+
+# Not yet released
+bevy_framepace = { git = "https://github.com/aevyrie/bevy_framepace.git", rev = "ea62830" }
+
+
 # bevy = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
 # bevy_ecs = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
 # bevy_ui = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }

@@ -4,7 +4,7 @@ use bevy_ui::{BackgroundColor, BorderColor, Node};
 
 use crate::{CapSet, ImmCapability, ImmEntity, ImplCap};
 
-/// Implements capability to modify ui node look
+/// Implements capability to modify UI node look
 pub struct CapabilityUiLook;
 
 impl ImmCapability for CapabilityUiLook {
@@ -17,7 +17,7 @@ impl ImmCapability for CapabilityUiLook {
     }
 }
 
-/// Implements methods to modify ui node look
+/// Implements methods to modify UI node look
 pub trait ImmUiLook {
     /// Modify [Node] value on entity
     ///

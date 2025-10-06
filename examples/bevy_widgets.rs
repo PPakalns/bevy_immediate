@@ -43,7 +43,7 @@ pub struct BevyWidgetExamplePlugin;
 impl bevy_app::Plugin for BevyWidgetExamplePlugin {
     fn build(&self, app: &mut bevy_app::App) {
         // You will need bevy feature `experimental_bevy_feathers` and/or `experimental_bevy_ui_widgets`
-        // For bevy feather prestyled bevy ui components
+        // For bevy feather prestyled bevy UI components
         app.add_plugins(FeathersPlugins)
             .insert_resource(UiTheme(create_dark_theme()));
 

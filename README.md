@@ -70,7 +70,11 @@ Examples can be viewed: (`cargo run --example demo`).
   - [Functional widget](./examples/widget_functional.rs) - Implement widgets as plain functions
   - [Native widget](./examples/widget_native.rs) - Implement native Bevy-like widgets
   - [Widget use](./examples/widget_use.rs) - Use functional and native widgets together
-- [Menu example](./examples/menu.rs) - Build a simple menu with selectable buttons
+- [Main menu example](./examples/main_menu.rs) - Build a simple main menu with selectable buttons
+- **Floating elements**
+  - [Tooltips](./examples/tooltip.rs) - Add tooltips.
+  - [Anchored UI](./examples/anchored.rs) - Build drop down menus, comboboxes, popups that utilize anchored floating UI.
+  - [Floating windows](./examples/floating_window.rs) - Resizable, draggable floating windows.
 - **Extensions**
   - [Extension implementation](./examples/extension.rs) - Write your own capabilities (e.g. `.clicked()` or `.selected(...)`)
   - [Using extensions](./examples/extension_use.rs) - Use a custom predefined set of extensions
@@ -215,10 +219,9 @@ where
 {
     fn selected(mut self, selected: bool) -> Self {
         if let Ok(Some(mut comp)) = self.cap_get_component_mut::<Selectable>() {
-            if comp.selected == selected {
-                return self;
+            if comp.selected != selected {
+                comp.selected = selected;
             }
-            comp.selected = selected;
             return self;
         }
 
