@@ -344,135 +344,170 @@ impl ImmediateAttach<CapsUiFeathers> for TooltipExampleRoot {
                         });
                     });
 
-                let trigger_dropdown = button.activated();
-                button = button.with_dropdown_container(trigger_dropdown, |container| {
-                    container
-                        .on_spawn_insert(|| AnchorOption {
-                            anchor: Direction { x, y },
-                            target_anchor: Direction { x: tx, y: ty },
-                            ..default()
-                        })
-                        .add(|ui| {
-                            dropdown_content(ui);
-                        });
-                });
-                let is_shown = button.dropdown_is_shown();
-                button.primary_button(is_shown);
+                // Dropdown state management using on entity stored value
+                let menu_open_id = imm_id("activated");
+                if button.activated() {
+                    button.hash_set(menu_open_id, imm_id(()));
+                }
+
+                let mut is_open_value = button.hash_get(menu_open_id);
+
+                button = button.primary_button(is_open_value.is_some());
+
+                if is_open_value.is_some() {
+                    button = button.with_dropdown_container(
+                        || {
+                            is_open_value = None;
+                        },
+                        |container| {
+                            container
+                                .on_spawn_insert(|| AnchorOption {
+                                    anchor: Direction { x, y },
+                                    target_anchor: Direction { x: tx, y: ty },
+                                    ..default()
+                                })
+                                .add(|ui| {
+                                    dropdown_content(ui);
+                                });
+                        },
+                    );
+                }
+
+                button.hash_update(menu_open_id, is_open_value);
             }
         });
     }
 }
 
 fn dropdown_content(ui: &mut Imm<'_, '_, CapsUiFeathers>) {
-    ui.ch()
-        .on_spawn_insert(|| {
-            (
-                Node {
-                    flex_direction: FlexDirection::Column,
-                    border: UiRect::all(px(2.)),
-                    padding: px(4.).into(),
-                    row_gap: px(4.),
-                    ..default()
-                },
-                BackgroundColor(bevy_color::palettes::css::BLACK.into()),
-                BorderColor::all(bevy_color::palettes::css::DARK_GRAY),
-            )
-        })
-        .add(|ui| {
-            for _ in 0..10 {
-                let mut button = ui
-                    .ch()
-                    .on_spawn_insert(|| {
-                        controls::button(
-                            ButtonProps {
-                                variant: ButtonVariant::Normal,
-                                corners: RoundedCorners::None,
-                            },
-                            (),
-                            (),
-                        )
-                    })
-                    .add(|ui| {
-                        ui.ch().on_spawn_text("Example");
-                    });
+    let mut menu_container = ui.ch().on_spawn_insert(|| {
+        (
+            Node {
+                flex_direction: FlexDirection::Column,
+                border: UiRect::all(px(2.)),
+                padding: px(4.).into(),
+                row_gap: px(4.),
+                ..default()
+            },
+            BackgroundColor(bevy_color::palettes::css::BLACK.into()),
+            BorderColor::all(bevy_color::palettes::css::DARK_GRAY),
+        )
+    });
 
-                let trigger_dropdown = button.activated();
-                button = button.with_dropdown_container(trigger_dropdown, |container| {
-                    container
-                        .on_spawn_insert(|| AnchorOption {
-                            anchor: Direction {
-                                x: Anchor::Start,
-                                y: Anchor::Start,
-                            },
-                            target_anchor: Direction {
-                                x: Anchor::End,
-                                y: Anchor::Start,
-                            },
-                            ..default()
-                        })
-                        .add(|ui| {
-                            ui.ch()
-                                .on_spawn_insert(|| {
-                                    (
-                                        Node {
-                                            flex_direction: FlexDirection::Column,
-                                            border: UiRect::all(px(2.)),
-                                            padding: px(4.).into(),
-                                            row_gap: px(4.),
-                                            ..default()
-                                        },
-                                        BackgroundColor(bevy_color::palettes::css::BLACK.into()),
-                                        BorderColor::all(bevy_color::palettes::css::DARK_GRAY),
-                                    )
-                                })
-                                .add(|ui| {
-                                    for _ in 0..3 {
-                                        ui.ch()
-                                            .on_spawn_insert(|| {
-                                                controls::button(
-                                                    ButtonProps {
-                                                        variant: ButtonVariant::Normal,
-                                                        corners: RoundedCorners::None,
-                                                    },
-                                                    (),
-                                                    (),
-                                                )
-                                            })
-                                            .add(|ui| {
-                                                ui.ch().on_spawn_text("Final button");
-                                            });
-                                    }
-                                });
-                        });
+    // On ImmEntity for the lifetime of entity custom hashed values can be stored
+    //
+    // We will use locally stored hash value to store current menu choice
+    let menu_hash_id = imm_id("menu_value");
+    let mut stored_hash = menu_container.hash_get(menu_hash_id);
+
+    menu_container = menu_container.add(|ui| {
+        for _ in 0..10 {
+            let mut button = ui
+                .ch()
+                .on_spawn_insert(|| {
+                    controls::button(
+                        ButtonProps {
+                            variant: ButtonVariant::Normal,
+                            corners: RoundedCorners::None,
+                        },
+                        (),
+                        (),
+                    )
+                })
+                .add(|ui| {
+                    ui.ch().on_spawn_text("Example");
                 });
-                let is_shown = button.dropdown_is_shown();
-                button.primary_button(is_shown);
+
+            let button_id = button.imm_id();
+            if button.hovered() {
+                stored_hash = Some(button_id);
             }
-        });
+
+            button = button.primary_button(stored_hash == Some(button_id));
+
+            if stored_hash == Some(button_id) {
+                button.with_dropdown_container(
+                    || {
+                        stored_hash = None;
+                    },
+                    |container| {
+                        container
+                            .on_spawn_insert(|| AnchorOption {
+                                anchor: Direction {
+                                    x: Anchor::Start,
+                                    y: Anchor::Start,
+                                },
+                                target_anchor: Direction {
+                                    x: Anchor::End,
+                                    y: Anchor::Start,
+                                },
+                                ..default()
+                            })
+                            .add(|ui| {
+                                ui.ch()
+                                    .on_spawn_insert(|| {
+                                        (
+                                            Node {
+                                                flex_direction: FlexDirection::Column,
+                                                border: UiRect::all(px(2.)),
+                                                padding: px(4.).into(),
+                                                row_gap: px(4.),
+                                                ..default()
+                                            },
+                                            BackgroundColor(
+                                                bevy_color::palettes::css::BLACK.into(),
+                                            ),
+                                            BorderColor::all(bevy_color::palettes::css::DARK_GRAY),
+                                        )
+                                    })
+                                    .add(|ui| {
+                                        for _ in 0..3 {
+                                            ui.ch()
+                                                .on_spawn_insert(|| {
+                                                    controls::button(
+                                                        ButtonProps {
+                                                            variant: ButtonVariant::Normal,
+                                                            corners: RoundedCorners::None,
+                                                        },
+                                                        (),
+                                                        (),
+                                                    )
+                                                })
+                                                .add(|ui| {
+                                                    ui.ch().on_spawn_text("Final button");
+                                                });
+                                        }
+                                    });
+                            });
+                    },
+                );
+            }
+        }
+    });
+
+    menu_container.hash_update(menu_hash_id, stored_hash);
 }
 
 pub trait ImmUiDropdown<'w, 's, Caps: CapSet> {
-    fn dropdown_is_shown(&self) -> bool;
-    fn with_dropdown(self, triggered: bool, f: impl FnOnce(&mut Imm<'w, 's, Caps>)) -> Self;
+    fn with_dropdown(self, on_close: impl FnOnce(), f: impl FnOnce(&mut Imm<'w, 's, Caps>))
+    -> Self;
     fn with_dropdown_container(
         self,
-        triggered: bool,
+        on_close: impl FnOnce(),
         f: impl FnOnce(ImmEntity<'_, 'w, 's, Caps>),
     ) -> Self;
 }
-
-struct DropdownHash;
 
 impl<'w, 's, Caps> ImmUiDropdown<'w, 's, Caps> for ImmEntity<'_, 'w, 's, Caps>
 where
     Caps: ImplCapsUi,
 {
-    fn dropdown_is_shown(&self) -> bool {
-        self.hash_get_typ::<DropdownHash>().is_some()
-    }
-
-    fn with_dropdown(self, triggered: bool, f: impl FnOnce(&mut Imm<'w, 's, Caps>)) -> Self {
-        self.with_dropdown_container(triggered, |entity| {
+    fn with_dropdown(
+        self,
+        on_close: impl FnOnce(),
+        f: impl FnOnce(&mut Imm<'w, 's, Caps>),
+    ) -> Self {
+        self.with_dropdown_container(on_close, |entity| {
             entity.add(|ui| {
                 f(ui);
             });
@@ -481,48 +516,39 @@ where
 
     fn with_dropdown_container(
         mut self,
-        triggered: bool,
+        on_close: impl FnOnce(),
         f: impl FnOnce(ImmEntity<'_, 'w, 's, Caps>),
     ) -> Self {
-        let mut show = self.dropdown_is_shown();
-
-        if triggered {
-            show = !show;
-            if show {
-                self.hash_store_typ::<DropdownHash>(imm_id(()));
-            } else {
-                self.hash_remove_typ::<DropdownHash>();
-            }
-        }
-
-        if show {
-            let entity = self.entity();
-            self = self.add(|ui| {
-                ui.unrooted("with_dropdown", |ui| {
-                    let entity = ui.ch().on_spawn_insert(|| {
-                        (
-                            Node {
-                                position_type: bevy_ui::PositionType::Absolute,
-                                ..default()
-                            },
-                            UiZOrderLayer::Dropdown,
-                            AnchorTarget::Entity(entity),
-                            FocusParent(entity),
-                            FocusDetectShouldClose,
-                        )
-                    });
-
-                    if entity.cap_entity_contains::<FocusShouldClose>() {
-                        show = false;
-                    }
-
-                    f(entity);
+        let entity = self.entity();
+        let mut should_close = false;
+        self = self.add(|ui| {
+            ui.unrooted("with_dropdown", |ui| {
+                let entity = ui.ch().on_spawn_insert(|| {
+                    (
+                        Node {
+                            position_type: bevy_ui::PositionType::Absolute,
+                            ..default()
+                        },
+                        UiZOrderLayer::Dropdown,
+                        AnchorTarget::Entity(entity),
+                        FocusParent(entity),
+                        FocusDetectShouldClose,
+                    )
                 });
-            });
 
-            if !show {
-                self.hash_remove_typ::<DropdownHash>();
-            }
+                if entity.cap_entity_contains::<FocusShouldClose>() {
+                    should_close = true;
+                }
+
+                f(entity);
+            });
+        });
+
+        // Should close is called at the end (1 frame delay)
+        // to process possible updates in dropdown that could
+        // have called dropdown to close.
+        if should_close {
+            on_close();
         }
 
         self

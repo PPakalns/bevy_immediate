@@ -46,7 +46,7 @@ fn inner_remove(this: &mut HashMap<Key, ImmId>, key: Key) -> Option<ImmId> {
 }
 
 impl<Caps> CachedHash<Caps> {
-    pub fn cache(&mut self, entity: Entity, key: ImmId, value: ImmId) -> bool {
+    pub fn set(&mut self, entity: Entity, key: ImmId, value: ImmId) -> bool {
         inner_cache(
             &mut self.values,
             Key {
@@ -57,7 +57,7 @@ impl<Caps> CachedHash<Caps> {
         )
     }
 
-    pub fn cache_typ<Marker: 'static>(&mut self, entity: Entity, value: ImmId) -> bool {
+    pub fn set_typ<Marker: 'static>(&mut self, entity: Entity, value: ImmId) -> bool {
         let typeid = TypeId::of::<Marker>();
         inner_cache(
             &mut self.values,
