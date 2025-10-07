@@ -139,6 +139,7 @@ struct PlacementCache {
     last_offset: Option<Vec2>,
 }
 
+#[allow(clippy::type_complexity)]
 fn position_anchor(
     elements_to_anchor: Query<(
         Entity,
@@ -168,12 +169,12 @@ fn position_anchor(
     {
         let cursor = window.physical_cursor_position();
 
-        let target_position: Vec2 = match &*target {
+        let target_position: Vec2 = match target {
             AnchorTarget::Entity(entity) => (|| -> _ {
                 let target_compute = computed_nodes.get(*entity).ok()?;
                 let target_global = global_transform.get(*entity).ok()?;
 
-                let anchor_offset = Vec2::from(anchor_option.target_anchor.sign_vec());
+                let anchor_offset = anchor_option.target_anchor.sign_vec();
                 let target_pos =
                     target_global.translation + anchor_offset * 0.5 * target_compute.size;
 
@@ -242,7 +243,7 @@ pub fn apply_position(
     comp_node: &ComputedNode,
     layout_config: Option<&LayoutConfig>,
     children: &Query<&Children>,
-    mut global_transform: &mut Query<&mut UiGlobalTransform>,
+    global_transform: &mut Query<&mut UiGlobalTransform>,
 ) {
     {
         let mut offset = final_position - comp_node.size * 0.5;
@@ -267,7 +268,7 @@ pub fn apply_position(
     // Global transform update is done immediatelly
     let delta = final_position - current.translation;
 
-    update_global_transforms(entity, delta, &children, &mut global_transform);
+    update_global_transforms(entity, delta, children, global_transform);
 }
 
 /// Useful helper function to correctly update global transformations

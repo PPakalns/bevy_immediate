@@ -152,6 +152,7 @@ fn floating_window_node_init_system(
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn floating_window_node_update_system(
     mut query: Query<
         (
@@ -359,6 +360,7 @@ pub struct WindowDragTmpCursor {
     cursor: Option<EntityCursor>,
 }
 
+#[allow(clippy::too_many_arguments)]
 fn window_resize_drag_start(
     mut drag_start: On<Pointer<DragStart>>,
     mut q_target: Query<(), With<WindowResizeDragDirection>>,
@@ -654,6 +656,7 @@ struct FloatingWindowLocation {
     size_px: Vec2,
 }
 
+#[allow(clippy::type_complexity)]
 fn floating_window_cache(
     mut query: Query<
         (
