@@ -35,9 +35,8 @@ impl bevy_app::Plugin for PlainUiExamplePlugin {
 fn ui_system(ctx: ImmCtx<CapsUi>, example: ResMut<CurrentExample>) {
     // It is possible to access world data that is not
     // used by immediate mode.
-    // See bevy_immediate documentation for what is and is not used.
 
-    // Build your ui
+    // Build your ui, provide unique id
     ctx.build_immediate_root("unique_id")
         .ch()
         .on_spawn_insert(|| {

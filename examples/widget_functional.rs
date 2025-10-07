@@ -10,7 +10,7 @@ pub struct WidgetFunctionalExamplePlugin;
 
 impl bevy_app::Plugin for WidgetFunctionalExamplePlugin {
     fn build(&self, _app: &mut bevy_app::App) {
-        // No need to even create a plugin
+        // No need to even create a plugin in this case
     }
 }
 
@@ -21,7 +21,7 @@ pub struct WidgetParams<'a> {
 
 /// You can implement your functional widget as a simple function with arbitrary parameters
 pub fn my_functional_widget(ui: &mut Imm<CapsUi>, value: WidgetParams) {
-    // This example avoids duplciated implementation by calling generic one
+    // This example avoids duplicated implementation by calling generic one
     my_functional_widget_generic(ui, value);
 }
 

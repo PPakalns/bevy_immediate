@@ -10,6 +10,7 @@ use bevy_immediate::{
     ui::{CapsUi, clicked::ImmUiClicked, selected::ImmUiSelectable, text::ImmUiText},
 };
 use bevy_ui::{FlexDirection, Node, Val};
+use strum::IntoEnumIterator;
 
 use crate::styles::{self, button_bundle, fill_parent_node, text_style};
 
@@ -55,18 +56,7 @@ impl ImmediateAttach<CapsUi> for MenuUiRoot {
                     ..default()
                 });
 
-                for example in [
-                    CurrentExample::HelloWorld,
-                    CurrentExample::BevyWidgets,
-                    CurrentExample::BevyScrollbar,
-                    CurrentExample::Tooltip,
-                    CurrentExample::Anchored,
-                    CurrentExample::FloatingWindows,
-                    CurrentExample::WidgetUse,
-                    CurrentExample::ExtensionUse,
-                    CurrentExample::PowerUser,
-                    CurrentExample::HotPatching,
-                ] {
+                for example in CurrentExample::iter() {
                     let mut button = ui
                         .ch()
                         .on_spawn_insert(styles::button_bundle)

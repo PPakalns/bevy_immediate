@@ -26,8 +26,6 @@ pub struct AnchoredUiExamplePlugin;
 
 impl bevy_app::Plugin for AnchoredUiExamplePlugin {
     fn build(&self, app: &mut bevy_app::App) {
-        // Add bevy immediate plugin with UI support which will construct UI
-        // rooted at entity with `HelloWorldRoot` component
         app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, AnchoredUiExampleRoot>::new());
     }
 }
@@ -36,7 +34,7 @@ impl bevy_app::Plugin for AnchoredUiExamplePlugin {
 pub struct AnchoredUiExampleRoot;
 
 impl ImmediateAttach<CapsUi> for AnchoredUiExampleRoot {
-    type Params = (); // Access data from World using SystemParam
+    type Params = ();
 
     fn construct(ui: &mut Imm<CapsUi>, _: &mut ()) {
         ui.ch()

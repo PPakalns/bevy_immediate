@@ -37,6 +37,8 @@ impl bevy_app::Plugin for BevyScrollareaExamplePlugin {
     fn build(&self, app: &mut bevy_app::App) {
         // You will need bevy feature `experimental_bevy_ui_widgets`
         //
+        // and bevy_immediate feature bevy_ui_widgets.
+        //
         // As these plugins are added by other examples
         // additional checks are done to avoid bevy error about already added plugins
         //
@@ -50,6 +52,7 @@ impl bevy_app::Plugin for BevyScrollareaExamplePlugin {
         if !app.is_plugin_added::<InputDispatchPlugin>() {
             app.add_plugins(InputDispatchPlugin);
         }
+
         // For tab navigation support
         if !app.is_plugin_added::<TabNavigationPlugin>() {
             app.add_plugins(TabNavigationPlugin);
@@ -119,6 +122,9 @@ impl ImmediateAttach<CapsUiWidget> for BevyScrollareaExampleRoot {
 
                 min_height: px(200.),
                 min_width: px(200.),
+
+                max_height: px(600.),
+                max_width: px(600.),
 
                 ..default()
             })

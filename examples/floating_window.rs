@@ -81,7 +81,7 @@ pub struct Params<'w> {
 }
 
 impl ImmediateAttach<CapsUi> for FloatingWindowRoot {
-    type Params = Params<'static>; // Access data from World using SystemParam
+    type Params = Params<'static>;
 
     fn construct(ui: &mut Imm<CapsUi>, params: &mut Params) {
         ui.ch()

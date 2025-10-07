@@ -49,6 +49,7 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
 
 | bevy_immediate | bevy | MSRV           |
 |------------|------------| ----------------|
+| 0.3        | 0.17           | 1.88 |
 | 0.2        | 0.17           | 1.88 |
 | 0.1        | 0.16           | 1.85 |
 
@@ -307,11 +308,12 @@ Publish your own crate that is built using `bevy_immediate`!
   - [x] Tried transitive capability implementation (works only inside one crate)
   - [x] Tried transitive trait implementation (works only inside one crate)
   - [x] Tried TupleList approach (conflicting trait implementations)
+  - [ ] ???
 
 - Create reusable logic for:
   - [x] Bevy ui widgets
   - [x] Bevy scroll areas
-  - [ ] Tooltips
-  - [ ] Popups
-  - [ ] Draggable windows (like `egui::Window`)
+  - [x] Tooltips
+  - [x] Popups
+  - [x] Draggable, resizable windows (like `egui::Window`)
 

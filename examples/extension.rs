@@ -11,7 +11,7 @@ pub struct ExtensionExamplePlugin;
 
 impl bevy_app::Plugin for ExtensionExamplePlugin {
     fn build(&self, _app: &mut bevy_app::App) {
-        // Add your resources, systems that are needed for extension to work
+        // No need to implement plugin in this case
     }
 }
 
@@ -91,6 +91,10 @@ where
     }
 
     fn with_toggle(&mut self, f: impl FnOnce(&mut bool)) {
+        // For simpler extension see [`bevy_immediate::ui::selected`]
+        //
+        // This showcases the worst case where stored state is important.
+
         if let Ok(Some(mut comp)) = self.cap_get_component_mut::<ToggleState>() {
             // Lookup directly from component
             f(&mut comp.state);

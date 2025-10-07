@@ -24,8 +24,6 @@ pub struct TooltipExamplePlugin;
 
 impl bevy_app::Plugin for TooltipExamplePlugin {
     fn build(&self, app: &mut bevy_app::App) {
-        // Add bevy immediate plugin with UI support which will construct UI
-        // rooted at entity with `HelloWorldRoot` component
         app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, TooltipExampleRoot>::new());
     }
 }
@@ -39,12 +37,9 @@ pub struct Params<'w> {
 }
 
 impl ImmediateAttach<CapsUi> for TooltipExampleRoot {
-    type Params = Params<'static>; // Access data from World using SystemParam
+    type Params = Params<'static>;
 
     fn construct(ui: &mut Imm<CapsUi>, params: &mut Params) {
-        // Construct entity hierarchies
-        // and attach necessary components
-
         ui.ch().on_spawn_text("Hover button too see tooltip!");
         ui.ch()
             .on_spawn_insert(compact_button_bundle)
