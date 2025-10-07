@@ -10,7 +10,7 @@ use bevy_immediate::{
     ui::{
         CapsUi,
         anchored::ImmUiAnchored,
-        anchored_entity_plugin::{Anchor, AnchorOption, AnchorTarget, Direction},
+        anchored_ui_plugin::{Anchor, AnchorOption, AnchorTarget, Direction},
         text::ImmUiText,
         tooltip_plugin::TooltipGlobalSettings,
     },

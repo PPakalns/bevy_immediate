@@ -124,6 +124,7 @@ pub mod slider_base_color;
 #[cfg(feature = "bevy_feathers")]
 pub mod button_variant;
 
+/// Implements capabilities for floating anchored elements
 pub mod anchored;
 
 /// Contains implementation to work around inconsistent
@@ -131,12 +132,17 @@ pub mod anchored;
 #[cfg(feature = "bevy_ui_widgets")]
 pub mod radio_button_fix_plugin;
 
+/// Implements plugin for floating windows
 pub mod floating_window_plugin;
 
-pub mod anchored_entity_plugin;
+/// Implements plugin for floating anchored entities
+pub mod anchored_ui_plugin;
 
-pub mod floating_entity_plugin;
+/// Implements plugin for floating entity ordering
+pub mod floating_ui_ordering_plugin;
 
-pub mod floating_entity_focus_plugin;
+/// Implements plugin for handling user focus over floating ui hierarchies
+pub mod floating_ui_focus_plugin;
 
+/// Implements plugin for calculating when tooltip should be displayed
 pub mod tooltip_plugin;

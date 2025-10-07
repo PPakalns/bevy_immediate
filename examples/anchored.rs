@@ -7,8 +7,8 @@ use bevy_immediate::{
         CapsUi,
         activated::ImmUiActivated,
         anchored::ImmUiAnchored,
-        anchored_entity_plugin::{Anchor, AnchorOption, Direction},
-        floating_entity_focus_plugin::FocusCloseCurrentTree,
+        anchored_ui_plugin::{Anchor, AnchorOption, Direction},
+        floating_ui_focus_plugin::FocusCloseCurrentTree,
         interaction::ImmUiInteraction,
         selected::ImmUiSelectable,
         text::ImmUiText,
@@ -87,7 +87,7 @@ impl ImmediateAttach<CapsUi> for AnchoredUiExampleRoot {
                         button = button.selected(local_state.is_stored(&true));
 
                         if local_state.is_stored(&true) {
-                            button = button.with_dropdown_container(
+                            button = button.add_dropdown_container(
                                 || {
                                     local_state.store(&false);
                                 },
@@ -144,7 +144,7 @@ fn dropdown_content(ui: &mut Imm<'_, '_, CapsUi>) {
             button = button.selected(is_open);
 
             if is_open {
-                button.with_dropdown_container(
+                button.add_dropdown_container(
                     || {
                         local_state.store(&None);
                     },

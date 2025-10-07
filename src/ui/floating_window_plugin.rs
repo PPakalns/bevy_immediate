@@ -27,15 +27,19 @@ use rand::Rng;
 
 use crate::{
     ImmId,
-    ui::floating_entity_plugin::{FloatingEntityPlugin, UiBringForward, UiZOrderLayer},
+    ui::floating_ui_ordering_plugin::{FloatingUiOrderingPlugin, UiBringForward, UiZOrderLayer},
 };
 
+/// Plugin implements floating windows
+/// and such functionality as window
+/// dragging, resizing, size restrictions
+/// and keeping them always inside view.
 pub struct FloatingWindowPlugin;
 
 impl bevy_app::Plugin for FloatingWindowPlugin {
     fn build(&self, app: &mut bevy_app::App) {
-        if !app.is_plugin_added::<FloatingEntityPlugin>() {
-            app.add_plugins(FloatingEntityPlugin);
+        if !app.is_plugin_added::<FloatingUiOrderingPlugin>() {
+            app.add_plugins(FloatingUiOrderingPlugin);
         }
 
         app.add_observer(window_on_drag_start)
@@ -297,7 +301,7 @@ fn window_on_drag(
     }
     state.drag_last_offset = Some(target_position);
 
-    super::anchored_entity_plugin::apply_position(
+    super::anchored_ui_plugin::apply_position(
         drag.entity,
         target_position,
         &mut node,
@@ -322,6 +326,8 @@ fn window_on_drag_end(
     }
 }
 
+/// If entity with this component is dragged
+/// It will be resized in the given direction
 #[derive(Component)]
 #[require(Hovered)]
 pub struct WindowResizeDragDirection(I8Vec2);
@@ -347,6 +353,7 @@ fn resolve_y(
     )
 }
 
+/// Stores cursor that was temporary replaced with cursor used for resizing window (dragging)
 #[derive(Resource, Default)]
 pub struct WindowDragTmpCursor {
     cursor: Option<EntityCursor>,
@@ -632,6 +639,8 @@ pub fn resizable_borders(border_thickness: f32, additional: impl Bundle + Copy) 
     )]
 }
 
+/// Windows marked with this component will have their size stored in memory.
+/// When window is reopened, window size will be restored.
 #[derive(Component)]
 pub struct FloatingWindowStoreLocationId(pub ImmId);
 

@@ -8,6 +8,7 @@ use bevy_ecs::{
 use bevy_picking::events::{Out, Over, Pointer};
 use bevy_time::Time;
 
+/// Implements functionality to calculate when tooltip should be displayed
 pub struct TooltipPlugin;
 
 impl bevy_app::Plugin for TooltipPlugin {
@@ -25,17 +26,31 @@ impl bevy_app::Plugin for TooltipPlugin {
     }
 }
 
+/// Marks entity as tooltip source. When hovered,
+///
+/// it will count towards timers for displaying tooltip.
 #[derive(Component)]
 pub struct TooltipSource;
 
+/// Global settings when tooltips should be displayed
 #[derive(Resource)]
 pub struct TooltipGlobalSettings {
+    /// Delay in seconds until tooltip is shown when ui element with tooltip is hovered
     pub tooltip_delay: f32,
+    /// If [`Self::tooltip_delay`] has elapsed. Tooltips will be shown immediatelly.
+    /// Reset delay will reset tooltip delay, when no tooltip source is hovered for reset delay
+    /// amount of seconds.
     pub reset_delay: f32,
 }
 
+/// Stores if tooltips should be shown
 #[derive(Resource, Default)]
-pub enum TooltipGlobalState {
+pub struct TooltipGlobalState {
+    state: TooltipGlobalStateInner,
+}
+
+#[derive(Default)]
+enum TooltipGlobalStateInner {
     #[default]
     Nothing,
     Waiting {
@@ -48,8 +63,9 @@ pub enum TooltipGlobalState {
 }
 
 impl TooltipGlobalState {
+    /// Returns if tooltip can be shown based on global tooltip timers.
     pub fn show_tooltip(&self) -> bool {
-        matches!(self, TooltipGlobalState::Tooltip)
+        matches!(self.state, TooltipGlobalStateInner::Tooltip)
     }
 }
 
@@ -60,18 +76,18 @@ fn on_source(
     time: Res<Time>,
 ) {
     if query.contains(pointer.entity) {
-        match &*res {
-            TooltipGlobalState::Nothing => {
-                *res = TooltipGlobalState::Waiting {
+        match &res.state {
+            TooltipGlobalStateInner::Nothing => {
+                res.state = TooltipGlobalStateInner::Waiting {
                     since: time.elapsed_secs_f64(),
                 };
             }
-            TooltipGlobalState::Waiting { since: _ } => {}
-            TooltipGlobalState::Tooltip => {
-                *res = TooltipGlobalState::Tooltip;
+            TooltipGlobalStateInner::Waiting { since: _ } => {}
+            TooltipGlobalStateInner::Tooltip => {
+                res.state = TooltipGlobalStateInner::Tooltip;
             }
-            TooltipGlobalState::Reset { since: _ } => {
-                *res = TooltipGlobalState::Tooltip;
+            TooltipGlobalStateInner::Reset { since: _ } => {
+                res.state = TooltipGlobalStateInner::Tooltip;
             }
         }
     }
@@ -84,14 +100,14 @@ fn out_sorce(
     time: Res<Time>,
 ) {
     if query.contains(pointer.entity) {
-        *res = match *res {
-            TooltipGlobalState::Nothing | TooltipGlobalState::Waiting { since: _ } => {
-                TooltipGlobalState::Nothing
+        res.state = match res.state {
+            TooltipGlobalStateInner::Nothing | TooltipGlobalStateInner::Waiting { since: _ } => {
+                TooltipGlobalStateInner::Nothing
             }
-            TooltipGlobalState::Tooltip => TooltipGlobalState::Reset {
+            TooltipGlobalStateInner::Tooltip => TooltipGlobalStateInner::Reset {
                 since: time.elapsed_secs_f64(),
             },
-            TooltipGlobalState::Reset { since } => TooltipGlobalState::Reset { since },
+            TooltipGlobalStateInner::Reset { since } => TooltipGlobalStateInner::Reset { since },
         };
     }
 }
@@ -101,17 +117,17 @@ fn update_tooltip_global_state(
     time: Res<Time>,
     global: Res<TooltipGlobalSettings>,
 ) {
-    match &*res {
-        TooltipGlobalState::Nothing => {}
-        TooltipGlobalState::Waiting { since } => {
+    match &res.state {
+        TooltipGlobalStateInner::Nothing => {}
+        TooltipGlobalStateInner::Waiting { since } => {
             if (time.elapsed_secs_f64() - since) > global.tooltip_delay as f64 {
-                *res = TooltipGlobalState::Tooltip;
+                res.state = TooltipGlobalStateInner::Tooltip;
             }
         }
-        TooltipGlobalState::Tooltip => {}
-        TooltipGlobalState::Reset { since } => {
+        TooltipGlobalStateInner::Tooltip => {}
+        TooltipGlobalStateInner::Reset { since } => {
             if (time.elapsed_secs_f64() - since) > global.reset_delay as f64 {
-                *res = TooltipGlobalState::Nothing;
+                res.state = TooltipGlobalStateInner::Nothing;
             }
         }
     }

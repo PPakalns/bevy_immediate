@@ -5,9 +5,10 @@ use bevy_ecs::{
 use bevy_picking::events::{Pointer, Press};
 use bevy_ui::{GlobalZIndex, UiSystems};
 
-pub struct FloatingEntityPlugin;
+/// Logic to handle UI layer Z ordering
+pub struct FloatingUiOrderingPlugin;
 
-impl bevy_app::Plugin for FloatingEntityPlugin {
+impl bevy_app::Plugin for FloatingUiOrderingPlugin {
     fn build(&self, app: &mut bevy_app::App) {
         app.add_systems(
             bevy_app::PostUpdate,
@@ -18,12 +19,14 @@ impl bevy_app::Plugin for FloatingEntityPlugin {
     }
 }
 
+/// Component that tracks if ui layer should be brought to the top
 #[derive(Component)]
 pub struct UiBringForward {
     forward: bool,
 }
 
 impl UiBringForward {
+    /// See [`UiBringForward`]
     pub fn new(forward: bool) -> Self {
         Self { forward }
     }
@@ -53,16 +56,22 @@ fn window_on_focus(
     forward.forward = true;
 }
 
+/// To which UI layer ui entity tree is assigned to
 #[derive(Component, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 #[require(UiBringForward { forward: true }, GlobalZIndex)]
 pub enum UiZOrderLayer {
+    /// Layer for floating windows
     Window,
+    /// Layer for dropdowns
     Dropdown,
+    /// Layer for popups
     Popup,
+    /// Layer for tooltips
     Tooltip,
 }
 
 impl UiZOrderLayer {
+    /// Return GlobalZIndex number from which given layer starts
     pub fn base(&self) -> i32 {
         match self {
             UiZOrderLayer::Window => 1000,

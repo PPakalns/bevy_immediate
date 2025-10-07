@@ -170,7 +170,9 @@ impl ImmediateAttach<CapsUi> for FloatingWindowRoot {
                             true,
                             |fw| fw,
                             || "Popup".into(),
-                            || is_popup_open_local.store(&false),
+                            || {
+                                is_popup_open_local.store(&false);
+                            },
                             |ui| {
                                 ui.ch().on_spawn_insert(node_container).add(|ui| {
                                     ui.ch().on_spawn_text("Popup text");

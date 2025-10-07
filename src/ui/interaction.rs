@@ -1,4 +1,4 @@
-use bevy_picking::hover::{Hovered, PickingInteraction};
+use bevy_picking::hover::Hovered;
 use bevy_ui::Pressed;
 
 use crate::{CapSet, ImmCapability, ImmEntity, ImplCap};

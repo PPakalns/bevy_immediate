@@ -1,4 +1,4 @@
-use bevy::{math::Vec2, text::TextLayout, time::Time, utils::default};
+use bevy::{math::Vec2, text::TextLayout, utils::default};
 use bevy_color::Color;
 use bevy_ecs::{
     component::Component,
@@ -23,7 +23,7 @@ use bevy_picking::{
 use bevy_ui::{
     BackgroundColor, BorderRadius, ComputedNode, Display, FlexDirection, FlexWrap, GridPlacement,
     Node, Overflow, OverflowAxis, PositionType, RepeatedGridTrack, ScrollPosition, UiRect, UiScale,
-    px, vh, vw,
+    px,
 };
 use bevy_ui_widgets::{
     ControlOrientation, CoreScrollbarDragState, CoreScrollbarThumb, Scrollbar, ScrollbarPlugin,

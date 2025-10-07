@@ -5,11 +5,11 @@ use bevy_ui::Node;
 use crate::{
     CapSet, Imm, ImmCapability, ImmEntity, ImplCap,
     ui::{
-        anchored_entity_plugin::{AnchorTarget, AnchoredEntityPlugin},
-        floating_entity_focus_plugin::{
-            FloatingEntityFocusPlugin, FocusDetectShouldClose, FocusParent, FocusShouldClose,
+        anchored_ui_plugin::{AnchorTarget, AnchoredUiPlugin},
+        floating_ui_focus_plugin::{
+            FloatingUiFocusPlugin, FocusDetectShouldClose, FocusParent, FocusShouldClose,
         },
-        floating_entity_plugin::{FloatingEntityPlugin, UiZOrderLayer},
+        floating_ui_ordering_plugin::{FloatingUiOrderingPlugin, UiZOrderLayer},
         interaction::{CapabilityUiInteraction, ImmUiInteraction},
         tooltip_plugin::{TooltipGlobalState, TooltipPlugin, TooltipSource},
     },
@@ -20,14 +20,14 @@ pub struct CapabilityUiAnchored;
 
 impl ImmCapability for CapabilityUiAnchored {
     fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
-        if !app.is_plugin_added::<AnchoredEntityPlugin>() {
-            app.add_plugins(AnchoredEntityPlugin);
+        if !app.is_plugin_added::<AnchoredUiPlugin>() {
+            app.add_plugins(AnchoredUiPlugin);
         }
-        if !app.is_plugin_added::<FloatingEntityFocusPlugin>() {
-            app.add_plugins(FloatingEntityFocusPlugin);
+        if !app.is_plugin_added::<FloatingUiFocusPlugin>() {
+            app.add_plugins(FloatingUiFocusPlugin);
         }
-        if !app.is_plugin_added::<FloatingEntityPlugin>() {
-            app.add_plugins(FloatingEntityPlugin);
+        if !app.is_plugin_added::<FloatingUiOrderingPlugin>() {
+            app.add_plugins(FloatingUiOrderingPlugin);
         }
 
         if !app.is_plugin_added::<HierarchyPropagatePlugin<Pickable>>() {
@@ -44,21 +44,43 @@ impl ImmCapability for CapabilityUiAnchored {
     }
 }
 
+/// Implements logic to create floating anchored elements
 pub trait ImmUiAnchored<'w, 's, Caps: CapSet> {
+    /// Show tooltip with given content
     fn with_tooltip(self, f: impl FnOnce(&mut Imm<'w, 's, Caps>)) -> Self
     where
         Caps: ImplCap<CapabilityUiInteraction>;
+
+    /// Show tooltip with given content. In closure parent element is passed.
+    ///
+    /// Anchored entity itself is passed. It can be used to override default configuration.
     fn with_tooltip_container(self, f: impl FnOnce(ImmEntity<'_, 'w, 's, Caps>)) -> Self
     where
         Caps: ImplCap<CapabilityUiInteraction>;
 
-    fn with_dropdown(self, on_close: impl FnOnce(), f: impl FnOnce(&mut Imm<'w, 's, Caps>))
-    -> Self;
-    fn with_dropdown_container(
+    /// Add floating anchored entity that can be closed upon losing focus. Useful to implement dropdown.
+    fn add_dropdown(self, on_close: impl FnOnce(), f: impl FnOnce(&mut Imm<'w, 's, Caps>)) -> Self;
+
+    /// Add floating anchored entity that can be closed upon losing focus. Useful to implement dropdown.
+    ///
+    /// Anchored entity itself is passed. It can be used to override default configuration.
+    fn add_dropdown_container(
         self,
         on_close: impl FnOnce(),
         f: impl FnOnce(ImmEntity<'_, 'w, 's, Caps>),
     ) -> Self;
+
+    /// Add floating anchored  entity.
+    ///
+    /// Opening and closing should be fully managed manually.
+    fn add_anchored(self, f: impl FnOnce(&mut Imm<'w, 's, Caps>)) -> Self;
+
+    /// Add floating anchored  entity.
+    ///
+    /// Opening and closing should be fully managed manually.
+    ///
+    /// Anchored entity itself is passed. It can be used to override default configuration.
+    fn add_anchored_container(self, f: impl FnOnce(ImmEntity<'_, 'w, 's, Caps>)) -> Self;
 }
 
 impl<'w, 's, Caps> ImmUiAnchored<'w, 's, Caps> for ImmEntity<'_, 'w, 's, Caps>
@@ -115,19 +137,15 @@ where
         self
     }
 
-    fn with_dropdown(
-        self,
-        on_close: impl FnOnce(),
-        f: impl FnOnce(&mut Imm<'w, 's, Caps>),
-    ) -> Self {
-        self.with_dropdown_container(on_close, |entity| {
+    fn add_dropdown(self, on_close: impl FnOnce(), f: impl FnOnce(&mut Imm<'w, 's, Caps>)) -> Self {
+        self.add_dropdown_container(on_close, |entity| {
             entity.add(|ui| {
                 f(ui);
             });
         })
     }
 
-    fn with_dropdown_container(
+    fn add_dropdown_container(
         mut self,
         on_close: impl FnOnce(),
         f: impl FnOnce(ImmEntity<'_, 'w, 's, Caps>),
@@ -163,6 +181,37 @@ where
         if should_close {
             on_close();
         }
+
+        self
+    }
+
+    fn add_anchored(self, f: impl FnOnce(&mut Imm<'w, 's, Caps>)) -> Self {
+        self.add_anchored_container(|entity| {
+            entity.add(|ui| {
+                f(ui);
+            });
+        })
+    }
+
+    fn add_anchored_container(mut self, f: impl FnOnce(ImmEntity<'_, 'w, 's, Caps>)) -> Self {
+        let entity = self.entity();
+        self = self.add(|ui| {
+            ui.unrooted("with_dropdown", |ui| {
+                let entity = ui.ch().on_spawn_insert(|| {
+                    (
+                        Node {
+                            position_type: bevy_ui::PositionType::Absolute,
+                            ..Default::default()
+                        },
+                        UiZOrderLayer::Dropdown,
+                        AnchorTarget::Entity(entity),
+                        FocusParent(entity),
+                    )
+                });
+
+                f(entity);
+            });
+        });
 
         self
     }

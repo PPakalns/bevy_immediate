@@ -10,9 +10,10 @@ use bevy_ecs::{
 use bevy_picking::events::Pointer;
 use bevy_platform::collections::HashSet;
 
-pub struct FloatingEntityFocusPlugin;
+/// Implements logic for handling user focus over floating anchored ui hierarchies
+pub struct FloatingUiFocusPlugin;
 
-impl bevy_app::Plugin for FloatingEntityFocusPlugin {
+impl bevy_app::Plugin for FloatingUiFocusPlugin {
     fn build(&self, app: &mut bevy_app::App) {
         app.add_observer(update_should_close);
         app.add_observer(should_close_current_tree_observer);
@@ -39,8 +40,12 @@ pub struct FocusDetectShouldClose;
 #[derive(Component)]
 pub struct FocusShouldClose;
 
+/// Entity event signalizes that current floating anchored ui entity tree
+/// hierarchy marked with [`FocusDetectShouldClose`] should be closed
 #[derive(EntityEvent)]
 pub struct FocusCloseCurrentTree {
+    /// Source entity
+    #[entity_event]
     pub entity: Entity,
 }
 

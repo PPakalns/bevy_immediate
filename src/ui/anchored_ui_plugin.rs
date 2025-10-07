@@ -15,9 +15,9 @@ use bevy_ui::{
 use bevy_window::{PrimaryWindow, Window};
 
 /// Implements floating UI placement against other entities
-pub struct AnchoredEntityPlugin;
+pub struct AnchoredUiPlugin;
 
-impl bevy_app::Plugin for AnchoredEntityPlugin {
+impl bevy_app::Plugin for AnchoredUiPlugin {
     fn build(&self, app: &mut bevy_app::App) {
         app.add_systems(
             bevy_app::PostUpdate,
@@ -89,6 +89,7 @@ pub enum Anchor {
 }
 
 impl Anchor {
+    /// Returns anchor relative position. See [`Anchor`]
     pub fn sign(&self) -> i32 {
         match self {
             Anchor::Start => -1,

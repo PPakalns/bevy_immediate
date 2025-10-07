@@ -77,6 +77,9 @@ impl<T> ImmLocalHashMemoryHelper<T>
 where
     T: std::hash::Hash,
 {
+    /// Create local state stored at given entity with `memory_key`.
+    ///
+    /// Remember to call [`Self::finalize`] at the end of operations.
     pub fn new<Caps>(
         store_on_entity: &mut ImmEntity<Caps>,
         memory_key: impl std::hash::Hash,
@@ -102,19 +105,25 @@ where
         }
     }
 
+    /// Check if stored value matches with given value
     pub fn is_stored(&mut self, value: &T) -> bool {
         self.state == imm_id(value)
     }
 
-    pub fn store(&mut self, value: &T) {
+    /// Stores value, returns if stored value changed
+    pub fn store(&mut self, value: &T) -> bool {
         let value = imm_id(value);
         if self.state != value {
             self.state = value;
             self.changed = true;
+            true
+        } else {
+            false
         }
     }
 
-    pub fn finalize<Caps: CapSet>(self, mut store_on_entity: &mut ImmEntity<Caps>) {
+    /// Store local state persistently on the entity
+    pub fn finalize<Caps: CapSet>(self, store_on_entity: &mut ImmEntity<Caps>) {
         if self.changed {
             store_on_entity.hash_set(self.key, self.state);
         }
