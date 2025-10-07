@@ -13,7 +13,7 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
 
 ### 👉 [Web Demo](https://ppakalns.github.io/bevy_immediate/demo/) 👈 
 
-![Demo screenshot](https://github.com/user-attachments/assets/d0acc571-74da-486a-9a58-235800ad2050)
+![Demo screenshot](https://github.com/user-attachments/assets/a17b90e7-7763-44d3-a031-14e6fe84e5c7)
 
 ## Features
 
