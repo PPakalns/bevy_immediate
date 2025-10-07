@@ -15,6 +15,7 @@ pub struct FloatingEntityFocusPlugin;
 impl bevy_app::Plugin for FloatingEntityFocusPlugin {
     fn build(&self, app: &mut bevy_app::App) {
         app.add_observer(update_should_close);
+        app.add_observer(should_close_current_tree_observer);
     }
 }
 
@@ -40,7 +41,29 @@ pub struct FocusShouldClose;
 
 #[derive(EntityEvent)]
 pub struct FocusCloseCurrentTree {
-    entity: Entity,
+    pub entity: Entity,
+}
+
+fn should_close_current_tree_observer(
+    event: On<FocusCloseCurrentTree>,
+    should_close: Query<(), With<FocusDetectShouldClose>>,
+    focus_parents: Query<&FocusParent>,
+    child_of: Query<&ChildOf>,
+    mut commands: Commands,
+) {
+    let mut current_entity = Some(event.entity);
+
+    while let Some(entity) = current_entity.take() {
+        let root_entity = child_of.root_ancestor(entity);
+
+        if should_close.contains(root_entity) {
+            commands.entity(root_entity).insert(FocusShouldClose);
+        }
+
+        if let Ok(focus_parent) = focus_parents.get(root_entity) {
+            current_entity = Some(focus_parent.0);
+        }
+    }
 }
 
 fn update_should_close(

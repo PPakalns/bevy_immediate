@@ -348,16 +348,17 @@ fn scroll_on_mouse(
 }
 
 fn scroll_on_drag_start(
-    drag_start: On<Pointer<DragStart>>,
+    mut drag_start: On<Pointer<DragStart>>,
     mut scroll_position_query: Query<(&ComputedNode, &mut ScrollState), With<MyScrollableNode>>,
 ) {
     if let Ok((computed_node, mut state)) = scroll_position_query.get_mut(drag_start.entity) {
+        drag_start.propagate(false);
         state.initial_pos = computed_node.scroll_position;
     }
 }
 
 fn scroll_on_drag(
-    drag: On<Pointer<Drag>>,
+    mut drag: On<Pointer<Drag>>,
     ui_scale: Res<UiScale>,
     mut scroll_position_query: Query<
         (&mut ScrollPosition, &ComputedNode, &ScrollState),
@@ -368,6 +369,9 @@ fn scroll_on_drag(
     {
         let visible_size = comp_node.size();
         let content_size = comp_node.content_size();
+
+        drag.propagate(false);
+
         let max_range = (content_size - visible_size).max(Vec2::ZERO);
 
         // Convert from screen coordinates to UI coordinates then back to physical coordinates

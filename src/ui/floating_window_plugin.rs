@@ -113,8 +113,8 @@ fn floating_window_node_init_system(
         node.max_height = floating.max_height;
 
         // TODO: Improve logic to decide window start location
-        node.left = px(rng.random_range(10..200i32) as f32);
-        node.top = px(rng.random_range(10..200i32) as f32);
+        node.left = px(rng.random_range(10..500i32) as f32);
+        node.top = px(rng.random_range(10..500i32) as f32);
     }
 }
 
@@ -154,6 +154,16 @@ fn floating_window_node_update_system(
 
         if interaction_state.currently_drag || interaction_state.currently_resize {
             continue;
+        }
+
+        if (node.width == Val::Auto || node.height == Val::Auto)
+            // Detect if layout calculations have been done
+            && comp_node.size.min_element() > 10.
+        {
+            // Fixed size is needed to force overflowing elements to not overflow
+            // See `Bevy Scrollareas` bevy_immediate example floating window behaviour.
+            node.min_width = px(comp_node.size.x * comp_node.inverse_scale_factor);
+            node.min_height = px(comp_node.size.y * comp_node.inverse_scale_factor);
         }
 
         let window_node = Aabb2d::new(global_transform.translation, comp_node.size * 0.5);

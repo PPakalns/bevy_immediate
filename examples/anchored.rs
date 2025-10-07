@@ -8,6 +8,7 @@ use bevy_immediate::{
         activated::ImmUiActivated,
         anchored::ImmUiAnchored,
         anchored_entity_plugin::{Anchor, AnchorOption, Direction},
+        floating_entity_focus_plugin::FocusCloseCurrentTree,
         interaction::ImmUiInteraction,
         selected::ImmUiSelectable,
         text::ImmUiText,
@@ -176,11 +177,21 @@ fn dropdown_content(ui: &mut Imm<'_, '_, CapsUi>) {
                                     })
                                     .add(|ui| {
                                         for _ in 0..3 {
-                                            ui.ch().on_spawn_insert(compact_button_bundle).add(
-                                                |ui| {
+                                            let mut button = ui
+                                                .ch()
+                                                .on_spawn_insert(compact_button_bundle)
+                                                .add(|ui| {
                                                     ui.ch().on_spawn_text("Final button");
-                                                },
-                                            );
+                                                });
+                                            if button.activated() {
+                                                // Do something
+
+                                                // Mark menu hierarchy to be closed
+                                                let event = FocusCloseCurrentTree {
+                                                    entity: button.entity(),
+                                                };
+                                                button.commands().trigger(event);
+                                            }
                                         }
                                     });
                             });
