@@ -594,24 +594,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_framepace"
-version = "0.20.0"
-source = "git+https://github.com/aevyrie/bevy_framepace.git?rev=ea62830#ea6283031b6a39f44cbcf4de424df1ea72d260b6"
-dependencies = [
- "bevy_app",
- "bevy_diagnostic",
- "bevy_ecs",
- "bevy_log",
- "bevy_platform",
- "bevy_reflect",
- "bevy_render",
- "bevy_time",
- "bevy_window",
- "bevy_winit",
- "spin_sleep",
-]
-
-[[package]]
 name = "bevy_gizmos"
 version = "0.17.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -688,7 +670,6 @@ dependencies = [
  "bevy_derive",
  "bevy_ecs",
  "bevy_feathers",
- "bevy_framepace",
  "bevy_input",
  "bevy_input_focus",
  "bevy_internal",
@@ -3457,15 +3438,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d5fe4ccb98d9c292d56fec89a5e07da7fc4cf0dc11e156b41793132775d3e591"
 dependencies = [
  "portable-atomic",
-]
-
-[[package]]
-name = "spin_sleep"
-version = "1.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c07347b7c0301b9adba4350bdcf09c039d0e7160922050db0439b3c6723c8ab"
-dependencies = [
- "windows-sys 0.61.0",
 ]
 
 [[package]]

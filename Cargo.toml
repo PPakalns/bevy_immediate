@@ -85,7 +85,7 @@ bevy = { version = "0.17.2", default-features = false, features = [
 ] }
 itertools = "0.14"
 strum = { version = "0.27.2", features = ["derive"] }
-bevy_framepace = "0.20"
+# bevy_framepace = "0.20"
 
 [[example]]
 name = "demo"
@@ -106,7 +106,7 @@ wasm-opt = ["-Oz", "--enable-bulk-memory"]
 [patch.crates-io]
 
 # Not yet released
-bevy_framepace = { git = "https://github.com/aevyrie/bevy_framepace.git", rev = "ea62830" }
+# bevy_framepace = { git = "https://github.com/aevyrie/bevy_framepace.git", rev = "ea62830" }
 
 
 # bevy = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
