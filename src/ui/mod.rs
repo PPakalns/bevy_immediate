@@ -138,3 +138,5 @@ pub mod anchored_entity_plugin;
 pub mod floating_entity_plugin;
 
 pub mod floating_entity_focus_plugin;
+
+pub mod tooltip_plugin;

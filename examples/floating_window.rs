@@ -17,14 +17,16 @@ use bevy_immediate::{
     ui::{
         CapsUi,
         activated::ImmUiActivated,
-        floating_window_plugin::{self, FloatingWindow, FloatingWindowPlugin},
+        floating_window_plugin::{
+            self, FloatingWindow, FloatingWindowPlugin, FloatingWindowStoreLocationId,
+        },
         selected::ImmUiSelectable,
         text::ImmUiText,
     },
     utils::ImmLocalHashMemoryHelper,
 };
 use bevy_picking::hover::Hovered;
-use bevy_platform::collections::{HashMap, HashSet};
+use bevy_platform::collections::{HashMap, HashSet, hash_set::Entry};
 use bevy_ui::{
     AlignItems, BackgroundColor, BorderColor, FlexDirection, JustifyContent, Node, Overflow,
     percent, px, vh, vw,
@@ -101,10 +103,13 @@ impl ImmediateAttach<CapsUi> for FloatingWindowRoot {
                         .selected(params.state.windows_with_memory.contains(&example));
 
                     if button.activated() {
-                        if params.state.windows_with_memory.contains(&example) {
-                            params.state.windows_with_memory.remove(&example);
-                        } else {
-                            params.state.windows_with_memory.insert(example);
+                        match params.state.windows_with_memory.entry(example) {
+                            Entry::Occupied(entry) => {
+                                entry.remove();
+                            }
+                            Entry::Vacant(entry) => {
+                                entry.insert();
+                            }
                         }
                     }
                 }
@@ -154,73 +159,24 @@ impl ImmediateAttach<CapsUi> for FloatingWindowRoot {
                 }
 
                 let is_open = is_popup_open_local.is_stored(&true);
+
                 button = button.selected(is_open);
 
                 if is_open {
+                    // Manage new entity tree
                     button = button.unrooted("my_ui", |ui| {
-                        ui.ch()
-                            .on_spawn_insert(|| {
-                                (
-                                    Node {
-                                        border: px(2.).into(),
-                                        ..default()
-                                    },
-                                    FloatingWindow {
-                                        max_width: vw(95.),
-                                        max_height: vh(95.),
-                                        ..Default::default()
-                                    },
-                                    floating_window_plugin::resizable_borders(8., ()),
-                                    BackgroundColor(BLACK.into()),
-                                    BorderColor::all(LIGHT_GRAY),
-                                )
-                            })
-                            .add(|ui| {
-                                ui.ch()
-                                    .on_spawn_insert(|| Node {
-                                        flex_direction: FlexDirection::Column,
-                                        width: percent(100.),
-                                        height: percent(100.),
-                                        max_width: percent(100.),
-                                        max_height: percent(100.),
-                                        overflow: Overflow::clip(),
-                                        ..default()
-                                    })
-                                    .add(|ui| {
-                                        ui.ch()
-                                            .on_spawn_insert(|| {
-                                                (
-                                                    Node {
-                                                        flex_direction: FlexDirection::RowReverse,
-                                                        align_items: AlignItems::Stretch,
-                                                        ..default()
-                                                    },
-                                                    BackgroundColor(
-                                                        Srgba::new(0.363, 0.363, 0.363, 1.0).into(),
-                                                    ),
-                                                )
-                                            })
-                                            .add(|ui| {
-                                                let mut close =
-                                                    ui.ch().on_spawn_insert(close_button_bundle);
-                                                if close.activated() {
-                                                    is_popup_open_local.store(&false);
-                                                }
-
-                                                ui.ch()
-                                                    .on_spawn_insert(|| Node {
-                                                        flex_grow: 1.,
-                                                        justify_content: JustifyContent::Center,
-                                                        ..default()
-                                                    })
-                                                    .add(|ui| {
-                                                        ui.ch().on_spawn_text("Popup");
-                                                    });
-                                            });
-
-                                        ui.ch().on_spawn_text("Popup text");
-                                    });
-                            });
+                        my_window(
+                            ui.ch(),
+                            true,
+                            |fw| fw,
+                            || "Popup".into(),
+                            || is_popup_open_local.store(&false),
+                            |ui| {
+                                ui.ch().on_spawn_insert(node_container).add(|ui| {
+                                    ui.ch().on_spawn_text("Popup text");
+                                });
+                            },
+                        );
                     });
                 }
 
@@ -241,6 +197,7 @@ fn spawn_windows_from_system(ctx: ImmCtx<CapsUi>, mut state: ResMut<FloatingWind
 
             show_example_window(
                 ui_root.ch_id(("non_unique", example, id)),
+                false,
                 example,
                 &mut open,
             );
@@ -252,114 +209,148 @@ fn spawn_windows_from_system(ctx: ImmCtx<CapsUi>, mut state: ResMut<FloatingWind
     state.windows_with_memory.retain(|example| {
         let mut open = true;
 
-        show_example_window(ui_root.ch_id(("memory", example)), example, &mut open);
+        show_example_window(ui_root.ch_id(("memory", example)), true, example, &mut open);
 
         open
     });
 }
 
-fn show_example_window(imm_entity: ImmEntity<CapsUi>, example: &CurrentExample, open: &mut bool) {
-    imm_entity
-        .on_spawn_insert(|| {
-            (
-                Node {
-                    max_width: vw(95.),
-                    max_height: vh(95.),
-                    border: px(2.).into(),
-                    ..default()
-                },
-                FloatingWindow {
-                    ..Default::default()
-                },
-                floating_window_plugin::resizable_borders(8., ()),
-                BackgroundColor(BLACK.into()),
-                BorderColor::all(LIGHT_GRAY),
-            )
-        })
-        .add(|ui| {
-            ui.ch()
-                .on_spawn_insert(|| Node {
+fn show_example_window(
+    imm_entity: ImmEntity<CapsUi>,
+    memorize_location: bool,
+    example: &CurrentExample,
+    open: &mut bool,
+) {
+    my_window(
+        imm_entity,
+        memorize_location,
+        |fw| fw,
+        || example.title().into(),
+        || *open = false,
+        |ui| {
+            // Content
+            let content = ui.ch().on_spawn_insert(|| {
+                (Node {
                     flex_direction: FlexDirection::Column,
-                    width: percent(100.),
-                    height: percent(100.),
-                    max_width: percent(100.),
-                    max_height: percent(100.),
-                    overflow: Overflow::clip(),
-                    ..default()
-                })
-                .add(|ui| {
-                    // Title line
-                    ui.ch()
-                        .on_spawn_insert(|| {
-                            (
-                                Node {
-                                    flex_direction: FlexDirection::RowReverse,
-                                    align_items: AlignItems::Stretch,
-                                    ..default()
-                                },
-                                BackgroundColor(Srgba::new(0.363, 0.363, 0.363, 1.0).into()),
-                            )
-                        })
-                        .add(|ui| {
-                            let mut close = ui.ch().on_spawn_insert(close_button_bundle);
+                    ..node_container()
+                },)
+            });
+            match *example {
+                CurrentExample::WidgetUse => {
+                    content.on_spawn_insert(|| WidgetUseExampleRoot);
+                }
+                CurrentExample::HelloWorld => {
+                    content.on_spawn_insert(|| HelloWorldRoot);
+                }
+                CurrentExample::ExtensionUse => {
+                    content.on_spawn_insert(|| ExtensionUseExampleRoot);
+                }
+                CurrentExample::PowerUser => {
+                    content.on_spawn_insert(|| PowerUserExampleRoot);
+                }
+                CurrentExample::BevyWidgets => {
+                    content.on_spawn_insert(|| BevyWidgetExampleRoot);
+                }
+                CurrentExample::BevyScrollbar => {
+                    content.on_spawn_insert(|| BevyScrollareaExampleRoot);
+                }
+                CurrentExample::HotPatching => {
+                    content.on_spawn_insert(|| HotPatchingRoot);
+                }
+                CurrentExample::Tooltip => {
+                    content.on_spawn_insert(|| TooltipExampleRoot);
+                }
+                CurrentExample::FloatingWindows => {
+                    content.on_spawn_insert(|| FloatingWindowRoot);
+                }
+                CurrentExample::Anchored => {
+                    content.on_spawn_insert(|| AnchoredUiExampleRoot);
+                }
+            }
+        },
+    );
+}
 
-                            if close.activated() {
-                                *open = false;
-                            }
+fn my_window(
+    mut ui_root: ImmEntity<CapsUi>,
+    memorize_location: bool,
+    window_params: impl FnOnce(FloatingWindow) -> FloatingWindow,
+    title: impl FnOnce() -> String,
+    on_close: impl FnOnce(),
+    content: impl FnOnce(&mut Imm<CapsUi>),
+) {
+    ui_root = ui_root.on_spawn_insert(|| {
+        (
+            Node {
+                border: px(2.).into(),
+                ..default()
+            },
+            window_params(FloatingWindow {
+                max_width: vw(95.),
+                max_height: vh(95.),
+                min_width: px(100.),
+                min_height: px(100.),
+                ..Default::default()
+            }),
+            BackgroundColor(BLACK.into()),
+            BorderColor::all(LIGHT_GRAY),
+            // Add borders for window resizing
+            floating_window_plugin::resizable_borders(8., ()),
+        )
+    });
 
-                            ui.ch()
-                                .on_spawn_insert(|| Node {
-                                    flex_grow: 1.,
-                                    justify_content: JustifyContent::Center,
-                                    align_items: AlignItems::Center,
-                                    ..default()
-                                })
-                                .add(|ui| {
-                                    ui.ch().on_spawn_text_fn(|| example.title().to_string());
-                                });
-                        });
+    if memorize_location {
+        // Add component which will store window location
+        // When window is reopened, it should open at the same location.
+        let id = ui_root.imm_id();
+        ui_root = ui_root.on_spawn_insert(|| FloatingWindowStoreLocationId(id));
+    }
 
-                    // Content
-                    let content = ui.ch().on_spawn_insert(|| {
-                        (Node {
-                            flex_direction: FlexDirection::Column,
-                            ..node_container()
-                        },)
+    ui_root.add(|ui| {
+        // Inner node required for overflow clipping
+        ui.ch()
+            .on_spawn_insert(|| Node {
+                flex_direction: FlexDirection::Column,
+                width: percent(100.),
+                height: percent(100.),
+                max_width: percent(100.),
+                max_height: percent(100.),
+                overflow: Overflow::clip(),
+                ..default()
+            })
+            .add(|ui| {
+                ui.ch()
+                    .on_spawn_insert(|| {
+                        (
+                            Node {
+                                flex_direction: FlexDirection::RowReverse,
+                                align_items: AlignItems::Stretch,
+                                ..default()
+                            },
+                            BackgroundColor(Srgba::new(0.363, 0.363, 0.363, 1.0).into()),
+                        )
+                    })
+                    .add(|ui| {
+                        let mut close = ui.ch().on_spawn_insert(close_button_bundle);
+                        if close.activated() {
+                            on_close();
+                        }
+
+                        ui.ch()
+                            .on_spawn_insert(|| Node {
+                                flex_grow: 1.,
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
+                                ..default()
+                            })
+                            .add(|ui| {
+                                ui.ch().on_spawn_text_fn(title);
+                            });
                     });
-                    match *example {
-                        CurrentExample::WidgetUse => {
-                            content.on_spawn_insert(|| WidgetUseExampleRoot);
-                        }
-                        CurrentExample::HelloWorld => {
-                            content.on_spawn_insert(|| HelloWorldRoot);
-                        }
-                        CurrentExample::ExtensionUse => {
-                            content.on_spawn_insert(|| ExtensionUseExampleRoot);
-                        }
-                        CurrentExample::PowerUser => {
-                            content.on_spawn_insert(|| PowerUserExampleRoot);
-                        }
-                        CurrentExample::BevyWidgets => {
-                            content.on_spawn_insert(|| BevyWidgetExampleRoot);
-                        }
-                        CurrentExample::BevyScrollbar => {
-                            content.on_spawn_insert(|| BevyScrollareaExampleRoot);
-                        }
-                        CurrentExample::HotPatching => {
-                            content.on_spawn_insert(|| HotPatchingRoot);
-                        }
-                        CurrentExample::Tooltip => {
-                            content.on_spawn_insert(|| TooltipExampleRoot);
-                        }
-                        CurrentExample::FloatingWindows => {
-                            content.on_spawn_insert(|| FloatingWindowRoot);
-                        }
-                        CurrentExample::Anchored => {
-                            content.on_spawn_insert(|| AnchoredUiExampleRoot);
-                        }
-                    }
-                });
-        });
+
+                content(ui);
+            });
+    });
 }
 
 fn close_button_bundle() -> impl Bundle {

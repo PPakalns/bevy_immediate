@@ -1,5 +1,9 @@
 use bevy::utils::default;
-use bevy_ecs::component::Component;
+use bevy_color::palettes::css::DARK_GRAY;
+use bevy_ecs::{
+    component::Component,
+    system::{Res, SystemParam},
+};
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
@@ -8,9 +12,10 @@ use bevy_immediate::{
         anchored::ImmUiAnchored,
         anchored_entity_plugin::{Anchor, AnchorOption, AnchorTarget, Direction},
         text::ImmUiText,
+        tooltip_plugin::TooltipGlobalSettings,
     },
 };
-use bevy_ui::{BackgroundColor, BorderColor, Node, RepeatedGridTrack, UiRect, px, widget::Text};
+use bevy_ui::{BackgroundColor, BorderColor, Node, RepeatedGridTrack, UiRect, px};
 use itertools::Itertools;
 
 use crate::styles::compact_button_bundle;
@@ -28,20 +33,42 @@ impl bevy_app::Plugin for TooltipExamplePlugin {
 #[derive(Component)]
 pub struct TooltipExampleRoot;
 
-impl ImmediateAttach<CapsUi> for TooltipExampleRoot {
-    type Params = (); // Access data from World using SystemParam
+#[derive(SystemParam)]
+pub struct Params<'w> {
+    tooltip: Res<'w, TooltipGlobalSettings>,
+}
 
-    fn construct(ui: &mut Imm<CapsUi>, _: &mut Self::Params) {
+impl ImmediateAttach<CapsUi> for TooltipExampleRoot {
+    type Params = Params<'static>; // Access data from World using SystemParam
+
+    fn construct(ui: &mut Imm<CapsUi>, params: &mut Params) {
         // Construct entity hierarchies
         // and attach necessary components
 
-        ui.ch().on_spawn_text("Hover \"T\" button with cursor!");
+        ui.ch().on_spawn_text("Hover button too see tooltip!");
+        ui.ch()
+            .on_spawn_insert(compact_button_bundle)
+            .add(|ui| {
+                ui.ch().on_spawn_text("Button");
+            })
+            .with_tooltip_container(|ui| {
+                ui.on_spawn_insert(|| AnchorTarget::Cursor).add(|ui| {
+                    ui.ch()
+                        .on_spawn_insert(|| (Node::DEFAULT, BackgroundColor(DARK_GRAY.into())))
+                        .add(|ui| {
+                            ui.ch().on_spawn_text("Tooltip!");
+                        });
+                });
+            });
 
         ui.ch().on_spawn_insert(|| Node {
-            height: px(20.),
+            height: px(40.),
             ..default()
         });
 
+        ui.ch().on_spawn_text(
+            "Possible anchor locations: Element (TT) placed against target element (T)",
+        );
         ui.ch()
             .on_spawn_insert(|| Node {
                 display: bevy_ui::Display::Grid,
@@ -119,7 +146,17 @@ impl ImmediateAttach<CapsUi> for TooltipExampleRoot {
                     }
                 }
             });
+
+        ui.ch().on_spawn_insert(|| Node {
+            height: px(40.),
+            ..default()
+        });
+
+        ui.ch().on_spawn_text("Tooltip global settings:");
+
         ui.ch()
-            .on_spawn_text("Anchoring: Element (TT) placed against target element (T)");
+            .text(format!("Delay: {:.2}s", params.tooltip.tooltip_delay));
+        ui.ch()
+            .text(format!("Reset: {:.2}s", params.tooltip.reset_delay));
     }
 }

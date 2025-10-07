@@ -1,3 +1,4 @@
+use ahash::HashMap;
 use bevy_ecs::{
     bundle::Bundle,
     children,
@@ -24,7 +25,10 @@ use bevy_ui::{
 use bevy_window::SystemCursorIcon;
 use rand::Rng;
 
-use crate::ui::floating_entity_plugin::{FloatingEntityPlugin, UiBringForward, UiZOrderLayer};
+use crate::{
+    ImmId,
+    ui::floating_entity_plugin::{FloatingEntityPlugin, UiBringForward, UiZOrderLayer},
+};
 
 pub struct FloatingWindowPlugin;
 
@@ -39,6 +43,7 @@ impl bevy_app::Plugin for FloatingWindowPlugin {
             .add_observer(window_on_drag_end);
 
         app.insert_resource(WindowDragTmpCursor::default());
+
         app.add_observer(window_resize_drag_start)
             .add_observer(window_resize_drag)
             .add_observer(window_resize_drag_end);
@@ -52,6 +57,10 @@ impl bevy_app::Plugin for FloatingWindowPlugin {
             bevy_app::PostUpdate,
             floating_window_node_init_system.before(UiSystems::Prepare),
         );
+
+        app.insert_resource(FloatingWindowLocationStore::default());
+
+        app.add_systems(bevy_app::PreUpdate, floating_window_cache);
     }
 }
 
@@ -103,18 +112,39 @@ impl Default for FloatingWindow {
 }
 
 fn floating_window_node_init_system(
-    mut query: Query<(&FloatingWindow, &mut Node), Added<FloatingWindow>>,
+    mut query: Query<
+        (
+            &FloatingWindow,
+            Option<&FloatingWindowStoreLocationId>,
+            &mut Node,
+        ),
+        Added<FloatingWindow>,
+    >,
+    floating_window_location_store: Res<FloatingWindowLocationStore>,
 ) {
     let mut rng = rand::rng();
-    for (floating, mut node) in query.iter_mut() {
-        node.min_width = floating.initial_width;
-        node.min_height = floating.initial_height;
-        node.max_width = floating.max_width;
-        node.max_height = floating.max_height;
+    for (floating, floating_window_location_id, mut node) in query.iter_mut() {
+        if let Some(stored_location) = floating_window_location_id
+            .and_then(|id| floating_window_location_store.stored.get(&id.0))
+        {
+            // Restore window location from memory
+            node.min_width = px(stored_location.size_px.x);
+            node.min_height = px(stored_location.size_px.y);
+            node.max_width = px(stored_location.size_px.x);
+            node.max_height = px(stored_location.size_px.y);
 
-        // TODO: Improve logic to decide window start location
-        node.left = px(rng.random_range(10..500i32) as f32);
-        node.top = px(rng.random_range(10..500i32) as f32);
+            node.left = px(stored_location.offset_px.x);
+            node.top = px(stored_location.offset_px.y);
+        } else {
+            node.min_width = floating.initial_width;
+            node.min_height = floating.initial_height;
+            node.max_width = floating.max_width;
+            node.max_height = floating.max_height;
+
+            // TODO: Improve logic to decide window start location
+            node.left = px(rng.random_range(10..500i32) as f32);
+            node.top = px(rng.random_range(10..500i32) as f32);
+        }
     }
 }
 
@@ -452,6 +482,7 @@ fn window_resize_drag(
                     .unwrap_or(window_comp_target_info.physical_size().x as f32),
             )
             .max(resolve_x(floating_window.min_width, window_comp_target_info).unwrap_or(50.));
+
         final_height = final_height
             .min(
                 resolve_x(floating_window.max_height, window_comp_target_info)
@@ -459,8 +490,8 @@ fn window_resize_drag(
             )
             .max(resolve_x(floating_window.min_height, window_comp_target_info).unwrap_or(50.));
 
-        // window_node.min_width = px(width * window_comp_node.inverse_scale_factor);
-        // window_node.min_height = px(height * window_comp_node.inverse_scale_factor);
+        window_node.min_width = px(final_width * window_comp_node.inverse_scale_factor);
+        window_node.min_height = px(final_height * window_comp_node.inverse_scale_factor);
         window_node.width = px(final_width * window_comp_node.inverse_scale_factor);
         window_node.height = px(final_height * window_comp_node.inverse_scale_factor);
 
@@ -599,4 +630,46 @@ pub fn resizable_borders(border_thickness: f32, additional: impl Bundle + Copy) 
             ),
         ]
     )]
+}
+
+#[derive(Component)]
+pub struct FloatingWindowStoreLocationId(pub ImmId);
+
+#[derive(Resource, Default)]
+struct FloatingWindowLocationStore {
+    stored: HashMap<ImmId, FloatingWindowLocation>,
+}
+
+struct FloatingWindowLocation {
+    offset_px: Vec2,
+    size_px: Vec2,
+}
+
+fn floating_window_cache(
+    mut query: Query<
+        (
+            &FloatingWindowStoreLocationId,
+            &ComputedNode,
+            &UiGlobalTransform,
+        ),
+        (
+            Or<(
+                Changed<FloatingWindowStoreLocationId>,
+                Changed<ComputedNode>,
+                Changed<UiGlobalTransform>,
+            )>,
+        ),
+    >,
+    mut location_store: ResMut<FloatingWindowLocationStore>,
+) {
+    for (store_location_id, comp_node, global_trasnform) in query.iter_mut() {
+        location_store.stored.insert(
+            store_location_id.0,
+            FloatingWindowLocation {
+                offset_px: (global_trasnform.translation - comp_node.size * 0.5)
+                    * comp_node.inverse_scale_factor,
+                size_px: comp_node.size * comp_node.inverse_scale_factor,
+            },
+        );
+    }
 }

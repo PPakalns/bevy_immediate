@@ -695,6 +695,7 @@ dependencies = [
  "bevy_math",
  "bevy_picking",
  "bevy_platform",
+ "bevy_time",
  "bevy_transform",
  "bevy_ui",
  "bevy_ui_widgets",

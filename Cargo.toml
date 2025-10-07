@@ -30,6 +30,7 @@ bevy_input = { version = "0.17.2", default-features = false, optional = true }
 bevy_input_focus = { version = "0.17.2", default-features = false, optional = true }
 bevy_ui_widgets = { version = "0.17.2", default-features = false, optional = true }
 bevy_feathers = { version = "0.17.2", default-features = false, optional = true }
+bevy_time = { version = "0.17.2", default-features = false, optional = true }
 
 log = "0.4.28"
 ahash = "0.8.12"
@@ -46,6 +47,7 @@ hotpatching = ["bevy_ecs/hotpatching"]
 
 ui = [
   "dep:bevy_ui",
+  "dep:bevy_time",
   "dep:bevy_color",
   "dep:bevy_input",
   "dep:bevy_picking",

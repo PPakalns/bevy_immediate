@@ -11,6 +11,7 @@ use crate::{
         },
         floating_entity_plugin::{FloatingEntityPlugin, UiZOrderLayer},
         interaction::{CapabilityUiInteraction, ImmUiInteraction},
+        tooltip_plugin::{TooltipGlobalState, TooltipPlugin, TooltipSource},
     },
 };
 
@@ -18,10 +19,7 @@ use crate::{
 pub struct CapabilityUiAnchored;
 
 impl ImmCapability for CapabilityUiAnchored {
-    fn build<Cap: CapSet>(
-        app: &mut bevy_app::App,
-        _cap_req: &mut crate::ImmCapAccessRequests<Cap>,
-    ) {
+    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
         if !app.is_plugin_added::<AnchoredEntityPlugin>() {
             app.add_plugins(AnchoredEntityPlugin);
         }
@@ -37,6 +35,12 @@ impl ImmCapability for CapabilityUiAnchored {
                 bevy_app::PostUpdate,
             ));
         }
+
+        if !app.is_plugin_added::<TooltipPlugin>() {
+            app.add_plugins(TooltipPlugin);
+        }
+
+        cap_req.request_resource_read::<TooltipGlobalState>(app.world_mut());
     }
 }
 
@@ -76,7 +80,16 @@ where
     where
         Caps: ImplCap<CapabilityUiInteraction>,
     {
-        if self.hovered() {
+        if !self.cap_entity_contains::<TooltipSource>() {
+            self.entity_commands().insert(TooltipSource);
+        }
+
+        if self.hovered()
+            && self
+                .cap_get_resource::<TooltipGlobalState>()
+                .unwrap()
+                .show_tooltip()
+        {
             let entity = self.entity();
             self = self.add(|ui| {
                 ui.unrooted("with_tooltip", |ui| {
