@@ -21,11 +21,13 @@ use bevy_immediate::{
         selected::ImmUiSelectable,
         text::ImmUiText,
     },
+    utils::ImmLocalHashMemoryHelper,
 };
 use bevy_picking::hover::Hovered;
 use bevy_platform::collections::{HashMap, HashSet};
 use bevy_ui::{
-    AlignItems, BackgroundColor, BorderColor, FlexDirection, JustifyContent, Node, px, vh, vw,
+    AlignItems, BackgroundColor, BorderColor, FlexDirection, JustifyContent, Node, Overflow,
+    percent, px, vh, vw,
     widget::{Button, Text},
 };
 use strum::IntoEnumIterator;
@@ -140,30 +142,29 @@ impl ImmediateAttach<CapsUi> for FloatingWindowRoot {
         ui.ch()
             .on_spawn_insert(styles::row_node_container)
             .add(|ui| {
-                let mut open = false;
+                let mut button = ui.ch().on_spawn_insert(button_bundle).add(|ui| {
+                    ui.ch().on_spawn_text("Popup");
+                });
 
-                let mut button = ui
-                    .ch()
-                    .on_spawn_insert(button_bundle)
-                    .selected(open)
-                    .add(|ui| {
-                        ui.ch().on_spawn_text("Popup");
-                    });
+                let mut is_popup_open_local =
+                    ImmLocalHashMemoryHelper::new(&mut button, "is_popup_open", &false);
 
                 if button.activated() {
-                    open = !open;
+                    is_popup_open_local.store(&true);
                 }
 
-                if open {
-                    button.unrooted("my_ui", |ui| {
+                let is_open = is_popup_open_local.is_stored(&true);
+                button = button.selected(is_open);
+
+                if is_open {
+                    button = button.unrooted("my_ui", |ui| {
                         ui.ch()
                             .on_spawn_insert(|| {
                                 (
                                     Node {
-                                        flex_direction: FlexDirection::Column,
-                                        border: px(2.).into(),
                                         max_width: vw(95.),
                                         max_height: vh(95.),
+                                        border: px(2.).into(),
                                         ..default()
                                     },
                                     FloatingWindow,
@@ -174,41 +175,54 @@ impl ImmediateAttach<CapsUi> for FloatingWindowRoot {
                             })
                             .add(|ui| {
                                 ui.ch()
-                                    .on_spawn_insert(|| {
-                                        (
-                                            Node {
-                                                flex_direction: FlexDirection::Row,
-                                                justify_content: JustifyContent::SpaceBetween,
-                                                align_items: AlignItems::Stretch,
-                                                ..default()
-                                            },
-                                            BackgroundColor(
-                                                Srgba::new(0.363, 0.363, 0.363, 1.0).into(),
-                                            ),
-                                        )
+                                    .on_spawn_insert(|| Node {
+                                        flex_direction: FlexDirection::Column,
+                                        width: percent(100.),
+                                        height: percent(100.),
+                                        max_width: percent(100.),
+                                        max_height: percent(100.),
+                                        overflow: Overflow::clip(),
+                                        ..default()
                                     })
                                     .add(|ui| {
                                         ui.ch()
-                                            .on_spawn_insert(|| Node {
-                                                flex_grow: 1.,
-                                                justify_content: JustifyContent::Center,
-                                                ..default()
+                                            .on_spawn_insert(|| {
+                                                (
+                                                    Node {
+                                                        flex_direction: FlexDirection::RowReverse,
+                                                        align_items: AlignItems::Stretch,
+                                                        ..default()
+                                                    },
+                                                    BackgroundColor(
+                                                        Srgba::new(0.363, 0.363, 0.363, 1.0).into(),
+                                                    ),
+                                                )
                                             })
                                             .add(|ui| {
-                                                ui.ch().on_spawn_text("Popup");
+                                                let mut close =
+                                                    ui.ch().on_spawn_insert(close_button_bundle);
+                                                if close.activated() {
+                                                    is_popup_open_local.store(&false);
+                                                }
+
+                                                ui.ch()
+                                                    .on_spawn_insert(|| Node {
+                                                        flex_grow: 1.,
+                                                        justify_content: JustifyContent::Center,
+                                                        ..default()
+                                                    })
+                                                    .add(|ui| {
+                                                        ui.ch().on_spawn_text("Popup");
+                                                    });
                                             });
 
-                                        let mut close =
-                                            ui.ch().on_spawn_insert(close_button_bundle);
-                                        if close.activated() {
-                                            open = !open;
-                                        }
+                                        ui.ch().on_spawn_text("Popup text");
                                     });
-
-                                ui.ch().on_spawn_text("Popup text");
                             });
                     });
                 }
+
+                is_popup_open_local.finalize(&mut button);
             });
     }
 }
@@ -249,7 +263,6 @@ fn show_example_window(imm_entity: ImmEntity<CapsUi>, example: &CurrentExample, 
                 Node {
                     max_width: vw(95.),
                     max_height: vh(95.),
-                    flex_direction: FlexDirection::Column,
                     border: px(2.).into(),
                     ..default()
                 },
@@ -260,77 +273,88 @@ fn show_example_window(imm_entity: ImmEntity<CapsUi>, example: &CurrentExample, 
             )
         })
         .add(|ui| {
-            // Title line
             ui.ch()
-                .on_spawn_insert(|| {
-                    (
-                        Node {
-                            flex_direction: FlexDirection::Row,
-                            justify_content: JustifyContent::SpaceBetween,
-                            align_items: AlignItems::Stretch,
-                            ..default()
-                        },
-                        BackgroundColor(Srgba::new(0.363, 0.363, 0.363, 1.0).into()),
-                    )
+                .on_spawn_insert(|| Node {
+                    flex_direction: FlexDirection::Column,
+                    width: percent(100.),
+                    height: percent(100.),
+                    max_width: percent(100.),
+                    max_height: percent(100.),
+                    overflow: Overflow::clip(),
+                    ..default()
                 })
                 .add(|ui| {
+                    // Title line
                     ui.ch()
-                        .on_spawn_insert(|| Node {
-                            flex_grow: 1.,
-                            justify_content: JustifyContent::Center,
-                            align_items: AlignItems::Center,
-                            ..default()
+                        .on_spawn_insert(|| {
+                            (
+                                Node {
+                                    flex_direction: FlexDirection::RowReverse,
+                                    align_items: AlignItems::Stretch,
+                                    ..default()
+                                },
+                                BackgroundColor(Srgba::new(0.363, 0.363, 0.363, 1.0).into()),
+                            )
                         })
                         .add(|ui| {
-                            ui.ch().on_spawn_text_fn(|| example.title().to_string());
+                            let mut close = ui.ch().on_spawn_insert(close_button_bundle);
+
+                            if close.activated() {
+                                *open = false;
+                            }
+
+                            ui.ch()
+                                .on_spawn_insert(|| Node {
+                                    flex_grow: 1.,
+                                    justify_content: JustifyContent::Center,
+                                    align_items: AlignItems::Center,
+                                    ..default()
+                                })
+                                .add(|ui| {
+                                    ui.ch().on_spawn_text_fn(|| example.title().to_string());
+                                });
                         });
 
-                    let mut close = ui.ch().on_spawn_insert(close_button_bundle);
-
-                    if close.activated() {
-                        *open = false;
+                    // Content
+                    let content = ui.ch().on_spawn_insert(|| {
+                        (Node {
+                            flex_direction: FlexDirection::Column,
+                            ..node_container()
+                        },)
+                    });
+                    match *example {
+                        CurrentExample::WidgetUse => {
+                            content.on_spawn_insert(|| WidgetUseExampleRoot);
+                        }
+                        CurrentExample::HelloWorld => {
+                            content.on_spawn_insert(|| HelloWorldRoot);
+                        }
+                        CurrentExample::ExtensionUse => {
+                            content.on_spawn_insert(|| ExtensionUseExampleRoot);
+                        }
+                        CurrentExample::PowerUser => {
+                            content.on_spawn_insert(|| PowerUserExampleRoot);
+                        }
+                        CurrentExample::BevyWidgets => {
+                            content.on_spawn_insert(|| BevyWidgetExampleRoot);
+                        }
+                        CurrentExample::BevyScrollbar => {
+                            content.on_spawn_insert(|| BevyScrollareaExampleRoot);
+                        }
+                        CurrentExample::HotPatching => {
+                            content.on_spawn_insert(|| HotPatchingRoot);
+                        }
+                        CurrentExample::Tooltip => {
+                            content.on_spawn_insert(|| TooltipExampleRoot);
+                        }
+                        CurrentExample::FloatingWindows => {
+                            content.on_spawn_insert(|| FloatingWindowRoot);
+                        }
+                        CurrentExample::Anchored => {
+                            content.on_spawn_insert(|| AnchoredUiExampleRoot);
+                        }
                     }
                 });
-
-            // Content
-            let content = ui.ch().on_spawn_insert(|| {
-                (Node {
-                    flex_direction: FlexDirection::Column,
-                    ..node_container()
-                },)
-            });
-            match *example {
-                CurrentExample::WidgetUse => {
-                    content.on_spawn_insert(|| WidgetUseExampleRoot);
-                }
-                CurrentExample::HelloWorld => {
-                    content.on_spawn_insert(|| HelloWorldRoot);
-                }
-                CurrentExample::ExtensionUse => {
-                    content.on_spawn_insert(|| ExtensionUseExampleRoot);
-                }
-                CurrentExample::PowerUser => {
-                    content.on_spawn_insert(|| PowerUserExampleRoot);
-                }
-                CurrentExample::BevyWidgets => {
-                    content.on_spawn_insert(|| BevyWidgetExampleRoot);
-                }
-                CurrentExample::BevyScrollbar => {
-                    content.on_spawn_insert(|| BevyScrollareaExampleRoot);
-                }
-                CurrentExample::HotPatching => {
-                    content.on_spawn_insert(|| HotPatchingRoot);
-                }
-                CurrentExample::Tooltip => {
-                    content.on_spawn_insert(|| TooltipExampleRoot);
-                }
-                CurrentExample::FloatingWindows => {
-                    content.on_spawn_insert(|| FloatingWindowRoot);
-                }
-                CurrentExample::Anchored => {
-                    content.on_spawn_insert(|| AnchoredUiExampleRoot);
-                }
-            }
         });
 }
 

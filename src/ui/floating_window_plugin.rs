@@ -254,13 +254,14 @@ fn window_resize_drag(
         let mut height = resolve_y(window_node.min_height, window_comp_target_info)
             .unwrap_or(window_comp_node.size.y);
 
-        width = (width + size_change.x).max(1.);
-        height = (height + size_change.y).max(1.);
+        // TODO: Set real min width in floating window configuration
+        width = (width + size_change.x).max(50.);
+        height = (height + size_change.y).max(50.);
 
         window_node.min_width = px(width * window_comp_node.inverse_scale_factor);
         window_node.min_height = px(height * window_comp_node.inverse_scale_factor);
-        window_node.max_width = px(width * window_comp_node.inverse_scale_factor);
-        window_node.max_height = px(height * window_comp_node.inverse_scale_factor);
+        window_node.width = px(width * window_comp_node.inverse_scale_factor);
+        window_node.height = px(height * window_comp_node.inverse_scale_factor);
     }
 }
 

@@ -82,6 +82,12 @@ itertools = "0.14"
 strum = { version = "0.27.2", features = ["derive"] }
 bevy_framepace = "0.20"
 
+[[example]]
+name = "demo"
+
+[profile.dev.package."*"]
+opt-level = 3
+
 [profile.web-release]
 inherits = "release"
 opt-level = 'z'
@@ -91,9 +97,6 @@ codegen-units = 1
 [package.metadata.bevy_cli.web.release]
 # Enable wasm-opt with custom flags
 wasm-opt = ["-Oz", "--enable-bulk-memory"]
-
-[[example]]
-name = "demo"
 
 [patch.crates-io]
 

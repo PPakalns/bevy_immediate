@@ -3,7 +3,6 @@ use bevy_ecs::component::Component;
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
-    imm_id,
     ui::{
         CapsUi,
         activated::ImmUiActivated,
@@ -13,10 +12,11 @@ use bevy_immediate::{
         selected::ImmUiSelectable,
         text::ImmUiText,
     },
+    utils::ImmLocalHashMemoryHelper,
 };
 use bevy_ui::{
     AlignItems, AlignSelf, BackgroundColor, BorderColor, FlexDirection, JustifyContent,
-    JustifyItems, JustifySelf, Node,
+    JustifySelf, Node, px,
 };
 
 use crate::styles::{compact_button_bundle, compact_node_container, row_node_container};
@@ -75,20 +75,20 @@ impl ImmediateAttach<CapsUi> for AnchoredUiExampleRoot {
                                 ui.ch().on_spawn_text_fn(|| format!("Menu {}", dir_text));
                             });
 
-                        // Dropdown state management using on entity stored value
-                        let menu_open_id = imm_id("activated");
+                        // Helper utility to store simple state that can be checked
+                        let mut local_state =
+                            ImmLocalHashMemoryHelper::new(&mut button, "is_activated", &false);
+
                         if button.activated() {
-                            button.hash_set(menu_open_id, imm_id(()));
+                            local_state.store(&true);
                         }
 
-                        let mut is_open_value = button.hash_get(menu_open_id);
+                        button = button.selected(local_state.is_stored(&true));
 
-                        button = button.selected(is_open_value.is_some());
-
-                        if is_open_value.is_some() {
+                        if local_state.is_stored(&true) {
                             button = button.with_dropdown_container(
                                 || {
-                                    is_open_value = None;
+                                    local_state.store(&false);
                                 },
                                 |container| {
                                     container
@@ -104,7 +104,7 @@ impl ImmediateAttach<CapsUi> for AnchoredUiExampleRoot {
                             );
                         }
 
-                        button.hash_update(menu_open_id, is_open_value);
+                        local_state.finalize(&mut button);
                     }
                 });
             });
@@ -114,17 +114,19 @@ impl ImmediateAttach<CapsUi> for AnchoredUiExampleRoot {
 fn dropdown_content(ui: &mut Imm<'_, '_, CapsUi>) {
     let mut menu_container = ui.ch().on_spawn_insert(|| {
         (
-            compact_node_container(),
+            Node {
+                border: px(1.).into(),
+                ..compact_node_container()
+            },
             BackgroundColor(bevy_color::palettes::css::BLACK.into()),
-            BorderColor::all(bevy_color::palettes::css::DARK_GRAY),
+            BorderColor::all(bevy_color::palettes::css::WHITE),
         )
     });
 
     // On ImmEntity for the lifetime of entity custom hashed values can be stored
     //
     // We will use locally stored hash value to store current menu choice
-    let menu_hash_id = imm_id("menu_value");
-    let mut stored_hash = menu_container.hash_get(menu_hash_id);
+    let mut local_state = ImmLocalHashMemoryHelper::new(&mut menu_container, "opened_menu", &None);
 
     menu_container = menu_container.add(|ui| {
         for _ in 0..10 {
@@ -132,17 +134,18 @@ fn dropdown_content(ui: &mut Imm<'_, '_, CapsUi>) {
                 ui.ch().on_spawn_text("Example");
             });
 
-            let button_id = button.imm_id();
             if button.hovered() {
-                stored_hash = Some(button_id);
+                local_state.store(&Some(button.imm_id()));
             }
 
-            button = button.selected(stored_hash == Some(button_id));
+            let is_open = local_state.is_stored(&Some(button.imm_id()));
 
-            if stored_hash == Some(button_id) {
+            button = button.selected(is_open);
+
+            if is_open {
                 button.with_dropdown_container(
                     || {
-                        stored_hash = None;
+                        local_state.store(&None);
                     },
                     |container| {
                         container
@@ -161,7 +164,10 @@ fn dropdown_content(ui: &mut Imm<'_, '_, CapsUi>) {
                                 ui.ch()
                                     .on_spawn_insert(|| {
                                         (
-                                            compact_node_container(),
+                                            Node {
+                                                border: px(1.).into(),
+                                                ..compact_node_container()
+                                            },
                                             BackgroundColor(
                                                 bevy_color::palettes::css::BLACK.into(),
                                             ),
@@ -184,5 +190,5 @@ fn dropdown_content(ui: &mut Imm<'_, '_, CapsUi>) {
         }
     });
 
-    menu_container.hash_update(menu_hash_id, stored_hash);
+    local_state.finalize(&mut menu_container);
 }

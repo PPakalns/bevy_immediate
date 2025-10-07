@@ -146,8 +146,8 @@ impl ImmediateAttach<CapsUiWidget> for BevyScrollareaExampleRoot {
                 {
                     ui.ch_id(("overflow", idx)).scrollarea(
                         Node {
-                            min_height: px(100),
-                            min_width: px(100),
+                            min_height: px(50),
+                            min_width: px(50),
                             // max_height: vh(20.),
                             // max_width: vw(20.),
                             ..default()
@@ -253,7 +253,7 @@ where
                 ui.ch().on_spawn_insert(|| {
                     (
                         Node {
-                            min_width: px(8),
+                            width: px(8),
                             grid_row: GridPlacement::start(1),
                             grid_column: GridPlacement::start(2),
                             ..default()
