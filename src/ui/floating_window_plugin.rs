@@ -11,7 +11,6 @@ use bevy_ecs::{
     spawn::SpawnRelated,
     system::{Commands, Query, Res, ResMut},
 };
-use bevy_feathers::cursor::{DefaultCursor, EntityCursor};
 use bevy_math::{I8Vec2, Vec2, bounding::Aabb2d};
 use bevy_picking::{
     Pickable,
@@ -22,13 +21,17 @@ use bevy_ui::{
     ComputedNode, ComputedUiRenderTargetInfo, LayoutConfig, Node, Pressed, RepeatedGridTrack,
     UiGlobalTransform, UiScale, UiSystems, Val, px,
 };
-use bevy_window::SystemCursorIcon;
 use rand::Rng;
 
 use crate::{
     ImmId,
     ui::floating_ui_ordering_plugin::{FloatingUiOrderingPlugin, UiBringForward, UiZOrderLayer},
 };
+
+#[cfg(feature = "bevy_feathers")]
+use bevy_feathers::cursor;
+#[cfg(feature = "bevy_feathers")]
+use bevy_window::SystemCursorIcon;
 
 /// Plugin implements floating windows
 /// and such functionality as window
@@ -46,6 +49,7 @@ impl bevy_app::Plugin for FloatingWindowPlugin {
             .add_observer(window_on_drag)
             .add_observer(window_on_drag_end);
 
+        #[cfg(feature = "bevy_feathers")]
         app.insert_resource(WindowDragTmpCursor::default());
 
         app.add_observer(window_resize_drag_start)
@@ -356,8 +360,9 @@ fn resolve_y(
 
 /// Stores cursor that was temporary replaced with cursor used for resizing window (dragging)
 #[derive(Resource, Default)]
+#[cfg(feature = "bevy_feathers")]
 pub struct WindowDragTmpCursor {
-    cursor: Option<EntityCursor>,
+    cursor: Option<cursor::EntityCursor>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -376,9 +381,9 @@ fn window_resize_drag_start(
     q_parents: Query<&ChildOf>,
     mut commands: Commands,
 
-    system_cursor: Query<&EntityCursor>,
-    mut default_cursor: ResMut<DefaultCursor>,
-    mut tmp_cursor: ResMut<WindowDragTmpCursor>,
+    #[cfg(feature = "bevy_feathers")] system_cursor: Query<&cursor::EntityCursor>,
+    #[cfg(feature = "bevy_feathers")] mut default_cursor: ResMut<cursor::DefaultCursor>,
+    #[cfg(feature = "bevy_feathers")] mut tmp_cursor: ResMut<WindowDragTmpCursor>,
 ) {
     let Ok(()) = q_target.get_mut(drag_start.entity) else {
         return;
@@ -388,6 +393,7 @@ fn window_resize_drag_start(
 
     commands.entity(drag_start.entity).insert(Pressed);
 
+    #[cfg(feature = "bevy_feathers")]
     if let Ok(cursor) = system_cursor.get(drag_start.entity) {
         std::mem::swap(
             &mut default_cursor.0,
@@ -524,8 +530,8 @@ fn window_resize_drag_end(
     mut commands: Commands,
     mut q_windows: Query<&mut FloatingWindowInteractionState, With<FloatingWindow>>,
 
-    mut default_cursor: ResMut<DefaultCursor>,
-    mut tmp_cursor: ResMut<WindowDragTmpCursor>,
+    #[cfg(feature = "bevy_feathers")] mut default_cursor: ResMut<cursor::DefaultCursor>,
+    #[cfg(feature = "bevy_feathers")] mut tmp_cursor: ResMut<WindowDragTmpCursor>,
 ) {
     let Ok(()) = q_target.get_mut(drag_end.entity) else {
         return;
@@ -545,6 +551,7 @@ fn window_resize_drag_end(
 
     window_interaction_state.currently_resize = false;
 
+    #[cfg(feature = "bevy_feathers")]
     if let Some(cursor) = tmp_cursor.cursor.take() {
         default_cursor.0 = cursor;
     }
@@ -585,25 +592,29 @@ pub fn resizable_borders(border_thickness: f32, additional: impl Bundle + Copy) 
             (
                 Node::DEFAULT,
                 WindowResizeDragDirection(I8Vec2 { x: -1, y: -1 }),
-                EntityCursor::System(SystemCursorIcon::NwResize),
+                #[cfg(feature = "bevy_feathers")]
+                cursor::EntityCursor::System(SystemCursorIcon::NwResize),
                 additional
             ),
             (
                 Node::DEFAULT,
                 WindowResizeDragDirection(I8Vec2 { x: 0, y: -1 }),
-                EntityCursor::System(SystemCursorIcon::NResize),
+                #[cfg(feature = "bevy_feathers")]
+                cursor::EntityCursor::System(SystemCursorIcon::NResize),
                 additional
             ),
             (
                 Node::DEFAULT,
                 WindowResizeDragDirection(I8Vec2 { x: 1, y: -1 }),
-                EntityCursor::System(SystemCursorIcon::NeResize),
+                #[cfg(feature = "bevy_feathers")]
+                cursor::EntityCursor::System(SystemCursorIcon::NeResize),
                 additional
             ),
             (
                 Node::DEFAULT,
                 WindowResizeDragDirection(I8Vec2 { x: -1, y: 0 }),
-                EntityCursor::System(SystemCursorIcon::WResize),
+                #[cfg(feature = "bevy_feathers")]
+                cursor::EntityCursor::System(SystemCursorIcon::WResize),
                 additional
             ),
             (
@@ -616,25 +627,29 @@ pub fn resizable_borders(border_thickness: f32, additional: impl Bundle + Copy) 
             (
                 Node::DEFAULT,
                 WindowResizeDragDirection(I8Vec2 { x: 1, y: 0 }),
-                EntityCursor::System(SystemCursorIcon::EResize),
+                #[cfg(feature = "bevy_feathers")]
+                cursor::EntityCursor::System(SystemCursorIcon::EResize),
                 additional
             ),
             (
                 Node::DEFAULT,
                 WindowResizeDragDirection(I8Vec2 { x: -1, y: 1 }),
-                EntityCursor::System(SystemCursorIcon::SwResize),
+                #[cfg(feature = "bevy_feathers")]
+                cursor::EntityCursor::System(SystemCursorIcon::SwResize),
                 additional
             ),
             (
                 Node::DEFAULT,
                 WindowResizeDragDirection(I8Vec2 { x: 0, y: 1 }),
-                EntityCursor::System(SystemCursorIcon::SResize),
+                #[cfg(feature = "bevy_feathers")]
+                cursor::EntityCursor::System(SystemCursorIcon::SResize),
                 additional
             ),
             (
                 Node::DEFAULT,
                 WindowResizeDragDirection(I8Vec2 { x: 1, y: 1 }),
-                EntityCursor::System(SystemCursorIcon::SeResize),
+                #[cfg(feature = "bevy_feathers")]
+                cursor::EntityCursor::System(SystemCursorIcon::SeResize),
                 additional
             ),
         ]
