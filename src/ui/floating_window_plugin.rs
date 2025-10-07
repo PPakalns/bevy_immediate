@@ -4,13 +4,14 @@ use bevy_ecs::{
     component::Component,
     hierarchy::{ChildOf, Children},
     observer::On,
-    query::With,
+    query::{Added, Changed, Or, With},
     resource::Resource,
+    schedule::IntoScheduleConfigs,
     spawn::SpawnRelated,
     system::{Commands, Query, Res, ResMut},
 };
 use bevy_feathers::cursor::{DefaultCursor, EntityCursor};
-use bevy_math::{I8Vec2, Vec2};
+use bevy_math::{I8Vec2, Vec2, bounding::Aabb2d};
 use bevy_picking::{
     Pickable,
     events::{Drag, DragEnd, DragStart, Pointer},
@@ -18,9 +19,10 @@ use bevy_picking::{
 };
 use bevy_ui::{
     ComputedNode, ComputedUiRenderTargetInfo, LayoutConfig, Node, Pressed, RepeatedGridTrack,
-    UiGlobalTransform, UiScale, Val, px,
+    UiGlobalTransform, UiScale, UiSystems, Val, px,
 };
 use bevy_window::SystemCursorIcon;
+use rand::Rng;
 
 use crate::ui::floating_entity_plugin::{FloatingEntityPlugin, UiBringForward, UiZOrderLayer};
 
@@ -33,35 +35,192 @@ impl bevy_app::Plugin for FloatingWindowPlugin {
         }
 
         app.add_observer(window_on_drag_start)
-            .add_observer(window_on_drag);
+            .add_observer(window_on_drag)
+            .add_observer(window_on_drag_end);
 
         app.insert_resource(WindowDragTmpCursor::default());
         app.add_observer(window_resize_drag_start)
             .add_observer(window_resize_drag)
             .add_observer(window_resize_drag_end);
+
+        app.add_systems(
+            bevy_app::PostUpdate,
+            floating_window_node_update_system.before(UiSystems::Prepare),
+        );
+
+        app.add_systems(
+            bevy_app::PostUpdate,
+            floating_window_node_init_system.before(UiSystems::Prepare),
+        );
     }
 }
 
+/// Floating window and its sizing restrictions
+///
+/// These need to be specified separately because
+/// [`Node`]` values will be overrided.
 #[derive(Component)]
-#[require(FloatingWindowDrag, UiZOrderLayer::Window, UiBringForward)]
-pub struct FloatingWindow;
+#[require(
+    Node,
+    FloatingWindowInteractionState,
+    UiZOrderLayer::Window,
+    UiBringForward
+)]
+pub struct FloatingWindow {
+    /// See [`Node::initial_width`]
+    pub initial_width: Val,
+    /// See [`Node::initial_height`]
+    pub initial_height: Val,
+    /// See [`Node::min_width`]
+    pub min_width: Val,
+    /// See [`Node::min_height`]
+    pub min_height: Val,
+    /// See [`Node::max_width`]
+    pub max_width: Val,
+    /// See [`Node::max_height`]
+    pub max_height: Val,
+
+    /// Ratio of how much floating window should be inside
+    /// window.
+    ///
+    /// Ration used to move windows inside screen when
+    /// they are fully outside the view.
+    pub overlap_ratio: Option<f32>,
+}
+
+impl Default for FloatingWindow {
+    fn default() -> Self {
+        Self {
+            min_width: Val::Px(50.),
+            min_height: Val::Px(50.),
+            max_width: Val::Vw(90.),
+            max_height: Val::Vh(90.),
+            initial_width: Val::Auto,
+            initial_height: Val::Auto,
+            overlap_ratio: Some(0.075),
+        }
+    }
+}
+
+fn floating_window_node_init_system(
+    mut query: Query<(&FloatingWindow, &mut Node), Added<FloatingWindow>>,
+) {
+    let mut rng = rand::rng();
+    for (floating, mut node) in query.iter_mut() {
+        node.min_width = floating.initial_width;
+        node.min_height = floating.initial_height;
+        node.max_width = floating.max_width;
+        node.max_height = floating.max_height;
+
+        // TODO: Improve logic to decide window start location
+        node.left = px(rng.random_range(10..200i32) as f32);
+        node.top = px(rng.random_range(10..200i32) as f32);
+    }
+}
+
+fn floating_window_node_update_system(
+    mut query: Query<
+        (
+            &FloatingWindow,
+            &mut Node,
+            &FloatingWindowInteractionState,
+            &ComputedNode,
+            &ComputedUiRenderTargetInfo,
+            &UiGlobalTransform,
+        ),
+        (
+            Or<(
+                Changed<FloatingWindow>,
+                Changed<FloatingWindowInteractionState>,
+                Changed<ComputedNode>,
+                Changed<ComputedUiRenderTargetInfo>,
+                Changed<UiGlobalTransform>,
+            )>,
+        ),
+    >,
+) {
+    for (
+        floating_window,
+        mut node,
+        interaction_state,
+        comp_node,
+        comp_target_info,
+        global_transform,
+    ) in query.iter_mut()
+    {
+        let Some(overlap_ratio) = floating_window.overlap_ratio else {
+            continue;
+        };
+
+        if interaction_state.currently_drag || interaction_state.currently_resize {
+            continue;
+        }
+
+        let window_node = Aabb2d::new(global_transform.translation, comp_node.size * 0.5);
+        let camera = Aabb2d {
+            max: comp_target_info.physical_size().as_vec2(),
+            min: Vec2::ZERO,
+        };
+
+        if camera.min.x <= window_node.min.x
+            && window_node.max.x <= camera.max.x
+            && camera.min.y <= window_node.min.y
+            && window_node.max.y <= camera.max.y
+        {
+            // Fully inside, no need to check overlap
+            continue;
+        }
+
+        let int_min = window_node.min.max(camera.min);
+        let int_max = window_node.max.min(camera.max);
+
+        let overlap = (int_max - int_min).max(Vec2::ZERO);
+        let needed_overlap = comp_target_info.physical_size().as_vec2() * overlap_ratio;
+
+        if overlap.x >= needed_overlap.x && overlap.y >= needed_overlap.y {
+            continue;
+        }
+
+        let mut offset_to_add = (needed_overlap - overlap).max(Vec2::ZERO);
+        if window_node.min.x > 0. {
+            offset_to_add.x *= -1.;
+        }
+        if window_node.min.y > 0. {
+            offset_to_add.y *= -1.;
+        }
+
+        let left = resolve_x(node.left, comp_target_info).unwrap_or(0.) + offset_to_add.x;
+        let top = resolve_y(node.top, comp_target_info).unwrap_or(0.) + offset_to_add.y;
+
+        node.left = px(left * comp_node.inverse_scale_factor);
+        node.top = px(top * comp_node.inverse_scale_factor);
+    }
+}
 
 #[derive(Component, Default)]
-struct FloatingWindowDrag {
-    initial_pos: Vec2,
-    last_offset: Option<Vec2>,
+struct FloatingWindowInteractionState {
+    // For dragging
+    currently_drag: bool,
+    initial_drag_pos: Vec2,
+    drag_last_offset: Option<Vec2>,
+
+    // For resize
+    currently_resize: bool,
+    initial_resize_size: Vec2,
+    initial_resize_offset: Vec2,
 }
 
 fn window_on_drag_start(
     mut drag_start: On<Pointer<DragStart>>,
     mut scroll_position_query: Query<
-        (&UiGlobalTransform, &mut FloatingWindowDrag),
-        With<FloatingWindowDrag>,
+        (&UiGlobalTransform, &mut FloatingWindowInteractionState),
+        With<FloatingWindowInteractionState>,
     >,
 ) {
     if let Ok((transform, mut state)) = scroll_position_query.get_mut(drag_start.entity) {
-        state.initial_pos = transform.translation;
-        state.last_offset = None;
+        state.initial_drag_pos = transform.translation;
+        state.drag_last_offset = None;
+        state.currently_drag = true;
 
         drag_start.propagate(false);
     }
@@ -71,12 +230,12 @@ fn window_on_drag(
     mut drag: On<Pointer<Drag>>,
     mut scroll_position_query: Query<
         (
-            &mut FloatingWindowDrag,
+            &mut FloatingWindowInteractionState,
             &mut Node,
             &ComputedNode,
             Option<&LayoutConfig>,
         ),
-        With<FloatingWindowDrag>,
+        With<FloatingWindowInteractionState>,
     >,
     ui_scale: Res<UiScale>,
     mut global_transform: Query<&mut UiGlobalTransform>,
@@ -91,12 +250,12 @@ fn window_on_drag(
     drag.propagate(false);
 
     let distance = drag.distance / (comp_node.inverse_scale_factor * ui_scale.0);
-    let target_position = state.initial_pos + distance;
+    let target_position = state.initial_drag_pos + distance;
 
-    if state.last_offset == Some(target_position) {
+    if state.drag_last_offset == Some(target_position) {
         return;
     }
-    state.last_offset = Some(target_position);
+    state.drag_last_offset = Some(target_position);
 
     super::anchored_entity_plugin::apply_position(
         drag.entity,
@@ -107,6 +266,20 @@ fn window_on_drag(
         &children,
         &mut global_transform,
     );
+}
+
+fn window_on_drag_end(
+    mut drag: On<Pointer<DragEnd>>,
+    mut scroll_position_query: Query<
+        &mut FloatingWindowInteractionState,
+        With<FloatingWindowInteractionState>,
+    >,
+) {
+    if let Ok(mut state) = scroll_position_query.get_mut(drag.entity) {
+        state.currently_drag = false;
+
+        drag.propagate(false);
+    }
 }
 
 #[derive(Component)]
@@ -142,7 +315,15 @@ pub struct WindowDragTmpCursor {
 fn window_resize_drag_start(
     mut drag_start: On<Pointer<DragStart>>,
     mut q_target: Query<(), With<WindowResizeDragDirection>>,
-    mut q_windows: Query<(&mut Node, &ComputedNode), With<FloatingWindow>>,
+    mut q_windows: Query<
+        (
+            &Node,
+            &mut FloatingWindowInteractionState,
+            &ComputedNode,
+            &ComputedUiRenderTargetInfo,
+        ),
+        With<FloatingWindow>,
+    >,
     q_parents: Query<&ChildOf>,
     mut commands: Commands,
 
@@ -172,26 +353,31 @@ fn window_resize_drag_start(
         return;
     };
 
-    let Ok((mut window_node, window_comp_node)) = q_windows.get_mut(window_entity) else {
+    let Ok((node, mut window_interaction_state, window_comp_node, window_comp_target_info)) =
+        q_windows.get_mut(window_entity)
+    else {
         return;
     };
 
-    // Reset min_width, min_height
-    let width = window_comp_node.size.x;
-    let height = window_comp_node.size.y;
-
-    window_node.min_width = px(width * window_comp_node.inverse_scale_factor);
-    window_node.min_height = px(height * window_comp_node.inverse_scale_factor);
+    window_interaction_state.currently_resize = true;
+    window_interaction_state.initial_resize_size = window_comp_node.size;
+    window_interaction_state.initial_resize_offset = Vec2::new(
+        resolve_x(node.left, window_comp_target_info).unwrap_or(0.),
+        resolve_y(node.top, window_comp_target_info).unwrap_or(0.),
+    );
 }
 
 fn window_resize_drag(
     mut drag: On<Pointer<Drag>>,
     mut position_query: Query<&WindowResizeDragDirection>,
     q_parents: Query<&ChildOf>,
-    mut q_windows: Query<
-        (&mut Node, &ComputedNode, &ComputedUiRenderTargetInfo),
-        With<FloatingWindow>,
-    >,
+    mut q_windows: Query<(
+        &mut Node,
+        &FloatingWindow,
+        &FloatingWindowInteractionState,
+        &ComputedNode,
+        &ComputedUiRenderTargetInfo,
+    )>,
     ui_scale: Res<UiScale>,
 ) {
     let Ok(drag_direction) = position_query.get_mut(drag.entity) else {
@@ -207,68 +393,86 @@ fn window_resize_drag(
         return;
     };
 
-    let Ok((mut window_node, window_comp_node, window_comp_target_info)) =
-        q_windows.get_mut(window_entity)
+    let Ok((
+        mut window_node,
+        floating_window,
+        floating_window_inter_state,
+        window_comp_node,
+        window_comp_target_info,
+    )) = q_windows.get_mut(window_entity)
     else {
         return;
     };
 
-    // Delta in physical coordinates
-    let delta = drag.delta / (window_comp_node.inverse_scale_factor * ui_scale.0);
+    // Distance in physical coordinates
+    let distance = drag.distance / (window_comp_node.inverse_scale_factor * ui_scale.0);
 
     // Retrieve only necessary dimensions
     let drag_direction = drag_direction.0;
-    let delta = drag_direction.as_vec2().abs() * delta;
+    let delta = drag_direction.as_vec2().abs() * distance;
 
     let mut size_change = Vec2::ZERO;
     let mut left_top_change = Vec2::ZERO;
 
     if drag_direction.x < 0 {
-        left_top_change.x += delta.x;
+        left_top_change.x = 1.;
         size_change.x += -delta.x;
     } else if drag_direction.x > 0 {
         size_change.x += delta.x;
     }
 
     if drag_direction.y < 0 {
-        left_top_change.y += delta.y;
+        left_top_change.y = 1.;
         size_change.y += -delta.y;
     } else if drag_direction.y > 0 {
         size_change.y += delta.y;
     }
 
-    if left_top_change != Vec2::ZERO {
-        let mut left = resolve_x(window_node.left, window_comp_target_info).unwrap_or(0.);
-        let mut top = resolve_y(window_node.top, window_comp_target_info).unwrap_or(0.);
-
-        left += left_top_change.x;
-        top += left_top_change.y;
-
-        window_node.left = px(left * window_comp_node.inverse_scale_factor);
-        window_node.top = px(top * window_comp_node.inverse_scale_factor);
-    }
-
     if size_change != Vec2::ZERO {
-        let mut width = resolve_x(window_node.min_width, window_comp_target_info)
-            .unwrap_or(window_comp_node.size.x);
-        let mut height = resolve_y(window_node.min_height, window_comp_target_info)
-            .unwrap_or(window_comp_node.size.y);
+        let width = floating_window_inter_state.initial_resize_size.x;
+        let height = floating_window_inter_state.initial_resize_size.y;
 
         // TODO: Set real min width in floating window configuration
-        width = (width + size_change.x).max(50.);
-        height = (height + size_change.y).max(50.);
+        let mut final_width = width + size_change.x;
+        let mut final_height = height + size_change.y;
 
-        window_node.min_width = px(width * window_comp_node.inverse_scale_factor);
-        window_node.min_height = px(height * window_comp_node.inverse_scale_factor);
-        window_node.width = px(width * window_comp_node.inverse_scale_factor);
-        window_node.height = px(height * window_comp_node.inverse_scale_factor);
+        final_width = final_width
+            .min(
+                resolve_x(floating_window.max_width, window_comp_target_info)
+                    .unwrap_or(window_comp_target_info.physical_size().x as f32),
+            )
+            .max(resolve_x(floating_window.min_width, window_comp_target_info).unwrap_or(50.));
+        final_height = final_height
+            .min(
+                resolve_x(floating_window.max_height, window_comp_target_info)
+                    .unwrap_or(window_comp_target_info.physical_size().y as f32),
+            )
+            .max(resolve_x(floating_window.min_height, window_comp_target_info).unwrap_or(50.));
+
+        // window_node.min_width = px(width * window_comp_node.inverse_scale_factor);
+        // window_node.min_height = px(height * window_comp_node.inverse_scale_factor);
+        window_node.width = px(final_width * window_comp_node.inverse_scale_factor);
+        window_node.height = px(final_height * window_comp_node.inverse_scale_factor);
+
+        if left_top_change != Vec2::ZERO {
+            let mut left = floating_window_inter_state.initial_resize_offset.x;
+            let mut top = floating_window_inter_state.initial_resize_offset.y;
+
+            left += (width - final_width) * left_top_change.x;
+            top += (height - final_height) * left_top_change.y;
+
+            window_node.left = px(left * window_comp_node.inverse_scale_factor);
+            window_node.top = px(top * window_comp_node.inverse_scale_factor);
+        }
     }
 }
 
 fn window_resize_drag_end(
     drag_end: On<Pointer<DragEnd>>,
     mut q_target: Query<(), With<WindowResizeDragDirection>>,
+    q_parents: Query<&ChildOf>,
     mut commands: Commands,
+    mut q_windows: Query<&mut FloatingWindowInteractionState, With<FloatingWindow>>,
 
     mut default_cursor: ResMut<DefaultCursor>,
     mut tmp_cursor: ResMut<WindowDragTmpCursor>,
@@ -277,6 +481,19 @@ fn window_resize_drag_end(
         return;
     };
     commands.entity(drag_end.entity).remove::<Pressed>();
+
+    let Some(window_entity) = q_parents
+        .iter_ancestors(drag_end.entity)
+        .find(|ancestor| q_windows.contains(*ancestor))
+    else {
+        return;
+    };
+
+    let Ok(mut window_interaction_state) = q_windows.get_mut(window_entity) else {
+        return;
+    };
+
+    window_interaction_state.currently_resize = false;
 
     if let Some(cursor) = tmp_cursor.cursor.take() {
         default_cursor.0 = cursor;

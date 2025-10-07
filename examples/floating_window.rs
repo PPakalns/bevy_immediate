@@ -162,12 +162,14 @@ impl ImmediateAttach<CapsUi> for FloatingWindowRoot {
                             .on_spawn_insert(|| {
                                 (
                                     Node {
-                                        max_width: vw(95.),
-                                        max_height: vh(95.),
                                         border: px(2.).into(),
                                         ..default()
                                     },
-                                    FloatingWindow,
+                                    FloatingWindow {
+                                        max_width: vw(95.),
+                                        max_height: vh(95.),
+                                        ..Default::default()
+                                    },
                                     floating_window_plugin::resizable_borders(8., ()),
                                     BackgroundColor(BLACK.into()),
                                     BorderColor::all(LIGHT_GRAY),
@@ -266,7 +268,9 @@ fn show_example_window(imm_entity: ImmEntity<CapsUi>, example: &CurrentExample, 
                     border: px(2.).into(),
                     ..default()
                 },
-                FloatingWindow,
+                FloatingWindow {
+                    ..Default::default()
+                },
                 floating_window_plugin::resizable_borders(8., ()),
                 BackgroundColor(BLACK.into()),
                 BorderColor::all(LIGHT_GRAY),

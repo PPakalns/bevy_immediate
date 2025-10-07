@@ -702,6 +702,7 @@ dependencies = [
  "itertools",
  "log",
  "paste",
+ "rand",
  "strum",
  "type-map",
 ]
