@@ -63,7 +63,7 @@ impl ImmediateAttach<CapsUi> for MenuUiRoot {
                         .selected(example == *params.current_example)
                         .add(|ui| {
                             ui.ch()
-                                .on_spawn_insert(styles::text_style)
+                                .on_spawn_insert(styles::centered_text_style)
                                 .on_spawn_text_fn(|| example.title().to_string());
                         });
 

@@ -157,6 +157,14 @@ pub fn text_style() -> impl Bundle + use<> {
     (TextColor(Color::srgb(0.9, 0.9, 0.9)), TextShadow::default())
 }
 
+pub fn centered_text_style() -> impl Bundle + use<> {
+    (
+        TextColor(Color::srgb(0.9, 0.9, 0.9)),
+        TextShadow::default(),
+        TextLayout::new_with_justify(Justify::Center),
+    )
+}
+
 pub fn title_text_style() -> impl Bundle + use<> {
     let mut text = TextFont::default();
     text.font_size *= 2.0;
