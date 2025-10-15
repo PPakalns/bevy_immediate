@@ -14,6 +14,7 @@ use crate::{
     main_menu::{CurrentExample, MenuUiRoot},
     power_user::PowerUserExampleRoot,
     styles,
+    text_edit::TextEditExampleRoot,
     tooltip::TooltipExampleRoot,
     widget_use::WidgetUseExampleRoot,
 };
@@ -95,6 +96,9 @@ fn ui_system(ctx: ImmCtx<CapsUi>, example: ResMut<CurrentExample>) {
                 }
                 CurrentExample::Anchored => {
                     content.on_spawn_insert(|| AnchoredUiExampleRoot);
+                }
+                CurrentExample::TextEdit => {
+                    content.on_spawn_insert(|| TextEditExampleRoot);
                 }
             }
         });

@@ -1,3 +1,5 @@
+use bevy_app::PluginGroup;
+use bevy_input_focus::tab_navigation::TabNavigationPlugin;
 use std::ops::DerefMut;
 
 use bevy::{
@@ -47,7 +49,7 @@ impl bevy_app::Plugin for BevyWidgetExamplePlugin {
 
         // You will need bevy_immediate features `bevy_feathers` and/or `bevy_ui_widgets`
 
-        app.add_plugins(FeathersPlugins)
+        app.add_plugins(FeathersPlugins.build().disable::<TabNavigationPlugin>())
             .insert_resource(UiTheme(create_dark_theme()));
 
         // Initialize plugin with your root component

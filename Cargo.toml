@@ -85,6 +85,9 @@ bevy = { version = "0.17.2", default-features = false, features = [
 ] }
 itertools = "0.14"
 strum = { version = "0.27.2", features = ["derive"] }
+
+bevy_ui_text_input = "0.6.0-rc.2"
+cosmic-text = "0.14.2"
 # bevy_framepace = "0.20"
 
 [[example]]
@@ -107,7 +110,7 @@ wasm-opt = ["-Oz", "--enable-bulk-memory"]
 
 # Not yet released
 # bevy_framepace = { git = "https://github.com/aevyrie/bevy_framepace.git", rev = "ea62830" }
-
+bevy_ui_text_input = { git = "https://github.com/PPakalns/bevy_ui_text_input.git", rev = "db1f0ffdec5830428afbe62358c25a6a72416aff" }
 
 # bevy = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
 # bevy_ecs = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }

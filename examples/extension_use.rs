@@ -32,7 +32,8 @@ impl_capability_set!(
         bevy_immediate::ui::anchored::CapabilityUiAnchored,
         //
         // Add your own capabilities
-        crate::extension::CapUiToggle
+        crate::extension::CapUiToggle,
+        crate::text_edit::CapabilityUiTextInput,
     )
 );
 

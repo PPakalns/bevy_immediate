@@ -15,7 +15,7 @@ use bevy_immediate::{
     ui::{CapsUiWidget, ImplCapsUiWidget, text::ImmUiText},
 };
 use bevy_input::{ButtonInput, keyboard::KeyCode};
-use bevy_input_focus::{InputDispatchPlugin, tab_navigation::TabNavigationPlugin};
+use bevy_input_focus::InputDispatchPlugin;
 use bevy_picking::{
     events::{Drag, DragStart, Pointer, Scroll},
     hover::Hovered,
@@ -51,11 +51,6 @@ impl bevy_app::Plugin for BevyScrollareaExamplePlugin {
         // For keyboard support
         if !app.is_plugin_added::<InputDispatchPlugin>() {
             app.add_plugins(InputDispatchPlugin);
-        }
-
-        // For tab navigation support
-        if !app.is_plugin_added::<TabNavigationPlugin>() {
-            app.add_plugins(TabNavigationPlugin);
         }
 
         // Initialize plugin with your root component

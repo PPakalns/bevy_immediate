@@ -103,6 +103,7 @@ pub enum CurrentExample {
     ExtensionUse,
     PowerUser,
     HotPatching,
+    TextEdit,
 }
 
 impl CurrentExample {
@@ -118,6 +119,7 @@ impl CurrentExample {
             CurrentExample::ExtensionUse => "Extension usage",
             CurrentExample::PowerUser => "Power user",
             CurrentExample::HotPatching => "Hot patching",
+            CurrentExample::TextEdit => "Text edit",
         }
     }
 }
