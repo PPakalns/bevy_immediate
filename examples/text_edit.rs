@@ -3,7 +3,7 @@ use std::{iter::Peekable, marker::PhantomData};
 use bevy::utils::default;
 use bevy_color::palettes::css::NAVY;
 use bevy_ecs::{
-    change_detection::DetectChangesMut,
+    change_detection::{DetectChanges, DetectChangesMut},
     component::Component,
     system::{Local, SystemParam},
 };
@@ -145,19 +145,20 @@ where
                     text_input_node.set_changed(); // Trigger text formatting
                 }
             } else {
-                let is_equal = input_buffer.editor.with_buffer(|buffer| {
-                    let mut remaining: &str = &text;
-                    for part in BufferTextIterator::new(buffer) {
-                        if !remaining.starts_with(part) {
-                            return false;
+                let not_equal = input_buffer.is_changed() // Fast check
+                    && !input_buffer.editor.with_buffer(|buffer| { // Slow check
+                        let mut remaining: &str = &text;
+                        for part in BufferTextIterator::new(buffer) {
+                            if !remaining.starts_with(part) {
+                                return false;
+                            }
+                            remaining = &remaining[part.len()..];
                         }
-                        remaining = &remaining[part.len()..];
-                    }
 
-                    return remaining.is_empty();
-                });
+                        return remaining.is_empty();
+                    });
 
-                if !is_equal {
+                if not_equal {
                     input_buffer.editor.with_buffer(|buffer| {
                         *text = BufferTextIterator::new(buffer).collect();
                     });
