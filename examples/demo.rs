@@ -33,6 +33,7 @@ fn main() {
         .add_plugins(power_user::PowerUserExamplePlugin)
         .add_plugins(hot_patching::HotPatchingExamplePlugin)
         .add_plugins(tooltip::TooltipExamplePlugin)
+        .add_plugins(text_edit::TextEditExamplePlugin)
         .add_plugins(anchored::AnchoredUiExamplePlugin)
         .add_plugins(floating_window::FloatingWindowExamplePlugin)
         .run();
@@ -71,5 +72,7 @@ mod tooltip;
 mod floating_window;
 
 mod anchored;
+
+mod text_edit;
 
 mod styles;
