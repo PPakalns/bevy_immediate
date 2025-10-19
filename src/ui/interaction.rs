@@ -25,6 +25,7 @@ impl<Cap: CapSet> ImmUiInteraction for ImmEntity<'_, '_, '_, Cap>
 where
     Cap: ImplCap<CapabilityUiInteraction>,
 {
+    /// Check if entity is hovered. Logic reads [`bevy_picking::hover::Hovered`]
     fn hovered(&mut self) -> bool {
         let Ok(Some(hovered)) = self.cap_get_component::<Hovered>() else {
             self.entity_commands().insert(Hovered::default());
@@ -35,8 +36,8 @@ where
 
     /// Checks if entity contains [`Pressed`]
     ///
-    /// To add [`Pressed`] component to entity
-    /// use similar logic as [`bevy_ui_widgets::ButtonPlugin`]
+    /// To insert, remove [`Pressed`] component to entity
+    /// use similar logic as in [`bevy_ui_widgets::ButtonPlugin`]
     fn pressed(&self) -> bool {
         let Ok(entity) = self.cap_get_entity() else {
             return false;

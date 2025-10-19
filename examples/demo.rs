@@ -10,7 +10,7 @@ fn main() {
             ..default()
         }))
         //
-        // .add_plugins(bevy_framepace::FramepacePlugin) // Reduces input latency
+        .add_plugins(bevy_framepace::FramepacePlugin) // Reduces input latency
         //
         // Reusable code for demo examples and effects
         .add_plugins(styles::DemoStylePlugin)

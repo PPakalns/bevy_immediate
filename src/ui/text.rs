@@ -4,7 +4,7 @@ use bevy_ui::widget::Text;
 
 use crate::{CapSet, ImmCapability, ImmEntity, ImplCap};
 
-/// Capability that makes [`bevy_ui::Interaction`] accessible from immediate UI
+/// Functionality to manage text rendering inside ui
 pub struct CapabilityUiText;
 
 impl ImmCapability for CapabilityUiText {
@@ -13,7 +13,7 @@ impl ImmCapability for CapabilityUiText {
     }
 }
 
-/// Implements methods to access [`bevy_ui::Interaction`] in immediate mode
+/// Implements methods to update [`Text`] in immediate mode
 pub trait ImmUiText {
     /// Insert [`Text`] on entity spawn and update it to given text upon change
     fn text(self, text: impl Deref<Target = str> + Into<String>) -> Self;

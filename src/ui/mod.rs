@@ -112,15 +112,15 @@ pub mod clicked;
 /// Contains plugin implementation for value change entity event tracking
 pub mod track_value_change_plugin;
 
-/// Module implements functionality for setting SliderValue
+/// Module implements functionality for setting feathers SliderValue
 #[cfg(feature = "bevy_ui_widgets")]
 pub mod slider_value;
 
-/// Module implements functionality for setting SliderValue
+/// Module implements functionality for setting feathers Slider base color
 #[cfg(feature = "bevy_feathers")]
 pub mod slider_base_color;
 
-/// Module implements functionality for setting SliderValue
+/// Module implements functionality for setting feathers button variant
 #[cfg(feature = "bevy_feathers")]
 pub mod button_variant;
 

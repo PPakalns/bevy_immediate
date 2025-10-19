@@ -2,7 +2,7 @@ use bevy_feathers::controls::ButtonVariant;
 
 use crate::{CapSet, ImmCapability, ImmEntity, ImplCap};
 
-/// Implements capability to set slider base color
+/// Implements capability to set button variant
 pub struct CapabilityUiFeathersButtonVariant;
 
 impl ImmCapability for CapabilityUiFeathersButtonVariant {

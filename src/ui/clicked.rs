@@ -1,8 +1,8 @@
 use bevy_ecs::{
     entity::Entity,
-    lifecycle,
     observer::On,
-    system::{Commands, ResMut},
+    query::With,
+    system::{Query, ResMut},
 };
 use bevy_picking::{
     events::{Click, Pointer},
@@ -12,7 +12,7 @@ use bevy_platform::collections::HashMap;
 
 use crate::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap};
 
-/// Immediate mode capability for `.clicked()`
+/// Immediate mode capability for pointer related events
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CapabilityUiClicked;
 
@@ -27,7 +27,7 @@ impl ImmCapability for CapabilityUiClicked {
     }
 }
 
-/// Implements support for `.clicked()`
+/// Implements support for pointer related logic
 pub trait ImmUiClicked {
     /// Entity clicked during last frame
     fn clicked(&mut self) -> bool;
@@ -97,23 +97,24 @@ impl bevy_app::Plugin for TrackClickedPlugin {
     fn build(&self, app: &mut bevy_app::App) {
         app.insert_resource(TrackClickedEntitiesResource::default());
         app.add_systems(bevy_app::First, reset_clicked_tracking);
-        app.add_observer(track_clicked_insert);
+        app.add_observer(on_click);
     }
-}
-
-// Insert on_click picking observer only once
-fn track_clicked_insert(trigger: On<lifecycle::Add, TrackClicked>, mut commands: Commands) {
-    let entity = trigger.event().entity;
-    commands.entity(entity).observe(on_click);
 }
 
 /// Tracks if entity has been clicked in this frame.
 #[derive(bevy_ecs::component::Component, Default)]
-#[component(storage = "SparseSet")]
 pub struct TrackClicked;
 
-fn on_click(trigger: On<Pointer<Click>>, mut resource: ResMut<TrackClickedEntitiesResource>) {
+fn on_click(
+    trigger: On<Pointer<Click>>,
+    query: Query<(), With<TrackClicked>>,
+    mut resource: ResMut<TrackClickedEntitiesResource>,
+) {
     let entity = trigger.event().entity;
+    if !query.contains(entity) {
+        return;
+    }
+
     resource.clicked.insert(entity, trigger.event().clone());
 }
 

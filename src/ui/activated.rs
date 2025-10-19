@@ -1,9 +1,8 @@
 use bevy_ecs::{
     entity::Entity,
-    lifecycle,
     observer::On,
-    query::Has,
-    system::{Commands, Query, ResMut},
+    query::{Has, With},
+    system::{Query, ResMut},
 };
 use bevy_input::{
     ButtonState,
@@ -16,14 +15,14 @@ use bevy_ui::InteractionDisabled;
 
 use crate::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap};
 
-/// Immediate mode capability for `.clicked()`
+/// Immediate mode capability for `.activated()`
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CapabilityUiActivated;
 
 impl ImmCapability for CapabilityUiActivated {
     fn build<CM: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<CM>) {
-        if !app.is_plugin_added::<TrackClickedPlugin>() {
-            app.add_plugins(TrackClickedPlugin);
+        if !app.is_plugin_added::<TrackActivatedPlugin>() {
+            app.add_plugins(TrackActivatedPlugin);
         }
 
         cap_req.request_component_read::<TrackActivated>(app.world_mut());
@@ -31,9 +30,9 @@ impl ImmCapability for CapabilityUiActivated {
     }
 }
 
-/// Implements support for `.clicked()`
+/// Implements support for `.activated()`
 pub trait ImmUiActivated {
-    /// Was button activated
+    /// Was widget activated
     fn activated(&mut self) -> bool;
 }
 
@@ -65,28 +64,19 @@ where
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Add click tracking related logic
-pub struct TrackClickedPlugin;
+pub struct TrackActivatedPlugin;
 
-impl bevy_app::Plugin for TrackClickedPlugin {
+impl bevy_app::Plugin for TrackActivatedPlugin {
     fn build(&self, app: &mut bevy_app::App) {
         app.insert_resource(TrackActivetedEntitiesResource::default());
         app.add_systems(bevy_app::First, reset_activated);
-        app.add_observer(track_clicked_insert);
+        app.add_observer(button_on_key_event)
+            .add_observer(button_on_pointer_click);
     }
 }
 
-// Insert on_click picking observer only once
-fn track_clicked_insert(trigger: On<lifecycle::Add, TrackActivated>, mut commands: Commands) {
-    let entity = trigger.event().entity;
-    commands
-        .entity(entity)
-        .observe(button_on_key_event)
-        .observe(button_on_pointer_click);
-}
-
-/// Tracks if entity has been clicked in this frame.
+/// Tracks if entity has been activated in this frame.
 #[derive(bevy_ecs::component::Component, Default)]
-#[component(storage = "SparseSet")]
 pub struct TrackActivated;
 
 #[derive(bevy_ecs::resource::Resource, Default)]
@@ -101,16 +91,19 @@ fn reset_activated(mut res: ResMut<TrackActivetedEntitiesResource>) {
 // Code duplicated from
 // https://docs.rs/bevy_ui_widgets/latest/src/bevy_ui_widgets/button.rs.html#26-30
 //
-// Hopefully there will be Activated trigger in future
+// Hopefully there will be Activated trigger in future.
+// This should be implemented in bevy 0.18
 
 fn button_on_key_event(
     event: On<FocusedInput<KeyboardInput>>,
-    q_state: Query<Has<InteractionDisabled>>,
+    q_state: Query<Has<InteractionDisabled>, With<TrackActivated>>,
     mut activated: ResMut<TrackActivetedEntitiesResource>,
 ) {
-    if let Ok(disabled) = q_state.get(event.focused_entity)
-        && !disabled
-    {
+    let Ok(disabled) = q_state.get(event.focused_entity) else {
+        return;
+    };
+
+    if !disabled {
         let input_event = &event.input;
         if !input_event.repeat
             && input_event.state == ButtonState::Pressed
@@ -123,14 +116,15 @@ fn button_on_key_event(
 
 fn button_on_pointer_click(
     mut click: On<Pointer<Click>>,
-    mut q_state: Query<Has<InteractionDisabled>>,
+    mut q_state: Query<Has<InteractionDisabled>, With<TrackActivated>>,
     mut activated: ResMut<TrackActivetedEntitiesResource>,
 ) {
-    // WARN: Check for pressed removed
-    if let Ok(disabled) = q_state.get_mut(click.entity) {
-        click.propagate(false);
-        if !disabled {
-            activated.activated.insert(click.entity);
-        }
+    let Ok(disabled) = q_state.get_mut(click.entity) else {
+        return;
+    };
+
+    click.propagate(false);
+    if !disabled {
+        activated.activated.insert(click.entity);
     }
 }
