@@ -28,7 +28,7 @@ pub trait ImmUiText {
     fn on_change_text_fn(self, changed: bool, text: impl FnOnce() -> String) -> Self;
 
     /// Update text upon hash change for given `hash_source`
-    fn on_change_hash_text_fn<T: std::hash::Hash>(
+    fn on_hash_change_text_fn<T: std::hash::Hash>(
         self,
         hash_source: &T,
         text: impl FnOnce() -> String,
@@ -71,7 +71,7 @@ where
         self.on_change_insert(changed, || Text(text()))
     }
 
-    fn on_change_hash_text_fn<T: std::hash::Hash>(
+    fn on_hash_change_text_fn<T: std::hash::Hash>(
         mut self,
         hash_source: &T,
         text: impl FnOnce() -> String,

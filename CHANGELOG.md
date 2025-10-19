@@ -2,7 +2,7 @@
 
 # 0.3.2
 
-* Added `on_change_hash_text_fn` to update text only when some data has changed.
+* Added `on_hash_change_text_fn` to update text only when some data has changed.
 
 # 0.3.1
 
