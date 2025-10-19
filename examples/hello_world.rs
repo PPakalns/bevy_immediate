@@ -56,3 +56,18 @@ impl ImmediateAttach<CapsUi> for HelloWorldRoot {
             });
     }
 }
+
+// To spawn UI rooted at HelloWorldRoot, you need to add it to world
+//
+// 1. Using classical approach
+// ```
+// fn commands(mut commmand: Commands) {
+//     commands.spawn((Node::DEFAULT, HelloWorldRoot));
+// }
+// ```
+// Remember to spawn necessary camera for UI too if not done already.
+//
+//
+// 2. Spawn ui ussing immediate mode systems
+//
+// See "./plain_ui.rs" example

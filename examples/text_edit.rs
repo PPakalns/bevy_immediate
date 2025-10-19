@@ -14,7 +14,6 @@ use bevy_immediate::{
     ui::text::ImmUiText,
     utils::ImmLocalHashMemoryHelper,
 };
-use bevy_input_focus::tab_navigation::TabNavigationPlugin;
 use bevy_ui::{BackgroundColor, FlexDirection, Node, px};
 use bevy_ui_text_input::{
     TextInputBuffer, TextInputMode, TextInputNode, TextInputPlugin, TextInputPrompt,
@@ -98,13 +97,17 @@ impl ImmediateAttach<CapsMyUi> for TextEditExampleRoot {
     }
 }
 
+/// Capability that allows to write, read ui input text in immediate mode
 pub struct CapabilityUiTextInput;
 
 impl ImmCapability for CapabilityUiTextInput {
     fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<Cap>) {
+        // See bevy_immediate dev-dependencies for bevy_ui_text_input version
+        // that works correctly in newest bevy
         if !app.is_plugin_added::<TextInputPlugin>() {
             app.add_plugins(TextInputPlugin);
         }
+
         cap_req.request_component_write::<TextInputBuffer>(app.world_mut());
         cap_req.request_component_write::<TextInputNode>(app.world_mut());
     }
