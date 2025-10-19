@@ -224,7 +224,8 @@ fn floating_window_node_update_system(
         let int_max = window_node.max.min(camera.max);
 
         let overlap = (int_max - int_min).max(Vec2::ZERO);
-        let needed_overlap = comp_target_info.physical_size().as_vec2() * overlap_ratio;
+        let needed_overlap =
+            (comp_target_info.physical_size().as_vec2() * overlap_ratio).min(comp_node.size);
 
         if overlap.x >= needed_overlap.x && overlap.y >= needed_overlap.y {
             continue;
