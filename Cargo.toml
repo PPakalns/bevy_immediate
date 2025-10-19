@@ -86,7 +86,9 @@ bevy = { version = "0.17.2", default-features = false, features = [
 itertools = "0.14"
 strum = { version = "0.27.2", features = ["derive"] }
 
-bevy_ui_text_input = "0.6.0-rc.2" # Patched in patch.crates-io
+# bevy_ui_text_input = "0.6.0-rc.2" # Patched in patch.crates-io
+bevy_ui_text_input = { git = "https://github.com/PPakalns/bevy_ui_text_input.git", rev = "db1f0ffdec5830428afbe62358c25a6a72416aff" }
+
 cosmic-text = "0.14.2"
 bevy_framepace = "0.20"
 
