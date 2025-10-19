@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use bevy_ui::widget::Text;
 
-use crate::{CapSet, ImmCapability, ImmEntity, ImplCap};
+use crate::{CapSet, ImmCapability, ImmEntity, ImplCap, imm_id};
 
 /// Functionality to manage text rendering inside ui
 pub struct CapabilityUiText;
@@ -26,6 +26,13 @@ pub trait ImmUiText {
 
     /// Insert text if something changed
     fn on_change_text_fn(self, changed: bool, text: impl FnOnce() -> String) -> Self;
+
+    /// Update text upon hash change for given `hash_source`
+    fn on_change_hash_text_fn<T: std::hash::Hash>(
+        self,
+        hash_source: &T,
+        text: impl FnOnce() -> String,
+    ) -> Self;
 }
 
 impl<Cap> ImmUiText for ImmEntity<'_, '_, '_, Cap>
@@ -62,5 +69,28 @@ where
 
     fn on_change_text_fn(self, changed: bool, text: impl FnOnce() -> String) -> Self {
         self.on_change_insert(changed, || Text(text()))
+    }
+
+    fn on_change_hash_text_fn<T: std::hash::Hash>(
+        mut self,
+        hash_source: &T,
+        text: impl FnOnce() -> String,
+    ) -> Self {
+        struct SealedKey;
+
+        let source = imm_id(hash_source);
+        let current = self.hash_get_typ::<SealedKey>();
+
+        if current != Some(source) {
+            self.hash_set_typ::<SealedKey>(source);
+
+            if let Ok(Some(mut text_comp)) = self.cap_get_component_mut::<Text>() {
+                text_comp.0 = text();
+            } else {
+                self.entity_commands().insert(Text(text()));
+            }
+        }
+
+        self
     }
 }
