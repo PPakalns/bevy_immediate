@@ -50,47 +50,28 @@ impl ImmediateAttach<CapsMyUi> for TextEditExampleRoot {
                 ..default()
             })
             .add(|ui| {
-                ui.ch()
-                    .on_spawn_insert(|| {
-                        (
-                            Node {
-                                width: px(500.),
-                                height: px(250.),
-                                ..default()
-                            },
-                            BackgroundColor(NAVY.into()),
-                            TextInputNode {
-                                mode: TextInputMode::SingleLine,
-                                max_chars: Some(20),
-                                clear_on_submit: false,
-                                ..Default::default()
-                            },
-                            TextInputPrompt::default(),
-                            TextInputBuffer::default(),
-                        )
-                    })
-                    .input_text(&mut params.text);
-
-                ui.ch()
-                    .on_spawn_insert(|| {
-                        (
-                            Node {
-                                width: px(500.),
-                                height: px(250.),
-                                ..default()
-                            },
-                            BackgroundColor(NAVY.into()),
-                            TextInputNode {
-                                mode: TextInputMode::SingleLine,
-                                max_chars: Some(20),
-                                clear_on_submit: false,
-                                ..Default::default()
-                            },
-                            TextInputPrompt::default(),
-                            TextInputBuffer::default(),
-                        )
-                    })
-                    .input_text(&mut params.text);
+                for idx in 0..10 {
+                    ui.ch_id(("text", idx))
+                        .on_spawn_insert(|| {
+                            (
+                                Node {
+                                    width: px(500.),
+                                    height: px(30.),
+                                    ..default()
+                                },
+                                BackgroundColor(NAVY.into()),
+                                TextInputNode {
+                                    mode: TextInputMode::SingleLine,
+                                    max_chars: Some(100),
+                                    clear_on_submit: false,
+                                    ..Default::default()
+                                },
+                                TextInputPrompt::default(),
+                                TextInputBuffer::default(),
+                            )
+                        })
+                        .input_text(&mut params.text);
+                }
 
                 ui.ch().text(params.text.as_str());
             });
