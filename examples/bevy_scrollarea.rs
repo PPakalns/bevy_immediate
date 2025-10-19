@@ -28,6 +28,7 @@ use bevy_ui::{
 use bevy_ui_widgets::{
     ControlOrientation, CoreScrollbarDragState, CoreScrollbarThumb, Scrollbar, ScrollbarPlugin,
 };
+use bevy_window::Window;
 
 use crate::{bevy_scrollarea::colors::GRAY1, styles::title_text_style};
 
@@ -320,7 +321,6 @@ struct ScrollState {
 
 fn scroll_on_mouse(
     scroll: On<Pointer<Scroll>>,
-    ui_scale: Res<UiScale>,
     mut scroll_position_query: Query<(&mut ScrollPosition, &ComputedNode), With<MyScrollableNode>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
@@ -331,20 +331,22 @@ fn scroll_on_mouse(
 
         let mut delta = Vec2::new(scroll.x, scroll.y);
 
-        match scroll.unit {
-            bevy_input::mouse::MouseScrollUnit::Line => {
-                delta *= 28.;
-            }
-            bevy_input::mouse::MouseScrollUnit::Pixel => {}
-        }
-
         if keyboard_input.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight]) {
             std::mem::swap(&mut delta.x, &mut delta.y);
         }
 
-        scroll_position.0 = (scroll_position.0 - (delta / ui_scale.0))
-            .min(max_range)
-            .max(Vec2::ZERO);
+        let inverse_scale_factor: f32 = node.inverse_scale_factor;
+
+        match scroll.unit {
+            bevy_input::mouse::MouseScrollUnit::Line => {
+                delta *= 28.;
+            }
+            bevy_input::mouse::MouseScrollUnit::Pixel => {
+                delta *= 1.0 / inverse_scale_factor;
+            }
+        }
+
+        scroll_position.0 = (scroll_position.0 - delta).min(max_range).max(Vec2::ZERO);
     }
 }
 
