@@ -1,6 +1,13 @@
 # Changelog
 
-# 0.3
+# 0.3.1
+
+Added text edit example
+
+* Improved documentation
+* Fixed bug where small floating windows were not correctly moved back inside main window.
+
+# 0.3.0
 
 * `.hovered()`, `.pressed()` is now calculated using `bevy_picking`.
 * Added support for tooltips, dropdowns, menus, floating windows, (draggable, resizable).

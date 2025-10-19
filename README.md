@@ -8,8 +8,8 @@
 A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, combining immediate mode ergonomics with Bevy ECS-powered retained UI.  
 
 * Develop complex UI as simple Rust code.  
-* No macros, observers, triggers, events, signals.  
-* Focus on your UI, not the boilerplate.
+* UI visuals, styling is fully customizable.
+* Extend immediate mode with custom extensions / capabilities.
 
 ### 👉 [Web Demo](https://ppakalns.github.io/bevy_immediate/demo/) 👈 
 
@@ -67,6 +67,7 @@ Examples can be viewed: (`cargo run --example demo`).
 - **Bevy inbuilt widgets**:
   - [Widgets](./examples/bevy_widgets.rs) - Showcases how to use widgets from bevy
   - [Scrollarea](./examples/bevy_scrollbars.rs) - Showcases how to create reusable scrollareas 
+- [Text edit](./examples/text_edit.rs) - Showcases text edit integration using bevy_ui_text_input crate.
 - **Reusable widget implementation**
   - [Functional widget](./examples/widget_functional.rs) - Implement widgets as plain functions
   - [Native widget](./examples/widget_native.rs) - Implement native Bevy-like widgets
