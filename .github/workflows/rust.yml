@@ -18,10 +18,10 @@ jobs:
     - name: Install Dependencies
       run: sudo apt-get update; sudo apt-get install --no-install-recommends libwayland-dev
     - uses: actions/checkout@v4
-    - name: Build
-      run: cargo build --verbose
-    - name: Build examples
-      run: cargo build --examples --verbose
+    - name: Check
+      run: cargo check
+    - name: Check examples
+      run: cargo check --examples
     - name: Run tests
       run: cargo test --verbose
     - name: Run clippy
