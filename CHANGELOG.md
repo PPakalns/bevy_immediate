@@ -3,6 +3,7 @@
 # 0.3.2
 
 * Added `on_hash_change_text_fn` to update text only when some data has changed.
+* Added `slider_get_set` function to update slider value. Useful for converting to/from integer values.
 
 # 0.3.1
 

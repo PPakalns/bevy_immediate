@@ -25,6 +25,10 @@ impl ImmCapability for CapabilityUiSliderValue {
 pub trait ImmUiSliderValue {
     /// Update slider value [SliderValue].
     fn slider(self, value: &mut f32) -> Self;
+    /// Update slider value [SliderValue] with custom funtion to get, set value.
+    ///
+    /// Useful when working with integer values.
+    fn slider_get_set(self, get_set: impl FnMut(Option<f32>) -> f32) -> Self;
 }
 
 impl<Cap> ImmUiSliderValue for ImmEntity<'_, '_, '_, Cap>
@@ -68,6 +72,16 @@ where
         commands
             .insert(NewValueChange::<f32>::default())
             .insert(SliderValue(*value));
+        self
+    }
+
+    fn slider_get_set(mut self, mut get_set: impl FnMut(Option<f32>) -> f32) -> Self {
+        let current = get_set(None);
+        let mut new = current;
+        self = self.slider(&mut new);
+        if new != current {
+            get_set(Some(new));
+        }
         self
     }
 }
