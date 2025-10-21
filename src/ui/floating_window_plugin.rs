@@ -559,6 +559,8 @@ fn window_resize_drag_end(
 }
 
 /// Helper bundle that adds draggable borders to UI element
+///
+/// You probably want to copy this function and modify it hovever you want to!
 pub fn resizable_borders(border_thickness: f32, additional: impl Bundle + Copy) -> impl Bundle {
     children![(
         Node {

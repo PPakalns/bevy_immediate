@@ -49,6 +49,14 @@ pub struct FocusCloseCurrentTree {
     pub entity: Entity,
 }
 
+impl FocusCloseCurrentTree {
+    /// Create entity event for entity which will cause
+    /// focus close detection to trigger for all ancestor elements
+    pub fn new(entity: Entity) -> Self {
+        Self { entity }
+    }
+}
+
 fn should_close_current_tree_observer(
     event: On<FocusCloseCurrentTree>,
     should_close: Query<(), With<FocusDetectShouldClose>>,

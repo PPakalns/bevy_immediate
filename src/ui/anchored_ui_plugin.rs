@@ -109,6 +109,14 @@ pub struct Direction<T> {
 }
 
 impl<T> Direction<T> {
+    /// Initialize new direction with both directions containing the same value
+    pub fn splat(val: T) -> Self
+    where
+        T: Copy,
+    {
+        Self { x: val, y: val }
+    }
+
     /// Map stored value from one type to another
     pub fn map<O>(&self, f: impl Fn(&T) -> O) -> Direction<O> {
         Direction {

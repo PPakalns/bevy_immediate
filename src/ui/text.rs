@@ -27,7 +27,7 @@ pub trait ImmUiText {
     /// Insert text if something changed
     fn on_change_text_fn(self, changed: bool, text: impl FnOnce() -> String) -> Self;
 
-    /// Update text upon hash change for given `hash_source`
+    /// Update text when hash changes for given `hash_source`
     fn on_hash_change_text_fn<T: std::hash::Hash>(
         self,
         hash_source: &T,
@@ -79,6 +79,7 @@ where
         struct SealedKey;
 
         let source = imm_id(hash_source);
+
         let current = self.hash_get_typ::<SealedKey>();
 
         if current != Some(source) {
