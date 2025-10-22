@@ -14,6 +14,11 @@ impl ImmCapability for CapabilityUiDisabled {
 
 /// Implements logic to manage entity disabled state
 pub trait ImmUiInteractionsDisabled {
+    /// Set entity interactions enabled
+    ///
+    /// This manages insertion and removal of [`InteractionDisabled`]
+    fn interactions_enabled(self, enabled: bool) -> Self;
+
     /// Set entity interactions disabled
     ///
     /// This manages insertion and removal of [`InteractionDisabled`]
@@ -24,6 +29,10 @@ impl<Cap> ImmUiInteractionsDisabled for ImmEntity<'_, '_, '_, Cap>
 where
     Cap: ImplCap<CapabilityUiDisabled>,
 {
+    fn interactions_enabled(self, enabled: bool) -> Self {
+        self.interactions_disabled(!enabled)
+    }
+
     fn interactions_disabled(mut self, disabled: bool) -> Self {
         if let Ok(entity) = self.cap_get_entity()
             && entity.contains::<InteractionDisabled>() == disabled

@@ -5,6 +5,7 @@
 * Added `on_hash_change_text_fn` to update text only when some data has changed.
 * Added `slider_get_set` function to update slider value. Useful for converting to/from integer values.
 * Added utility trait `Mutable<T>` to abstract over `T`, `Mut<T>` types.
+* Added `interaction_enabled` function that does the opposite of `interaction_disabled` (Manages `InteractionDisabled` component)
 
 # 0.3.1
 
