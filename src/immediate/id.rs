@@ -33,6 +33,18 @@ impl ImmId {
             id: hasher.finish(),
         }
     }
+
+    /// Initialize id value from iterator over hashable elements
+    pub fn from_iter<T: std::hash::Hash>(iter: impl Iterator<Item = T>) -> Self {
+        use std::hash::{BuildHasher as _, Hasher as _};
+        let mut hasher = ahash::RandomState::with_seeds(1, 2, 3, 4).build_hasher();
+        for item in iter {
+            item.hash(&mut hasher);
+        }
+        Self {
+            id: hasher.finish(),
+        }
+    }
 }
 
 /// Can be used to construct unique id for new entity

@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use bevy_ecs::world::Mut;
 use type_map::TypeMap;
 
 use crate::{CapSet, ImmEntity, ImmId, imm_id};
@@ -127,5 +128,34 @@ where
         if self.changed {
             store_on_entity.hash_set(self.key, self.state);
         }
+    }
+}
+
+/// Helper trait to abstract operations over mutable data
+/// that could be inside change tracking container like [`bevy_ecs::prelude::Mut`]
+pub trait Mutable<T> {
+    /// Get reference to data
+    fn get(&self) -> &T;
+    /// Get unique reference to data
+    fn get_mut(&mut self) -> &mut T;
+}
+
+impl<T> Mutable<T> for T {
+    fn get(&self) -> &T {
+        self
+    }
+
+    fn get_mut(&mut self) -> &mut T {
+        self
+    }
+}
+
+impl<T> Mutable<T> for Mut<'_, T> {
+    fn get(&self) -> &T {
+        self
+    }
+
+    fn get_mut(&mut self) -> &mut T {
+        self
     }
 }
