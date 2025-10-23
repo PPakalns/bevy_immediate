@@ -2,6 +2,7 @@
 
 # 0.3.2
 
+* Added `with_local_auto_id_guard` to create scope with different id generation. See `ImmCustomAutoIdScopeGuard`.
 * Added `on_hash_change_text_fn` to update text only when some data has changed.
 * Added `slider_get_set` function to update slider value. Useful for converting to/from integer values.
 * Added utility trait `Mutable<T>` to abstract over `T`, `Mut<T>` types.

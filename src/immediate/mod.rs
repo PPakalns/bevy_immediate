@@ -99,7 +99,8 @@ pub struct Imm<'w, 's, Caps: CapSet> {
 struct Current {
     id: ImmId,
     entity: Option<CurrentEntity>,
-    idx: usize,
+    auto_id_pref: ImmId,
+    auto_id_idx: usize,
 }
 
 #[derive(Clone, Copy)]
@@ -202,6 +203,16 @@ impl<'w, 's, Caps: CapSet> Imm<'w, 's, Caps> {
         entity
     }
 
+    /// Modify auto id generation with additional id
+    ///
+    /// Useful in situations where multiple elements require unique id.
+    pub fn with_local_auto_id_guard(
+        &mut self,
+        id: impl std::hash::Hash,
+    ) -> ImmCustomAutoIdScopeGuard<'_, 'w, 's, Caps> {
+        ImmCustomAutoIdScopeGuard::new(self, id)
+    }
+
     /// Useful to spawn new unrooted entity trees
     ///
     /// In context of UI, useful for tooltips, popups.
@@ -212,7 +223,8 @@ impl<'w, 's, Caps: CapSet> Imm<'w, 's, Caps> {
         let mut current = Current {
             id,
             entity: None,
-            idx: 0,
+            auto_id_idx: 0,
+            auto_id_pref: ImmId::new(49382395483011234u64),
         };
 
         std::mem::swap(&mut self.current, &mut current);
@@ -282,7 +294,8 @@ impl<'w, 's, Caps: CapSet> Imm<'w, 's, Caps> {
                 entity,
                 will_be_spawned,
             }),
-            idx: 0,
+            auto_id_idx: 0,
+            auto_id_pref: ImmId::new(49382395483011234u64),
         };
 
         let resp = f(self);
@@ -727,5 +740,53 @@ impl ChangeDetector {
     /// Has state changed since and including last time system was executed
     pub fn has_changed<T>(&self, value: &Mut<'_, T>) -> bool {
         value.is_changed() || value.last_changed() == self.last_run
+    }
+}
+
+/// Helper guard structure to create unique auto id generation for limited scope
+pub struct ImmCustomAutoIdScopeGuard<'r, 'w, 's, Caps: CapSet> {
+    imm: &'r mut Imm<'w, 's, Caps>,
+    stored_current: Current,
+}
+
+impl<'r, 'w, 's, Caps: CapSet> std::ops::Deref for ImmCustomAutoIdScopeGuard<'r, 'w, 's, Caps> {
+    type Target = Imm<'w, 's, Caps>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.imm
+    }
+}
+
+impl<'r, 'w, 's, Caps: CapSet> std::ops::DerefMut for ImmCustomAutoIdScopeGuard<'r, 'w, 's, Caps> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.imm
+    }
+}
+
+impl<'r, 'w, 's, Caps: CapSet> Drop for ImmCustomAutoIdScopeGuard<'r, 'w, 's, Caps> {
+    fn drop(&mut self) {
+        self.imm.current = self.stored_current;
+    }
+}
+
+impl<'r, 'w, 's, Caps: CapSet> ImmCustomAutoIdScopeGuard<'r, 'w, 's, Caps> {
+    /// Construct guard with unique auto id generation parameter
+    pub fn new(imm: &'r mut Imm<'w, 's, Caps>, additional_auto_id: impl std::hash::Hash) -> Self {
+        let auto_id_pref = ImmIdBuilder::Hierarchy(ImmId::new(additional_auto_id)).resolve(imm);
+
+        // Create new unrooted context
+        let mut current = Current {
+            id: imm.current.id,
+            entity: imm.current.entity,
+            auto_id_idx: 0,
+            auto_id_pref,
+        };
+
+        std::mem::swap(&mut imm.current, &mut current);
+
+        Self {
+            imm,
+            stored_current: current,
+        }
     }
 }

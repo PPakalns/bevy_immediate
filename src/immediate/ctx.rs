@@ -62,7 +62,8 @@ where
             current: Current {
                 id,
                 entity: None,
-                idx: 0,
+                auto_id_idx: 0,
+                auto_id_pref: ImmId::new(49382395483011234u64),
             },
         }
     }
@@ -88,7 +89,8 @@ where
                     entity,
                     will_be_spawned: false,
                 }),
-                idx: 0,
+                auto_id_idx: 0,
+                auto_id_pref: ImmId::new(49382395483011234u64),
             },
         }
     }

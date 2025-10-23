@@ -67,10 +67,11 @@ impl ImmIdBuilder {
                 // Auto increment id only when adding entity with auto generated id
                 // All entities that are not permanent children of parent should have
                 // non auto id
-                //
-                const AUTO_UNIQUE_PREFIX: i32 = 813754928;
-                let id = sui.current.id.with((AUTO_UNIQUE_PREFIX, sui.current.idx));
-                sui.current.idx += 1;
+                let id = sui
+                    .current
+                    .id
+                    .with((sui.current.auto_id_pref, sui.current.auto_id_idx));
+                sui.current.auto_id_idx += 1;
                 id
             }
             ImmIdBuilder::Hierarchy(sui_id) => sui.current.id.with(sui_id),

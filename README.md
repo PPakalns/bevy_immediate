@@ -256,6 +256,16 @@ for idx in 0..count {
 ui.ch(); // Has internal counter for id generation, but can not be used
          // for appearing, disappearing entities.
          // Because between frames entities may get misidentified.
+
+for idx in 0..count {
+    // In case of many items inside block, you can add additional id to auto id generation
+    // In that case you have a new unique scope for which unique id requirements are restored.
+    let mut ui = ui.with_local_auto_id_guard(("my_loop", idx));
+    ui.ch();
+    ui.ch();
+    ui.ch();
+}
+
 ```
 
 `lid, lch` helper macros use current column, line numbers to generate auto id. But still inside loops you need to provide additional unique id.
