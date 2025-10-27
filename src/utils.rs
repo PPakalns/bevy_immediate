@@ -135,27 +135,27 @@ where
 /// that could be inside change tracking container like [`bevy_ecs::prelude::Mut`]
 pub trait Mutable<T> {
     /// Get reference to data
-    fn get(&self) -> &T;
-    /// Get unique reference to data
-    fn get_mut(&mut self) -> &mut T;
+    fn read(&self) -> &T;
+    /// Get unique reference to data. Marks data as changed if type is tracking changes.
+    fn write(&mut self) -> &mut T;
 }
 
 impl<T> Mutable<T> for T {
-    fn get(&self) -> &T {
+    fn read(&self) -> &T {
         self
     }
 
-    fn get_mut(&mut self) -> &mut T {
+    fn write(&mut self) -> &mut T {
         self
     }
 }
 
 impl<T> Mutable<T> for Mut<'_, T> {
-    fn get(&self) -> &T {
+    fn read(&self) -> &T {
         self
     }
 
-    fn get_mut(&mut self) -> &mut T {
+    fn write(&mut self) -> &mut T {
         self
     }
 }

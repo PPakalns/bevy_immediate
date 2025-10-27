@@ -28,7 +28,6 @@ use bevy_ui::{
 use bevy_ui_widgets::{
     ControlOrientation, CoreScrollbarDragState, CoreScrollbarThumb, Scrollbar, ScrollbarPlugin,
 };
-use bevy_window::Window;
 
 use crate::{bevy_scrollarea::colors::GRAY1, styles::title_text_style};
 
