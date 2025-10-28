@@ -335,7 +335,7 @@ fn window_on_drag_end(
 /// It will be resized in the given direction
 #[derive(Component)]
 #[require(Hovered)]
-pub struct WindowResizeDragDirection(I8Vec2);
+pub struct WindowResizeDragDirection(pub I8Vec2);
 
 fn resolve_x(
     y: Val,
@@ -382,8 +382,8 @@ fn window_resize_drag_start(
     mut commands: Commands,
 
     #[cfg(feature = "bevy_feathers")] system_cursor: Query<&cursor::EntityCursor>,
-    #[cfg(feature = "bevy_feathers")] mut default_cursor: ResMut<cursor::DefaultCursor>,
-    #[cfg(feature = "bevy_feathers")] mut tmp_cursor: ResMut<WindowDragTmpCursor>,
+    #[cfg(feature = "bevy_feathers")] default_cursor: Option<ResMut<cursor::DefaultCursor>>,
+    #[cfg(feature = "bevy_feathers")] tmp_cursor: Option<ResMut<WindowDragTmpCursor>>,
 ) {
     let Ok(()) = q_target.get_mut(drag_start.entity) else {
         return;
@@ -394,11 +394,13 @@ fn window_resize_drag_start(
     commands.entity(drag_start.entity).insert(Pressed);
 
     #[cfg(feature = "bevy_feathers")]
-    if let Ok(cursor) = system_cursor.get(drag_start.entity) {
-        std::mem::swap(
-            &mut default_cursor.0,
-            tmp_cursor.cursor.insert(cursor.clone()),
-        );
+    if let (Some(mut default_cursor), Some(mut tmp_cursor)) = (default_cursor, tmp_cursor) {
+        if let Ok(cursor) = system_cursor.get(drag_start.entity) {
+            std::mem::swap(
+                &mut default_cursor.0,
+                tmp_cursor.cursor.insert(cursor.clone()),
+            );
+        }
     }
 
     let Some(window_entity) = q_parents
@@ -530,8 +532,8 @@ fn window_resize_drag_end(
     mut commands: Commands,
     mut q_windows: Query<&mut FloatingWindowInteractionState, With<FloatingWindow>>,
 
-    #[cfg(feature = "bevy_feathers")] mut default_cursor: ResMut<cursor::DefaultCursor>,
-    #[cfg(feature = "bevy_feathers")] mut tmp_cursor: ResMut<WindowDragTmpCursor>,
+    #[cfg(feature = "bevy_feathers")] default_cursor: Option<ResMut<cursor::DefaultCursor>>,
+    #[cfg(feature = "bevy_feathers")] tmp_cursor: Option<ResMut<WindowDragTmpCursor>>,
 ) {
     let Ok(()) = q_target.get_mut(drag_end.entity) else {
         return;
@@ -552,8 +554,10 @@ fn window_resize_drag_end(
     window_interaction_state.currently_resize = false;
 
     #[cfg(feature = "bevy_feathers")]
-    if let Some(cursor) = tmp_cursor.cursor.take() {
-        default_cursor.0 = cursor;
+    if let (Some(mut default_cursor), Some(mut tmp_cursor)) = (default_cursor, tmp_cursor) {
+        if let Some(cursor) = tmp_cursor.cursor.take() {
+            default_cursor.0 = cursor;
+        }
     }
 }
 

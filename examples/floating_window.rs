@@ -1,5 +1,4 @@
-use bevy::prelude::SpawnRelated;
-use bevy::utils::default;
+use bevy::{prelude::SpawnRelated, utils::default};
 use bevy_color::{
     Srgba,
     palettes::css::{BLACK, LIGHT_GRAY},
