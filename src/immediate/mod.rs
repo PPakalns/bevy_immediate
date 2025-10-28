@@ -787,13 +787,13 @@ impl<'r, 'w, 's, Caps: CapSet> std::ops::Deref for ImmCustomAutoIdScopeGuard<'r,
     type Target = Imm<'w, 's, Caps>;
 
     fn deref(&self) -> &Self::Target {
-        &self.imm
+        self.imm
     }
 }
 
 impl<'r, 'w, 's, Caps: CapSet> std::ops::DerefMut for ImmCustomAutoIdScopeGuard<'r, 'w, 's, Caps> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.imm
+        self.imm
     }
 }
 

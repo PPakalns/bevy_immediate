@@ -273,7 +273,7 @@ fn position_anchor(
                 BVec2 { x: false, y: true },
             ]
             .into_iter()
-            .map(|flip| final_position_and_overlap(flip))
+            .map(final_position_and_overlap)
             .chain(std::iter::once((best_final_position, best_overlap)))
             .max_by_key(|(_, fit)| (*fit * 1024.) as i32)
             .unwrap();

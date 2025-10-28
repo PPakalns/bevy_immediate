@@ -33,9 +33,13 @@ impl ImmId {
             id: hasher.finish(),
         }
     }
+}
 
-    /// Initialize id value from iterator over hashable elements
-    pub fn from_iter<T: std::hash::Hash>(iter: impl Iterator<Item = T>) -> Self {
+impl<A> FromIterator<A> for ImmId
+where
+    A: std::hash::Hash,
+{
+    fn from_iter<T: IntoIterator<Item = A>>(iter: T) -> Self {
         use std::hash::{BuildHasher as _, Hasher as _};
         let mut hasher = ahash::RandomState::with_seeds(1, 2, 3, 4).build_hasher();
         for item in iter {
