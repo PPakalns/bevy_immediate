@@ -6,13 +6,18 @@ use bevy_ecs::{
     schedule::IntoScheduleConfigs,
     system::{Query, Single},
 };
-use bevy_math::Vec2;
+use bevy_math::{
+    BVec2, Vec2,
+    bounding::{Aabb2d, BoundingVolume},
+};
 use bevy_transform::TransformSystems;
 use bevy_ui::{
     ComputedNode, ComputedUiRenderTargetInfo, LayoutConfig, Node, UiGlobalTransform, UiSystems,
     Val, px,
 };
 use bevy_window::{PrimaryWindow, Window};
+
+use crate::ui::utils::aabb_overlap;
 
 /// Implements floating UI placement against other entities
 pub struct AnchoredUiPlugin;
@@ -50,6 +55,8 @@ pub struct AnchorOption {
     /// Additional padding to location where element will be placed
     /// Padding is ignored for Middle anchor locations
     pub padding: Direction<Val>,
+    /// Allow anchor changes to position element inside view
+    pub update_anchor_to_fit_inside_view: bool,
 }
 
 impl Default for AnchorOption {
@@ -60,13 +67,14 @@ impl Default for AnchorOption {
                 y: Anchor::End,
             },
             target_anchor: Direction {
-                x: Anchor::Middle,
+                x: Anchor::Start,
                 y: Anchor::Start,
             },
             padding: Direction {
                 x: Val::ZERO,
                 y: Val::ZERO,
             },
+            update_anchor_to_fit_inside_view: true,
         }
     }
 }
@@ -95,6 +103,14 @@ impl Anchor {
             Anchor::Start => -1,
             Anchor::Middle => 0,
             Anchor::End => 1,
+        }
+    }
+
+    fn flip(&self) -> Anchor {
+        match self {
+            Anchor::Start => Anchor::End,
+            Anchor::Middle => Anchor::Middle,
+            Anchor::End => Anchor::Start,
         }
     }
 }
@@ -130,6 +146,17 @@ impl Direction<Anchor> {
     /// Retrieve sign_vec from stored value
     pub fn sign_vec(&self) -> Vec2 {
         self.map(|v| v.sign() as f32).into()
+    }
+
+    fn flip(&self, flip: BVec2) -> Self {
+        let mut output = *self;
+        if flip.x {
+            output.x = output.x.flip();
+        }
+        if flip.y {
+            output.y = output.y.flip();
+        }
+        output
     }
 }
 
@@ -175,63 +202,93 @@ fn position_anchor(
         mut node,
     ) in elements_to_anchor
     {
-        let cursor = window.physical_cursor_position();
+        let final_position_and_overlap = |flip: BVec2| {
+            let cursor = window.physical_cursor_position();
 
-        let target_position: Vec2 = match target {
-            AnchorTarget::Entity(entity) => (|| -> _ {
-                let target_compute = computed_nodes.get(*entity).ok()?;
-                let target_global = global_transform.get(*entity).ok()?;
+            let target_position: Vec2 = match target {
+                AnchorTarget::Entity(entity) => (|| -> _ {
+                    let target_compute = computed_nodes.get(*entity).ok()?;
+                    let target_global = global_transform.get(*entity).ok()?;
 
-                let anchor_offset = anchor_option.target_anchor.sign_vec();
-                let target_pos =
-                    target_global.translation + anchor_offset * 0.5 * target_compute.size;
+                    let anchor_offset = anchor_option.target_anchor.flip(flip).sign_vec();
+                    let target_pos =
+                        target_global.translation + anchor_offset * 0.5 * target_compute.size;
 
-                Some(target_pos)
-            })()
-            .unwrap_or(Vec2::ZERO),
-            AnchorTarget::Cursor => cursor.unwrap_or(Vec2::ZERO),
-            AnchorTarget::PhysicalPosition(pos) => *pos,
+                    Some(target_pos)
+                })()
+                .unwrap_or(Vec2::ZERO),
+                AnchorTarget::Cursor => cursor.unwrap_or(Vec2::ZERO),
+                AnchorTarget::PhysicalPosition(pos) => *pos,
+            };
+            let target_position = target_position.round();
+
+            let element_anchor_offset = {
+                let anchor_sign_vec = anchor_option.anchor.flip(flip).sign_vec();
+
+                let anchor_offset = anchor_sign_vec * 0.5 * comp_node.size;
+
+                let x = anchor_option
+                    .padding
+                    .x
+                    .resolve(
+                        comp_target_info.scale_factor(),
+                        comp_target_info.physical_size().x as f32,
+                        comp_target_info.physical_size().as_vec2(),
+                    )
+                    .unwrap_or(0.);
+
+                let y = anchor_option
+                    .padding
+                    .y
+                    .resolve(
+                        comp_target_info.scale_factor(),
+                        comp_target_info.physical_size().y as f32,
+                        comp_target_info.physical_size().as_vec2(),
+                    )
+                    .unwrap_or(0.);
+
+                anchor_offset + anchor_sign_vec * Vec2 { x, y }
+            };
+
+            let final_position = target_position - element_anchor_offset;
+
+            let anchor_node_rect = Aabb2d::new(final_position, comp_node.size * 0.5);
+            let camera = Aabb2d {
+                min: Vec2::ZERO,
+                max: comp_target_info.physical_size().as_vec2(),
+            };
+            let overlap = aabb_overlap(&anchor_node_rect, &camera);
+            let fitness = overlap.visible_area() / anchor_node_rect.visible_area().max(1.);
+            (final_position, fitness)
         };
-        let target_position = target_position.round();
 
-        let element_anchor_offset = {
-            let anchor_sign_vec = anchor_option.anchor.sign_vec();
+        let (mut best_final_position, mut best_overlap) = final_position_and_overlap(BVec2::FALSE);
 
-            let anchor_offset = anchor_sign_vec * 0.5 * comp_node.size;
+        if anchor_option.update_anchor_to_fit_inside_view && best_overlap < 0.99 {
+            // Try to find better location by flipping anchor position
+            (best_final_position, best_overlap) = [
+                // If several are equal, last element is returned!!!
+                BVec2 { x: true, y: true },
+                BVec2 { x: true, y: false },
+                BVec2 { x: false, y: true },
+            ]
+            .into_iter()
+            .map(|flip| final_position_and_overlap(flip))
+            .chain(std::iter::once((best_final_position, best_overlap)))
+            .max_by_key(|(_, fit)| (*fit * 1024.) as i32)
+            .unwrap();
 
-            let x = anchor_option
-                .padding
-                .x
-                .resolve(
-                    comp_target_info.scale_factor(),
-                    comp_target_info.physical_size().x as f32,
-                    comp_target_info.physical_size().as_vec2(),
-                )
-                .unwrap_or(0.);
+            let _ = best_overlap;
+        }
 
-            let y = anchor_option
-                .padding
-                .y
-                .resolve(
-                    comp_target_info.scale_factor(),
-                    comp_target_info.physical_size().y as f32,
-                    comp_target_info.physical_size().as_vec2(),
-                )
-                .unwrap_or(0.);
-
-            anchor_offset + anchor_sign_vec * Vec2 { x, y }
-        };
-
-        let final_position = target_position - element_anchor_offset;
-
-        if placement_cache.last_offset == Some(final_position) {
+        if placement_cache.last_offset == Some(best_final_position) {
             continue;
         }
-        placement_cache.last_offset = Some(final_position);
+        placement_cache.last_offset = Some(best_final_position);
 
         apply_position(
             entity,
-            final_position,
+            best_final_position,
             &mut node,
             comp_node,
             layout_config,

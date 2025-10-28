@@ -25,7 +25,10 @@ use rand::Rng;
 
 use crate::{
     ImmId,
-    ui::floating_ui_ordering_plugin::{FloatingUiOrderingPlugin, UiBringForward, UiZOrderLayer},
+    ui::{
+        floating_ui_ordering_plugin::{FloatingUiOrderingPlugin, UiBringForward, UiZOrderLayer},
+        utils::fully_inside,
+    },
 };
 
 #[cfg(feature = "bevy_feathers")]
@@ -211,11 +214,7 @@ fn floating_window_node_update_system(
             min: Vec2::ZERO,
         };
 
-        if camera.min.x <= window_node.min.x
-            && window_node.max.x <= camera.max.x
-            && camera.min.y <= window_node.min.y
-            && window_node.max.y <= camera.max.y
-        {
+        if fully_inside(&window_node, &camera) {
             // Fully inside, no need to check overlap
             continue;
         }

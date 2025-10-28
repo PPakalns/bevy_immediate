@@ -715,6 +715,40 @@ impl<'r, 'w, 's, Caps: CapSet> ImmEntity<'r, 'w, 's, Caps> {
         let entity = self.entity();
         self.imm.ctx.cached_hash.remove_typ::<UniqueMarker>(entity)
     }
+
+    /// Insert bundle on entity when provided value hash changes (including first function call)
+    pub fn on_hash_change_insert<H, F, B>(mut self, key: &str, value: &H, f: F) -> Self
+    where
+        H: std::hash::Hash,
+        F: FnOnce() -> B,
+        B: Bundle,
+    {
+        let key = imm_id(key);
+        let value = imm_id(value);
+        let current = self.hash_get(key);
+        if current != Some(value) {
+            self.entity_commands().insert(f());
+            self.hash_set(key, value);
+        }
+        self
+    }
+
+    /// Insert bundle on entity when provided value hash changes (including first function call)
+    pub fn on_hash_change_typ_insert<Key, H, F, B>(mut self, value: &H, f: F) -> Self
+    where
+        Key: 'static,
+        H: std::hash::Hash,
+        F: FnOnce() -> B,
+        B: Bundle,
+    {
+        let value = imm_id(value);
+        let current = self.hash_get_typ::<Key>();
+        if current != Some(value) {
+            self.entity_commands().insert(f());
+            self.hash_set_typ::<Key>(value);
+        }
+        self
+    }
 }
 
 /// Component that is added to entities that are managed by immediate mode system

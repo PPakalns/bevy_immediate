@@ -1,5 +1,4 @@
-use crate::capabilities::ImplCapsEmpty;
-use crate::impl_capability_set;
+use crate::{capabilities::ImplCapsEmpty, impl_capability_set};
 
 /// Defines capability set for Ui
 pub struct CapsUi;
@@ -146,3 +145,6 @@ pub mod floating_ui_focus_plugin;
 
 /// Implements plugin for calculating when tooltip should be displayed
 pub mod tooltip_plugin;
+
+/// Helper functions for ui calculations
+pub mod utils;
