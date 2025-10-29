@@ -71,14 +71,20 @@ impl ImmIdBuilder {
                 // Auto increment id only when adding entity with auto generated id
                 // All entities that are not permanent children of parent should have
                 // non auto id
+                const AUTO: u32 = 295847291;
                 let id = sui
                     .current
                     .id
-                    .with((sui.current.auto_id_pref, sui.current.auto_id_idx));
+                    .with((AUTO, sui.current.id_pref, sui.current.auto_id_idx));
                 sui.current.auto_id_idx += 1;
                 id
             }
-            ImmIdBuilder::Hierarchy(sui_id) => sui.current.id.with(sui_id),
+            ImmIdBuilder::Hierarchy(sui_id) => {
+                const HIERARCHY: u32 = 958472831;
+                sui.current
+                    .id
+                    .with((HIERARCHY, sui.current.id_pref, sui_id))
+            }
             ImmIdBuilder::Unique(sui_id) => sui_id,
         }
     }

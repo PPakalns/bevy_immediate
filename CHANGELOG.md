@@ -1,5 +1,9 @@
 # Changelog
 
+# 0.3.3
+
+* Improved `with_local_auto_id_guard` id prefix concatenation logic to correctly work in recursive situations.
+
 # 0.3.2
 
 * Added `with_local_auto_id_guard` to create scope with different id generation. See `ImmCustomAutoIdScopeGuard`.

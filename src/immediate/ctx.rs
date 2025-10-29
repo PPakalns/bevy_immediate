@@ -63,7 +63,7 @@ where
                 id,
                 entity: None,
                 auto_id_idx: 0,
-                auto_id_pref: ImmId::new(49382395483011234u64),
+                id_pref: ImmId::new(49382395483011234u64),
             },
         }
     }
@@ -90,7 +90,7 @@ where
                     will_be_spawned: false,
                 }),
                 auto_id_idx: 0,
-                auto_id_pref: ImmId::new(49382395483011234u64),
+                id_pref: ImmId::new(49382395483011234u64),
             },
         }
     }

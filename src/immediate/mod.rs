@@ -99,7 +99,7 @@ pub struct Imm<'w, 's, Caps: CapSet> {
 struct Current {
     id: ImmId,
     entity: Option<CurrentEntity>,
-    auto_id_pref: ImmId,
+    id_pref: ImmId,
     auto_id_idx: usize,
 }
 
@@ -224,7 +224,7 @@ impl<'w, 's, Caps: CapSet> Imm<'w, 's, Caps> {
             id,
             entity: None,
             auto_id_idx: 0,
-            auto_id_pref: ImmId::new(49382395483011234u64),
+            id_pref: ImmId::new(49382395483011234u64),
         };
 
         std::mem::swap(&mut self.current, &mut current);
@@ -295,7 +295,7 @@ impl<'w, 's, Caps: CapSet> Imm<'w, 's, Caps> {
                 will_be_spawned,
             }),
             auto_id_idx: 0,
-            auto_id_pref: ImmId::new(49382395483011234u64),
+            id_pref: ImmId::new(49382395483011234u64),
         };
 
         let resp = f(self);
@@ -806,14 +806,14 @@ impl<'r, 'w, 's, Caps: CapSet> Drop for ImmCustomAutoIdScopeGuard<'r, 'w, 's, Ca
 impl<'r, 'w, 's, Caps: CapSet> ImmCustomAutoIdScopeGuard<'r, 'w, 's, Caps> {
     /// Construct guard with unique auto id generation parameter
     pub fn new(imm: &'r mut Imm<'w, 's, Caps>, additional_auto_id: impl std::hash::Hash) -> Self {
-        let auto_id_pref = ImmIdBuilder::Hierarchy(ImmId::new(additional_auto_id)).resolve(imm);
+        let auto_id_pref = imm.current.id_pref.with(additional_auto_id);
 
         // Create new unrooted context
         let mut current = Current {
             id: imm.current.id,
             entity: imm.current.entity,
             auto_id_idx: 0,
-            auto_id_pref,
+            id_pref: auto_id_pref,
         };
 
         std::mem::swap(&mut imm.current, &mut current);
