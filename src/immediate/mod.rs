@@ -203,9 +203,20 @@ impl<'w, 's, Caps: CapSet> Imm<'w, 's, Caps> {
         entity
     }
 
-    /// Modify auto id generation with additional id
+    /// Add additional id to final id generation
     ///
     /// Useful in situations where multiple elements require unique id.
+    pub fn with_add_id_pref(
+        &mut self,
+        id: impl std::hash::Hash,
+    ) -> ImmCustomAutoIdScopeGuard<'_, 'w, 's, Caps> {
+        ImmCustomAutoIdScopeGuard::new(self, id)
+    }
+
+    /// Add additional id to final id generation
+    ///
+    /// Useful in situations where multiple elements require unique id.
+    #[deprecated = "Use with_add_id_pref"]
     pub fn with_local_auto_id_guard(
         &mut self,
         id: impl std::hash::Hash,
