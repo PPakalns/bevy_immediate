@@ -209,8 +209,8 @@ impl<'w, 's, Caps: CapSet> Imm<'w, 's, Caps> {
     pub fn with_add_id_pref(
         &mut self,
         id: impl std::hash::Hash,
-    ) -> ImmCustomAutoIdScopeGuard<'_, 'w, 's, Caps> {
-        ImmCustomAutoIdScopeGuard::new(self, id)
+    ) -> ImmScopeGuard<'_, 'w, 's, Caps> {
+        ImmScopeGuard::add_id_pref(self, id)
     }
 
     /// Add additional id to final id generation
@@ -220,8 +220,8 @@ impl<'w, 's, Caps: CapSet> Imm<'w, 's, Caps> {
     pub fn with_local_auto_id_guard(
         &mut self,
         id: impl std::hash::Hash,
-    ) -> ImmCustomAutoIdScopeGuard<'_, 'w, 's, Caps> {
-        ImmCustomAutoIdScopeGuard::new(self, id)
+    ) -> ImmScopeGuard<'_, 'w, 's, Caps> {
+        ImmScopeGuard::add_id_pref(self, id)
     }
 
     /// Useful to spawn new unrooted entity trees
@@ -231,17 +231,16 @@ impl<'w, 's, Caps: CapSet> Imm<'w, 's, Caps> {
         let id = ImmIdBuilder::Hierarchy(ImmId::new(id)).resolve(self);
 
         // Create new unrooted context
-        let mut current = Current {
-            id,
-            entity: None,
-            auto_id_idx: 0,
-            id_pref: ImmId::new(49382395483011234u64),
-        };
-
-        std::mem::swap(&mut self.current, &mut current);
-        f(self);
-
-        self.current = current;
+        let mut imm = ImmScopeGuard::new_scope(
+            self,
+            Current {
+                id,
+                entity: None,
+                auto_id_idx: 0,
+                id_pref: ImmId::new(49382395483011234u64),
+            },
+        );
+        f(&mut imm);
     }
 
     /// Entity that is currently being managed
@@ -277,42 +276,46 @@ impl<'w, 's, Caps: CapSet> Imm<'w, 's, Caps> {
         self.ctx
     }
 
-    /// Manage entity with provided [`ImmId`] and [`Entity`] attributes with provided closure
-    fn add_child_entity<R>(
-        &mut self,
-        params: EntityParams,
-        f: impl FnOnce(&mut Imm<'w, 's, Caps>) -> R,
-    ) -> R {
-        self.add_child_entity_dyn(params, Box::new(f))
-    }
-
-    /// Manage entity with provided [`ImmId`] and [`Entity`] attributes with provided closure
-    #[allow(clippy::type_complexity)]
-    fn add_child_entity_dyn<R>(
+    fn add_child_entities_scope(
         &mut self,
         EntityParams {
             id,
             entity,
             will_be_spawned,
         }: EntityParams,
+    ) -> ImmScopeGuard<'_, 'w, 's, Caps> {
+        ImmScopeGuard::new_scope(
+            self,
+            Current {
+                id,
+                entity: Some(CurrentEntity {
+                    entity,
+                    will_be_spawned,
+                }),
+                auto_id_idx: 0,
+                id_pref: ImmId::new(49382395483011234u64),
+            },
+        )
+    }
+
+    /// Manage entity with provided [`ImmId`] and [`Entity`] attributes with provided closure
+    fn add_child_entities<R>(
+        &mut self,
+        params: EntityParams,
+        f: impl FnOnce(&mut Imm<'w, 's, Caps>) -> R,
+    ) -> R {
+        self.add_child_entities_dyn(params, Box::new(f))
+    }
+
+    /// Manage entity with provided [`ImmId`] and [`Entity`] attributes with provided closure
+    #[allow(clippy::type_complexity)]
+    fn add_child_entities_dyn<R>(
+        &mut self,
+        params: EntityParams,
         f: Box<dyn FnOnce(&mut Imm<'w, 's, Caps>) -> R + '_>,
     ) -> R {
-        let stored_current = self.current;
-
-        self.current = Current {
-            id,
-            entity: Some(CurrentEntity {
-                entity,
-                will_be_spawned,
-            }),
-            auto_id_idx: 0,
-            id_pref: ImmId::new(49382395483011234u64),
-        };
-
-        let resp = f(self);
-
-        self.current = stored_current;
-
+        let mut imm = self.add_child_entities_scope(params);
+        let resp = f(&mut imm);
         resp
     }
 
@@ -377,14 +380,22 @@ impl<'r, 'w, 's, Caps: CapSet> ImmEntity<'r, 'w, 's, Caps> {
     /// If closure return value is needed, use `[Self::add_with_return]``
     #[allow(clippy::should_implement_trait)]
     pub fn add(self, f: impl FnOnce(&mut Imm<'w, 's, Caps>)) -> Self {
-        self.imm.add_child_entity(self.e, f);
+        self.imm.add_child_entities(self.e, f);
         self
     }
 
     /// Build descendants of this entity and retrieve return value of inner closure.
     pub fn add_with_return<R>(self, f: impl FnOnce(&mut Imm<'w, 's, Caps>) -> R) -> (Self, R) {
-        let value = self.imm.add_child_entity(self.e, f);
+        let value = self.imm.add_child_entities(self.e, f);
         (self, value)
+    }
+
+    /// Build descendants of this entity using returned [`Imm`] scope
+    ///
+    /// This function works exactly like [`Self::add`], but without
+    /// introducing additional nesting level
+    pub fn add_scoped(&mut self) -> ImmScopeGuard<'_, 'w, 's, Caps> {
+        self.imm.add_child_entities_scope(self.e)
     }
 
     /// Spawn new entity trees (unrooted)
@@ -788,13 +799,16 @@ impl ChangeDetector {
     }
 }
 
-/// Helper guard structure to create unique auto id generation for limited scope
-pub struct ImmCustomAutoIdScopeGuard<'r, 'w, 's, Caps: CapSet> {
+/// Helper guard structure to handle scope for child creation without introducing additional
+/// nesting level
+///
+/// Useful in for loops, match statements, if else statements to create unique ids for this scope
+pub struct ImmScopeGuard<'r, 'w, 's, Caps: CapSet> {
     imm: &'r mut Imm<'w, 's, Caps>,
     stored_current: Current,
 }
 
-impl<'r, 'w, 's, Caps: CapSet> std::ops::Deref for ImmCustomAutoIdScopeGuard<'r, 'w, 's, Caps> {
+impl<'r, 'w, 's, Caps: CapSet> std::ops::Deref for ImmScopeGuard<'r, 'w, 's, Caps> {
     type Target = Imm<'w, 's, Caps>;
 
     fn deref(&self) -> &Self::Target {
@@ -802,36 +816,42 @@ impl<'r, 'w, 's, Caps: CapSet> std::ops::Deref for ImmCustomAutoIdScopeGuard<'r,
     }
 }
 
-impl<'r, 'w, 's, Caps: CapSet> std::ops::DerefMut for ImmCustomAutoIdScopeGuard<'r, 'w, 's, Caps> {
+impl<'r, 'w, 's, Caps: CapSet> std::ops::DerefMut for ImmScopeGuard<'r, 'w, 's, Caps> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.imm
     }
 }
 
-impl<'r, 'w, 's, Caps: CapSet> Drop for ImmCustomAutoIdScopeGuard<'r, 'w, 's, Caps> {
+impl<'r, 'w, 's, Caps: CapSet> Drop for ImmScopeGuard<'r, 'w, 's, Caps> {
     fn drop(&mut self) {
         self.imm.current = self.stored_current;
     }
 }
 
-impl<'r, 'w, 's, Caps: CapSet> ImmCustomAutoIdScopeGuard<'r, 'w, 's, Caps> {
+impl<'r, 'w, 's, Caps: CapSet> ImmScopeGuard<'r, 'w, 's, Caps> {
     /// Construct guard with unique auto id generation parameter
-    pub fn new(imm: &'r mut Imm<'w, 's, Caps>, additional_auto_id: impl std::hash::Hash) -> Self {
+    pub fn add_id_pref(
+        imm: &'r mut Imm<'w, 's, Caps>,
+        additional_auto_id: impl std::hash::Hash,
+    ) -> Self {
         let auto_id_pref = imm.current.id_pref.with(additional_auto_id);
 
-        // Create new unrooted context
-        let mut current = Current {
-            id: imm.current.id,
-            entity: imm.current.entity,
-            auto_id_idx: 0,
-            id_pref: auto_id_pref,
-        };
+        Self::new_scope(
+            imm,
+            Current {
+                id: imm.current.id,
+                entity: imm.current.entity,
+                auto_id_idx: 0,
+                id_pref: auto_id_pref,
+            },
+        )
+    }
 
-        std::mem::swap(&mut imm.current, &mut current);
-
+    fn new_scope(imm: &'r mut Imm<'w, 's, Caps>, mut new_current: Current) -> Self {
+        std::mem::swap(&mut new_current, &mut imm.current);
         Self {
             imm,
-            stored_current: current,
+            stored_current: new_current,
         }
     }
 }

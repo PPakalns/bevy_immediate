@@ -1,5 +1,11 @@
 # Changelog
 
+# 0.3.4
+- Introduced `ImmScopeGuard` to avoid additional nesting levels when
+  creating child entities.
+- Introduced `ImmEntity::add_scoped` method to create child entities
+  without using closure.
+
 # 0.3.3
 
 * Improved `with_local_auto_id_guard` id prefix concatenation logic to correctly work in recursive situations.
