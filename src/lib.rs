@@ -36,7 +36,7 @@ macro_rules! lch {
     ($ui:ident) => {
         $ui.ch_id($crate::lid!())
     };
-    ($ui:ident, $id:ident) => {
+    ($ui:ident, $id:expr) => {
         $ui.ch_id($crate::lid!($id))
     };
 }
@@ -52,7 +52,7 @@ macro_rules! lid {
     () => {
         (596784345354, line!(), column!())
     };
-    ($id:ident) => {
+    ($id:expr) => {
         (596784345354, line!(), column!(), $id)
     };
 }
