@@ -1,5 +1,6 @@
 use bevy_color::Color;
 use bevy_ecs::world::Mut;
+use bevy_text::TextColor;
 use bevy_ui::{BackgroundColor, BorderColor, Node};
 
 use crate::{CapSet, ImmCapability, ImmEntity, ImplCap};
@@ -14,6 +15,7 @@ impl ImmCapability for CapabilityUiLook {
         cap_req.request_component_write::<Node>(app.world_mut());
         cap_req.request_component_write::<BackgroundColor>(app.world_mut());
         cap_req.request_component_write::<BorderColor>(app.world_mut());
+        cap_req.request_component_write::<TextColor>(app.world_mut());
     }
 }
 
@@ -24,11 +26,14 @@ pub trait ImmUiLook {
     /// Given function will not be called if entity doesn't have Node component
     fn node_mut(self, f: impl FnOnce(&mut Mut<'_, Node>)) -> Self;
 
-    /// Set BackgroundColor
+    /// Set [`BackgroundColor`]`
     fn background_color(self, value: Color) -> Self;
 
-    /// Set BorderColor
+    /// Set [`BorderColor`]`
     fn border_color(self, value: &BorderColor) -> Self;
+
+    /// Set [`TextColor`]
+    fn text_color(self, value: Color) -> Self;
 }
 
 impl<Cap> ImmUiLook for ImmEntity<'_, '_, '_, Cap>
@@ -58,6 +63,19 @@ where
 
         let mut commands = self.entity_commands();
         commands.insert(*value);
+        self
+    }
+
+    fn text_color(mut self, value: Color) -> Self {
+        if let Ok(Some(mut current_value)) = self.cap_get_component_mut::<TextColor>() {
+            if current_value.0 != value {
+                current_value.0 = value;
+            }
+            return self;
+        }
+
+        let mut commands = self.entity_commands();
+        commands.insert(TextColor(value));
         self
     }
 

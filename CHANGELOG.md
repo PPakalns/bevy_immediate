@@ -5,6 +5,7 @@
   creating child entities.
 - Introduced `ImmEntity::add_scoped` method to create child entities
   without using closure.
+- Added function `text_color` to update text color in each frame.
 
 # 0.3.3
 
