@@ -697,7 +697,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_immediate"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "ahash",
  "bevy",
@@ -713,6 +713,7 @@ dependencies = [
  "bevy_math",
  "bevy_picking",
  "bevy_platform",
+ "bevy_text",
  "bevy_time",
  "bevy_transform",
  "bevy_ui",
