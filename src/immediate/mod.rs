@@ -265,7 +265,15 @@ impl<'w, 's, Caps: CapSet> Imm<'w, 's, Caps> {
 
     /// Access underlaying context
     ///
-    /// Useful for implementing additional [crate::ImmCapability]
+    /// Useful for implementing [crate::ImmCapability]
+    #[inline]
+    pub fn ctx(&self) -> &ImmCtx<'w, 's, Caps> {
+        &self.ctx
+    }
+
+    /// Access underlaying context
+    ///
+    /// Useful for implementing [crate::ImmCapability]
     #[inline]
     pub fn ctx_mut(&mut self) -> &mut ImmCtx<'w, 's, Caps> {
         &mut self.ctx

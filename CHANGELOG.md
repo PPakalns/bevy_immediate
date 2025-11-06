@@ -1,16 +1,14 @@
 # Changelog
 
-# 0.3.4
-- Introduced `ImmScopeGuard` to avoid additional nesting levels when
-  creating child entities.
-- Introduced `ImmEntity::add_scoped` method to create child entities
-  without using closure.
-- Added function `text_color` to update text color in each frame.
-
 # 0.3.3
-
 * Improved `with_local_auto_id_guard` id prefix concatenation logic to correctly work in recursive situations.
 * Renamed `with_local_auto_id_guard` to `with_add_id_pref`. Old function name deprecated until 0.4 release.
+* Introduced `ImmScopeGuard` to avoid additional nesting levels when
+  creating child entities.
+* Introduced `ImmEntity::add_scoped` method to create child entities
+  without using closure.
+* Added function `text_color` to update text color in each frame.
+* Added immutable `.ctx()` function to retrieve `ImmCtx`.
 
 # 0.3.2
 
