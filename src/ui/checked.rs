@@ -31,6 +31,9 @@ impl ImmCapability for CapabilityUiChecked {
 
 /// Implements capability to synchronise checked value on component
 pub trait ImmUiChecked {
+    /// Control if [`Checked`] component is attached to entity by get set approach
+    fn checked_get_set(self, f: impl FnMut(Option<bool>) -> bool) -> Self;
+
     /// Synchronise checked value
     fn checked(self, value: &mut bool) -> Self;
 
@@ -48,6 +51,17 @@ impl<Cap> ImmUiChecked for ImmEntity<'_, '_, '_, Cap>
 where
     Cap: ImplCap<CapabilityUiChecked>,
 {
+    /// Get set access for checked value
+    fn checked_get_set(mut self, mut f: impl FnMut(Option<bool>) -> bool) -> Self {
+        let current = f(None);
+        let mut new = current;
+        self = self.checked(&mut new);
+        if new != current {
+            f(Some(new));
+        }
+        self
+    }
+
     fn checked(mut self, value: &mut bool) -> Self {
         fn update_checked(commands: &mut EntityCommands, value: bool) {
             if value {
