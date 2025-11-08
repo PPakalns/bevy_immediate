@@ -32,4 +32,3 @@ impl HotpatchingCounter {
         self.hotpatch
     }
 }
-

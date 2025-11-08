@@ -1,7 +1,8 @@
-use bevy::color::Color;
-use bevy::{color::palettes::basic::*, prelude::*};
-use bevy_immediate::ui::floating_window_plugin::WindowResizeDragDirection;
-use bevy_immediate::ui::selected::Selectable;
+use bevy::{
+    color::{Color, palettes::basic::*},
+    prelude::*,
+};
+use bevy_immediate::ui::{floating_window_plugin::WindowResizeDragDirection, selected::Selectable};
 use bevy_input_focus::{InputFocus, InputFocusVisible};
 use bevy_picking::hover::Hovered;
 use bevy_ui::Pressed;
