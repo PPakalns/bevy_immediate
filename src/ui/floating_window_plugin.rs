@@ -1,8 +1,11 @@
 use ahash::HashMap;
+#[cfg(feature = "bevy_feathers")]
+use bevy_ecs::system::Local;
 use bevy_ecs::{
     bundle::Bundle,
     children,
     component::Component,
+    entity::Entity,
     hierarchy::{ChildOf, Children},
     observer::On,
     query::{Added, Changed, Or, With},
@@ -52,12 +55,12 @@ impl bevy_app::Plugin for FloatingWindowPlugin {
             .add_observer(window_on_drag)
             .add_observer(window_on_drag_end);
 
-        #[cfg(feature = "bevy_feathers")]
-        app.insert_resource(WindowDragTmpCursor::default());
-
         app.add_observer(window_resize_drag_start)
             .add_observer(window_resize_drag)
             .add_observer(window_resize_drag_end);
+        app.insert_resource(FloatingWindowResizeState::default());
+        #[cfg(feature = "bevy_feathers")]
+        app.add_systems(bevy_app::Update, update_bevy_feathers_cursor);
 
         app.add_systems(
             bevy_app::PostUpdate,
@@ -73,6 +76,15 @@ impl bevy_app::Plugin for FloatingWindowPlugin {
 
         app.add_systems(bevy_app::PreUpdate, floating_window_cache);
     }
+}
+
+/// Stores current state related to window resizing
+#[derive(Resource, Default)]
+pub struct FloatingWindowResizeState {
+    /// Stores information about which border is dragged to resize window
+    ///
+    /// Useful to update cursor values.
+    pub dragging: Option<Entity>,
 }
 
 /// Floating window and its sizing restrictions
@@ -358,11 +370,41 @@ fn resolve_y(
     )
 }
 
-/// Stores cursor that was temporary replaced with cursor used for resizing window (dragging)
-#[derive(Resource, Default)]
+/// Function to update bevy feathers cursor while resizing window
 #[cfg(feature = "bevy_feathers")]
-pub struct WindowDragTmpCursor {
-    cursor: Option<cursor::EntityCursor>,
+fn update_bevy_feathers_cursor(
+    default_cursor: Option<ResMut<cursor::DefaultCursor>>,
+    resize_state: ResMut<FloatingWindowResizeState>,
+    q: Query<&cursor::EntityCursor>,
+    mut stored_cursor: Local<Option<Option<cursor::EntityCursor>>>,
+) {
+    // TODO: IN bevy 0.18 use the new mechanism
+    let Some(mut default_cursor) = default_cursor else {
+        return;
+    };
+
+    match (resize_state.dragging, stored_cursor.as_mut()) {
+        (None, None) | (Some(_), Some(_)) => {
+            // State didn't change
+        }
+        (None, Some(_)) => {
+            // Restore stored cursor
+            let cursor = stored_cursor.take().unwrap();
+            if let Some(cursor) = cursor {
+                default_cursor.0 = cursor;
+            }
+        }
+        (Some(entity), None) => {
+            let new_cursor = q.get(entity).map(|c| c.clone()).ok();
+
+            if let Some(mut new_cursor) = new_cursor {
+                std::mem::swap(&mut new_cursor, &mut default_cursor.0);
+                *stored_cursor = Some(Some(new_cursor));
+            } else {
+                *stored_cursor = Some(None);
+            }
+        }
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -380,10 +422,7 @@ fn window_resize_drag_start(
     >,
     q_parents: Query<&ChildOf>,
     mut commands: Commands,
-
-    #[cfg(feature = "bevy_feathers")] system_cursor: Query<&cursor::EntityCursor>,
-    #[cfg(feature = "bevy_feathers")] default_cursor: Option<ResMut<cursor::DefaultCursor>>,
-    #[cfg(feature = "bevy_feathers")] tmp_cursor: Option<ResMut<WindowDragTmpCursor>>,
+    mut active_state: ResMut<FloatingWindowResizeState>,
 ) {
     let Ok(()) = q_target.get_mut(drag_start.entity) else {
         return;
@@ -393,15 +432,7 @@ fn window_resize_drag_start(
 
     commands.entity(drag_start.entity).insert(Pressed);
 
-    #[cfg(feature = "bevy_feathers")]
-    if let (Some(mut default_cursor), Some(mut tmp_cursor)) = (default_cursor, tmp_cursor) {
-        if let Ok(cursor) = system_cursor.get(drag_start.entity) {
-            std::mem::swap(
-                &mut default_cursor.0,
-                tmp_cursor.cursor.insert(cursor.clone()),
-            );
-        }
-    }
+    active_state.dragging = Some(drag_start.entity);
 
     let Some(window_entity) = q_parents
         .iter_ancestors(drag_start.entity)
@@ -531,9 +562,7 @@ fn window_resize_drag_end(
     q_parents: Query<&ChildOf>,
     mut commands: Commands,
     mut q_windows: Query<&mut FloatingWindowInteractionState, With<FloatingWindow>>,
-
-    #[cfg(feature = "bevy_feathers")] default_cursor: Option<ResMut<cursor::DefaultCursor>>,
-    #[cfg(feature = "bevy_feathers")] tmp_cursor: Option<ResMut<WindowDragTmpCursor>>,
+    mut active_state: ResMut<FloatingWindowResizeState>,
 ) {
     let Ok(()) = q_target.get_mut(drag_end.entity) else {
         return;
@@ -553,12 +582,7 @@ fn window_resize_drag_end(
 
     window_interaction_state.currently_resize = false;
 
-    #[cfg(feature = "bevy_feathers")]
-    if let (Some(mut default_cursor), Some(mut tmp_cursor)) = (default_cursor, tmp_cursor) {
-        if let Some(cursor) = tmp_cursor.cursor.take() {
-            default_cursor.0 = cursor;
-        }
-    }
+    active_state.dragging = None;
 }
 
 /// Helper bundle that adds draggable borders to UI element
