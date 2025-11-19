@@ -34,7 +34,7 @@ impl bevy_app::Plugin for AnchoredUiPlugin {
 }
 
 /// Specifies against what entity must be positioned
-#[derive(Component)]
+#[derive(Component, PartialEq, Clone)]
 #[require(PlacementCache, AnchorOption)]
 pub enum AnchorTarget {
     /// Place relative to entity
