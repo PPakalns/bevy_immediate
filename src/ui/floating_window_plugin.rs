@@ -161,8 +161,8 @@ fn floating_window_node_init_system(
         } else {
             node.min_width = floating.initial_width;
             node.min_height = floating.initial_height;
-            node.max_width = floating.max_width;
-            node.max_height = floating.max_height;
+            node.max_width = floating.initial_width;
+            node.max_height = floating.initial_height;
 
             // TODO: Improve logic to decide window start location
             node.left = px(rng.random_range(10..500i32) as f32);
