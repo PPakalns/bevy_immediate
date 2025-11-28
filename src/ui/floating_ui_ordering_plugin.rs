@@ -68,6 +68,8 @@ pub enum UiZOrderLayer {
     Popup,
     /// Layer for tooltips
     Tooltip,
+    /// Layer for notifications
+    Notifications,
 }
 
 impl UiZOrderLayer {
@@ -78,6 +80,7 @@ impl UiZOrderLayer {
             UiZOrderLayer::Dropdown => 2000,
             UiZOrderLayer::Popup => 3000,
             UiZOrderLayer::Tooltip => 4000,
+            UiZOrderLayer::Notifications => 5000,
         }
     }
 }
