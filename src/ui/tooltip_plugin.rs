@@ -16,6 +16,7 @@ impl bevy_app::Plugin for TooltipPlugin {
         app.insert_resource(TooltipGlobalSettings {
             tooltip_delay: 0.5,
             reset_delay: 0.5,
+            pointer_changed_delay: 0.1,
         });
 
         app.insert_resource(TooltipGlobalState::default());
@@ -37,6 +38,13 @@ pub struct TooltipSource;
 pub struct TooltipGlobalSettings {
     /// Delay in seconds until tooltip is shown when ui element with tooltip is hovered
     pub tooltip_delay: f32,
+
+    /// When [`Self::tooltip_delay`] has elapsed. If pointer changes ui element with
+    /// tooltip, show tooltip after pointer changed delay.
+    ///
+    /// Useful to avoid flickering when moving mouse.
+    pub pointer_changed_delay: f32,
+
     /// If [`Self::tooltip_delay`] has elapsed. Tooltips will be shown immediatelly.
     /// Reset delay will reset tooltip delay, when no tooltip source is hovered for reset delay
     /// amount of seconds.
@@ -54,6 +62,9 @@ enum TooltipGlobalStateInner {
     #[default]
     Nothing,
     Waiting {
+        since: f64,
+    },
+    PointerWaiting {
         since: f64,
     },
     Tooltip,
@@ -82,12 +93,15 @@ fn on_source(
                     since: time.elapsed_secs_f64(),
                 };
             }
-            TooltipGlobalStateInner::Waiting { since: _ } => {}
+            TooltipGlobalStateInner::Waiting { since: _ }
+            | TooltipGlobalStateInner::PointerWaiting { since: _ } => {}
             TooltipGlobalStateInner::Tooltip => {
                 res.state = TooltipGlobalStateInner::Tooltip;
             }
             TooltipGlobalStateInner::Reset { since: _ } => {
-                res.state = TooltipGlobalStateInner::Tooltip;
+                res.state = TooltipGlobalStateInner::PointerWaiting {
+                    since: time.elapsed_secs_f64(),
+                };
             }
         }
     }
@@ -104,7 +118,8 @@ fn out_sorce(
             TooltipGlobalStateInner::Nothing | TooltipGlobalStateInner::Waiting { since: _ } => {
                 TooltipGlobalStateInner::Nothing
             }
-            TooltipGlobalStateInner::Tooltip => TooltipGlobalStateInner::Reset {
+            TooltipGlobalStateInner::PointerWaiting { since: _ }
+            | TooltipGlobalStateInner::Tooltip => TooltipGlobalStateInner::Reset {
                 since: time.elapsed_secs_f64(),
             },
             TooltipGlobalStateInner::Reset { since } => TooltipGlobalStateInner::Reset { since },
@@ -121,6 +136,11 @@ fn update_tooltip_global_state(
         TooltipGlobalStateInner::Nothing => {}
         TooltipGlobalStateInner::Waiting { since } => {
             if (time.elapsed_secs_f64() - since) > global.tooltip_delay as f64 {
+                res.state = TooltipGlobalStateInner::Tooltip;
+            }
+        }
+        TooltipGlobalStateInner::PointerWaiting { since } => {
+            if (time.elapsed_secs_f64() - since) > global.pointer_changed_delay as f64 {
                 res.state = TooltipGlobalStateInner::Tooltip;
             }
         }

@@ -151,6 +151,10 @@ impl ImmediateAttach<CapsUi> for TooltipExampleRoot {
 
         ui.ch()
             .text(format!("Delay: {:.2}s", params.tooltip.tooltip_delay));
+        ui.ch().text(format!(
+            "Pointer delay: {:.2}s",
+            params.tooltip.pointer_changed_delay
+        ));
         ui.ch()
             .text(format!("Reset: {:.2}s", params.tooltip.reset_delay));
     }
