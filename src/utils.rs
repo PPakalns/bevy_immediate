@@ -107,7 +107,7 @@ where
     }
 
     /// Check if stored value matches with given value
-    pub fn is_stored(&mut self, value: &T) -> bool {
+    pub fn is_stored(&self, value: &T) -> bool {
         self.state == imm_id(value)
     }
 
