@@ -80,7 +80,7 @@ fn should_close_current_tree_observer(
 }
 
 fn update_should_close(
-    pointer: On<Pointer<bevy_picking::events::Press>>,
+    pointer: On<Pointer<bevy_picking::events::Click>>,
     should_close: Query<Entity, With<FocusDetectShouldClose>>,
     focus_parents: Query<&FocusParent>,
     child_of: Query<&ChildOf>,
