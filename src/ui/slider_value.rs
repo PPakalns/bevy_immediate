@@ -46,23 +46,21 @@ where
             };
             let new_value = NewValueChange::take(&mut new_value);
 
-            let Some(last_value) = entity.get::<SliderValue>() else {
+            let Some(slider_value) = entity.get::<SliderValue>() else {
                 break 'initialized;
             };
-            let last_value = last_value.0;
+            let slider_value = slider_value.0;
+
+            if *value != slider_value {
+                // Checked value changed
+                self.entity_commands().insert(SliderValue(*value));
+            }
 
             if let Some(new_value) = new_value
                 // Avoid update loop
-                && new_value != last_value
+                && new_value != slider_value
             {
                 *value = new_value;
-                self.entity_commands().insert(SliderValue(new_value));
-                return self;
-            }
-
-            if *value != last_value {
-                // Checked value changed
-                self.entity_commands().insert(SliderValue(*value));
             }
 
             return self;
