@@ -392,7 +392,7 @@ fn update_bevy_feathers_cursor(
             }
         }
         (Some(entity), None) => {
-            let new_cursor = q.get(entity).map(|c| c.clone()).ok();
+            let new_cursor = q.get(entity).ok().cloned();
 
             if let Some(mut new_cursor) = new_cursor {
                 std::mem::swap(&mut new_cursor, &mut default_cursor.0);

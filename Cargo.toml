@@ -1,6 +1,6 @@
 [package]
 name = "bevy_immediate"
-version = "0.3.3"
+version = "0.4.0"
 edition = "2024"
 authors = ["Pēteris Pakalns"]
 repository = "https://github.com/PPakalns/bevy_immediate/"
@@ -49,10 +49,10 @@ rand = { version = "0.9.2", features = [
   "thread_rng",
 ], default-features = false }
 
-bevy_immediate_core = { version = "0.3.3", path = "./crates/bevy_immediate_core/" }
-bevy_immediate_attach = { version = "0.3.3", path = "./crates/bevy_immediate_attach/" }
-bevy_immediate_floating_ui = { version = "0.3.3", path = "./crates/bevy_immediate_floating_ui/" }
-bevy_immediate_ui = { version = "0.3.3", path = "./crates/bevy_immediate_ui/" }
+bevy_immediate_core = { version = "0.4.0", path = "./crates/bevy_immediate_core/" }
+bevy_immediate_attach = { version = "0.4.0", path = "./crates/bevy_immediate_attach/" }
+bevy_immediate_floating_ui = { version = "0.4.0", path = "./crates/bevy_immediate_floating_ui/" }
+bevy_immediate_ui = { version = "0.4.0", path = "./crates/bevy_immediate_ui/" }
 
 [dependencies]
 bevy_immediate_core = { workspace = true }

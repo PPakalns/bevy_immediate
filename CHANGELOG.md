@@ -1,7 +1,21 @@
 # Changelog
 
-# 0.3.4
+# 0.4.0
+* bevy_immediate implementation has been split into multiple crates. Migration shouldn't require any changes
+  because `bevy_immediate` reexports all necessary types.
+
+* FloatingWindowStoreLocationId(pub u64) now stores u64 value.
+  You can call `id.raw()` method on `ImmId` `id` value to retrieve u64 representation.
+
+* bevy_immediate floating ui logic can now be used without requiring users to use rest of bevy_immediate.
+  Use `bevy_immediate_floating_ui` crate.
+
 * Added `checked_get_set` method to control for `Checkable` entity if `Checked` component is attached.
+* Added `is_interaction_enabled` method to check if `InteractionDisabled` component is added.
+
+* Tooltip improvements to avoid flickering.
+* Improve slider behaviour when get_set is called.
+* Improve behaviour when dropdown is closed.
 
 # 0.3.3
 * Improved `with_local_auto_id_guard` id prefix concatenation logic to correctly work in recursive situations.

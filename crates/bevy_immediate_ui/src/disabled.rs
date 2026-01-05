@@ -37,9 +37,10 @@ where
         if let Ok(entity) = self.cap_get_entity()
             && entity.contains::<InteractionDisabled>()
         {
-            return false;
+            false
+        } else {
+            true
         }
-        return true;
     }
 
     fn interactions_enabled(self, enabled: bool) -> Self {

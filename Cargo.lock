@@ -697,7 +697,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_immediate"
-version = "0.3.3"
+version = "0.4.0"
 dependencies = [
  "bevy",
  "bevy_framepace",
@@ -712,7 +712,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_immediate_attach"
-version = "0.3.3"
+version = "0.4.0"
 dependencies = [
  "bevy_app",
  "bevy_ecs",
@@ -722,7 +722,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_immediate_core"
-version = "0.3.3"
+version = "0.4.0"
 dependencies = [
  "ahash",
  "bevy_app",
@@ -736,7 +736,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_immediate_floating_ui"
-version = "0.3.3"
+version = "0.4.0"
 dependencies = [
  "bevy_app",
  "bevy_ecs",
@@ -753,7 +753,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_immediate_ui"
-version = "0.3.3"
+version = "0.4.0"
 dependencies = [
  "bevy_app",
  "bevy_color",

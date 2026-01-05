@@ -323,8 +323,7 @@ impl<'w, 's, Caps: CapSet> Imm<'w, 's, Caps> {
         f: Box<dyn FnOnce(&mut Imm<'w, 's, Caps>) -> R + '_>,
     ) -> R {
         let mut imm = self.add_child_entities_scope(params);
-        let resp = f(&mut imm);
-        resp
+        f(&mut imm)
     }
 
     /// Manage current context as entity
