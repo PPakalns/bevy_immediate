@@ -1,19 +1,19 @@
+use bevy::ecs::component::Component;
+use bevy::ui::{
+    BackgroundColor, BorderColor, BorderRadius, FlexDirection, Node, UiRect, Val,
+    widget::{Text, TextShadow},
+};
 use bevy::{color::Color, text::TextColor, utils::default};
-use bevy_ecs::component::Component;
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
     ui::CapsUi,
 };
-use bevy_ui::{
-    BackgroundColor, BorderColor, BorderRadius, FlexDirection, Node, UiRect, Val,
-    widget::{Text, TextShadow},
-};
 
 pub struct HelloWorldPlugin;
 
-impl bevy_app::Plugin for HelloWorldPlugin {
-    fn build(&self, app: &mut bevy_app::App) {
+impl bevy::app::Plugin for HelloWorldPlugin {
+    fn build(&self, app: &mut bevy::app::App) {
         // Add bevy immediate plugin with UI support which will construct UI
         // rooted at entity with `HelloWorldRoot` component
         app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, HelloWorldRoot>::new());

@@ -1,13 +1,13 @@
 use bevy_picking::hover::Hovered;
 use bevy_ui::Pressed;
 
-use crate::{CapSet, ImmCapability, ImmEntity, ImplCap};
+use bevy_immediate_core::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap};
 
 /// Capability for long lasting interaction tracking from immediate UI
 pub struct CapabilityUiInteraction;
 
 impl ImmCapability for CapabilityUiInteraction {
-    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
+    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<Cap>) {
         cap_req.request_component_read::<Hovered>(app.world_mut());
     }
 }

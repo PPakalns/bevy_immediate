@@ -2,13 +2,15 @@ use std::ops::Deref;
 
 use bevy_ui::widget::Text;
 
-use crate::{CapSet, ImmCapability, ImmEntity, ImplCap, imm_id};
+use bevy_immediate_core::{
+    CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap, imm_id,
+};
 
 /// Functionality to manage text rendering inside ui
 pub struct CapabilityUiText;
 
 impl ImmCapability for CapabilityUiText {
-    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
+    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<Cap>) {
         cap_req.request_component_write::<Text>(app.world_mut());
     }
 }

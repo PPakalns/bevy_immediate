@@ -1,4 +1,3 @@
-use ahash::HashMap;
 #[cfg(feature = "bevy_feathers")]
 use bevy_ecs::system::Local;
 use bevy_ecs::{
@@ -20,6 +19,7 @@ use bevy_picking::{
     events::{Drag, DragEnd, DragStart, Pointer},
     hover::Hovered,
 };
+use bevy_platform::collections::HashMap;
 use bevy_ui::{
     ComputedNode, ComputedUiRenderTargetInfo, LayoutConfig, Node, Pressed, RepeatedGridTrack,
     UiGlobalTransform, UiScale, UiSystems, Val, px,
@@ -27,11 +27,8 @@ use bevy_ui::{
 use rand::Rng;
 
 use crate::{
-    ImmId,
-    ui::{
-        floating_ui_ordering_plugin::{FloatingUiOrderingPlugin, UiBringForward, UiZOrderLayer},
-        utils::fully_inside,
-    },
+    floating_ui_ordering_plugin::{FloatingUiOrderingPlugin, UiBringForward, UiZOrderLayer},
+    utils::fully_inside,
 };
 
 #[cfg(feature = "bevy_feathers")]
@@ -687,13 +684,13 @@ pub fn resizable_borders(border_thickness: f32, additional: impl Bundle + Copy) 
 }
 
 /// Windows marked with this component will have their size stored in memory.
-/// When window is reopened, window size will be restored.
+/// When window is reopened, window size will be restored if inner value matches.
 #[derive(Component)]
-pub struct FloatingWindowStoreLocationId(pub ImmId);
+pub struct FloatingWindowStoreLocationId(pub u64);
 
 #[derive(Resource, Default)]
 struct FloatingWindowLocationStore {
-    stored: HashMap<ImmId, FloatingWindowLocation>,
+    stored: HashMap<u64, FloatingWindowLocation>,
 }
 
 struct FloatingWindowLocation {

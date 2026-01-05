@@ -74,7 +74,7 @@ where
 mod bevy_ui_widgets_impl {
     use bevy_ecs::{observer::On, system::Query};
 
-    use crate::ui::track_value_change_plugin::NewValueChange;
+    use crate::track_value_change_plugin::NewValueChange;
 
     pub fn on_value_change<T>(
         trigger: On<bevy_ui_widgets::ValueChange<T>>,

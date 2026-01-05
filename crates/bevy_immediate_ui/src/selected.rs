@@ -1,10 +1,10 @@
-use crate::{CapSet, ImmCapability, ImmEntity, ImplCap};
+use bevy_immediate_core::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap};
 
 /// Implements capability to mark entities as selectable.
 pub struct CapabilityUiSelectable;
 
 impl ImmCapability for CapabilityUiSelectable {
-    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
+    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<Cap>) {
         cap_req.request_component_write::<Selectable>(app.world_mut());
     }
 }

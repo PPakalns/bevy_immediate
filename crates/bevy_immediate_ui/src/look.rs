@@ -3,13 +3,13 @@ use bevy_ecs::world::Mut;
 use bevy_text::TextColor;
 use bevy_ui::{BackgroundColor, BorderColor, Node};
 
-use crate::{CapSet, ImmCapability, ImmEntity, ImplCap};
+use bevy_immediate_core::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap};
 
 /// Implements capability to modify UI node look
 pub struct CapabilityUiLook;
 
 impl ImmCapability for CapabilityUiLook {
-    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
+    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<Cap>) {
         let _ = cap_req;
         let _ = app;
         cap_req.request_component_write::<Node>(app.world_mut());

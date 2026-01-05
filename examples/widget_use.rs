@@ -1,14 +1,14 @@
-use bevy_ecs::{
+use bevy::ecs::{
     component::Component,
     resource::Resource,
     system::{ResMut, SystemParam},
 };
+use bevy::ui::Node;
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
     ui::{CapsUi, text::ImmUiText},
 };
-use bevy_ui::Node;
 
 use crate::{
     styles::{self},
@@ -18,8 +18,8 @@ use crate::{
 
 pub struct WidgetUseExamplePlugin;
 
-impl bevy_app::Plugin for WidgetUseExamplePlugin {
-    fn build(&self, app: &mut bevy_app::App) {
+impl bevy::app::Plugin for WidgetUseExamplePlugin {
+    fn build(&self, app: &mut bevy::app::App) {
         // Initialize plugin with your root component
         app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, WidgetUseExampleRoot>::new());
 

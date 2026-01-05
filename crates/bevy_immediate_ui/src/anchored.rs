@@ -3,23 +3,21 @@ use bevy_picking::Pickable;
 use bevy_ui::Node;
 
 use crate::{
-    CapSet, Imm, ImmCapability, ImmEntity, ImplCap,
-    ui::{
-        anchored_ui_plugin::{AnchorTarget, AnchoredUiPlugin},
-        floating_ui_focus_plugin::{
-            FloatingUiFocusPlugin, FocusDetectShouldClose, FocusParent, FocusShouldClose,
-        },
-        floating_ui_ordering_plugin::{FloatingUiOrderingPlugin, UiZOrderLayer},
-        interaction::{CapabilityUiInteraction, ImmUiInteraction},
-        tooltip_plugin::{TooltipGlobalState, TooltipPlugin, TooltipSource},
+    anchored_ui_plugin::{AnchorTarget, AnchoredUiPlugin},
+    floating_ui_focus_plugin::{
+        FloatingUiFocusPlugin, FocusDetectShouldClose, FocusParent, FocusShouldClose,
     },
+    floating_ui_ordering_plugin::{FloatingUiOrderingPlugin, UiZOrderLayer},
+    interaction::{CapabilityUiInteraction, ImmUiInteraction},
+    tooltip_plugin::{TooltipGlobalState, TooltipPlugin, TooltipSource},
 };
+use bevy_immediate_core::{CapSet, Imm, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap};
 
 /// Implements capability to create floatable, anchored elements
 pub struct CapabilityUiAnchored;
 
 impl ImmCapability for CapabilityUiAnchored {
-    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
+    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<Cap>) {
         if !app.is_plugin_added::<AnchoredUiPlugin>() {
             app.add_plugins(AnchoredUiPlugin);
         }

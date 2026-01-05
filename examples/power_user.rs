@@ -1,22 +1,22 @@
-use bevy::text::TextFont;
-use bevy_ecs::{
+use bevy::ecs::{
     component::Component,
     resource::Resource,
     system::{ResMut, SystemParam},
 };
+use bevy::text::TextFont;
+use bevy::ui::{FlexDirection, UiRect, Val};
 use bevy_immediate::{
     Imm, ImmEntity,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
     ui::{CapsUi, ImplCapsUi, clicked::ImmUiClicked, selected::ImmUiSelectable, text::ImmUiText},
 };
-use bevy_ui::{FlexDirection, UiRect, Val};
 
 use crate::styles;
 
 pub struct PowerUserExamplePlugin;
 
-impl bevy_app::Plugin for PowerUserExamplePlugin {
-    fn build(&self, app: &mut bevy_app::App) {
+impl bevy::app::Plugin for PowerUserExamplePlugin {
+    fn build(&self, app: &mut bevy::app::App) {
         // Initialize plugin with your root component
         app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, PowerUserExampleRoot>::new());
         app.insert_resource(ShowHidden { show: false });

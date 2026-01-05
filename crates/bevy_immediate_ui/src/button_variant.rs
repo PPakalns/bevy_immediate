@@ -1,12 +1,12 @@
 use bevy_feathers::controls::ButtonVariant;
 
-use crate::{CapSet, ImmCapability, ImmEntity, ImplCap};
+use bevy_immediate_core::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap};
 
 /// Implements capability to set button variant
 pub struct CapabilityUiFeathersButtonVariant;
 
 impl ImmCapability for CapabilityUiFeathersButtonVariant {
-    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
+    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<Cap>) {
         let _ = cap_req;
         let _ = app;
         cap_req.request_component_write::<ButtonVariant>(app.world_mut());

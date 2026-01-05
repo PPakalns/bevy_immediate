@@ -1,7 +1,16 @@
 [package]
 name = "bevy_immediate_core"
 version = "0.3.3"
+
 edition = "2024"
+authors = ["Pēteris Pakalns"]
+repository = "https://github.com/PPakalns/bevy_immediate/"
+homepage = "https://github.com/PPakalns/bevy_immediate/"
+description = "A simple, fast, and modular immediate mode UI library for Bevy"
+keywords = ["bevy", "ui", "immediate", "simple", "ecs"]
+categories = ["gui", "graphics", "game-development"]
+license = "MIT"
+exclude = ["/.github"]
 
 [dependencies]
 bevy_ecs = { workspace = true }

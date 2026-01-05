@@ -33,6 +33,11 @@ impl ImmId {
             id: hasher.finish(),
         }
     }
+
+    /// Retrieve raw inner id
+    pub fn raw(&self) -> u64 {
+        self.id
+    }
 }
 
 impl<A> FromIterator<A> for ImmId

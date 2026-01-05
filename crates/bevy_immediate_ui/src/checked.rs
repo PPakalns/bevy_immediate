@@ -1,16 +1,15 @@
 use bevy_ecs::system::EntityCommands;
 use bevy_ui::{Checkable, Checked};
 
-use crate::{
-    CapSet, ImmCapability, ImmEntity, ImplCap,
-    ui::track_value_change_plugin::{NewValueChange, TrackValueChangePlugin},
-};
+use bevy_immediate_core::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap};
+
+use crate::track_value_change_plugin::{NewValueChange, TrackValueChangePlugin};
 
 /// Implements capability to synchronise checked value on component
 pub struct CapabilityUiChecked;
 
 impl ImmCapability for CapabilityUiChecked {
-    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
+    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<Cap>) {
         let _ = cap_req;
         let _ = app;
         cap_req.request_component_write::<NewValueChange<bool>>(app.world_mut());
@@ -21,7 +20,7 @@ impl ImmCapability for CapabilityUiChecked {
 
         #[cfg(feature = "bevy_ui_widgets")]
         {
-            use crate::ui::radio_button_fix_plugin::RadioButtonFixPlugin;
+            use crate::radio_button_fix_plugin::RadioButtonFixPlugin;
             if !app.is_plugin_added::<RadioButtonFixPlugin>() {
                 app.add_plugins(RadioButtonFixPlugin);
             }

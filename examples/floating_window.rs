@@ -1,15 +1,22 @@
-use bevy::{prelude::SpawnRelated, utils::default};
-use bevy_color::{
+use bevy::color::{
     Srgba,
     palettes::css::{BLACK, LIGHT_GRAY},
 };
-use bevy_ecs::{
+use bevy::ecs::{
     bundle::Bundle,
     children,
     component::Component,
     resource::Resource,
     system::{ResMut, SystemParam},
 };
+use bevy::picking::hover::Hovered;
+use bevy::platform::collections::{HashMap, HashSet, hash_set::Entry};
+use bevy::ui::{
+    AlignItems, BackgroundColor, BorderColor, FlexDirection, JustifyContent, Node, Overflow,
+    percent, px, vh, vw,
+    widget::{Button, Text},
+};
+use bevy::{prelude::SpawnRelated, utils::default};
 use bevy_immediate::{
     Imm, ImmCtx, ImmEntity,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
@@ -23,13 +30,6 @@ use bevy_immediate::{
         text::ImmUiText,
     },
     utils::ImmLocalHashMemoryHelper,
-};
-use bevy_picking::hover::Hovered;
-use bevy_platform::collections::{HashMap, HashSet, hash_set::Entry};
-use bevy_ui::{
-    AlignItems, BackgroundColor, BorderColor, FlexDirection, JustifyContent, Node, Overflow,
-    percent, px, vh, vw,
-    widget::{Button, Text},
 };
 use strum::IntoEnumIterator;
 
@@ -50,13 +50,13 @@ use crate::{
 
 pub struct FloatingWindowExamplePlugin;
 
-impl bevy_app::Plugin for FloatingWindowExamplePlugin {
-    fn build(&self, app: &mut bevy_app::App) {
+impl bevy::app::Plugin for FloatingWindowExamplePlugin {
+    fn build(&self, app: &mut bevy::app::App) {
         app.add_plugins(FloatingWindowPlugin);
 
         app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, FloatingWindowRoot>::new());
 
-        app.add_systems(bevy_app::Update, spawn_windows_from_system);
+        app.add_systems(bevy::app::Update, spawn_windows_from_system);
 
         app.insert_resource(FloatingWindowState::default());
     }
@@ -89,7 +89,7 @@ impl ImmediateAttach<CapsUi> for FloatingWindowRoot {
 
         ui.ch()
             .on_spawn_insert(|| Node {
-                flex_wrap: bevy_ui::FlexWrap::Wrap,
+                flex_wrap: bevy::ui::FlexWrap::Wrap,
                 ..styles::row_node_container()
             })
             .add(|ui| {
@@ -119,7 +119,7 @@ impl ImmediateAttach<CapsUi> for FloatingWindowRoot {
 
         ui.ch()
             .on_spawn_insert(|| Node {
-                flex_wrap: bevy_ui::FlexWrap::Wrap,
+                flex_wrap: bevy::ui::FlexWrap::Wrap,
                 ..styles::row_node_container()
             })
             .add(|ui| {
@@ -308,7 +308,7 @@ fn my_window(
         // Add component which will store window location
         // When window is reopened, it should open at the same location.
         let id = ui_root.imm_id();
-        ui_root = ui_root.on_spawn_insert(|| FloatingWindowStoreLocationId(id));
+        ui_root = ui_root.on_spawn_insert(|| FloatingWindowStoreLocationId(id.raw()));
     }
 
     ui_root.add(|ui| {

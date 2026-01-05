@@ -1,6 +1,32 @@
 [package]
 name = "bevy_immediate_floating_ui"
 version = "0.3.3"
+
 edition = "2024"
+authors = ["Pēteris Pakalns"]
+repository = "https://github.com/PPakalns/bevy_immediate/"
+homepage = "https://github.com/PPakalns/bevy_immediate/"
+description = "A simple, fast, and modular immediate mode UI library for Bevy"
+keywords = ["bevy", "ui", "immediate", "simple", "ecs"]
+categories = ["gui", "graphics", "game-development"]
+license = "MIT"
+exclude = ["/.github"]
 
 [dependencies]
+bevy_ecs = { workspace = true }
+bevy_picking = { workspace = true }
+bevy_ui = { workspace = true }
+bevy_app = { workspace = true }
+bevy_math = { workspace = true }
+bevy_time = { workspace = true }
+bevy_platform = { workspace = true }
+bevy_window = { workspace = true }
+bevy_transform = { workspace = true }
+
+bevy_feathers = { workspace = true, optional = true }
+
+rand = { workspace = true }
+
+[features]
+default = []
+bevy_feathers = ["dep:bevy_feathers"]

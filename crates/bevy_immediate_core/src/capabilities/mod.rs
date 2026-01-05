@@ -36,7 +36,7 @@ macro_rules! impl_capability_set {
     ($name:ty, $set_trait:ident > $subset_check:ident, ($($t:ty),+ $(,)?)) => {
         impl $crate::CapSet for $name {
             fn initialize<Caps: $crate::CapSet>(
-                app: &mut bevy_app::App,
+                app: &mut $crate::bevy_app::App,
                 cap_req: &mut $crate::ImmCapAccessRequests<Caps>,
             ) {
                 $(<$t as $crate::ImmCapability>::build(app, cap_req);)+

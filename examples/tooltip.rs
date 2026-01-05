@@ -1,9 +1,10 @@
-use bevy::utils::default;
-use bevy_color::palettes::css::DARK_GRAY;
-use bevy_ecs::{
+use bevy::color::palettes::css::DARK_GRAY;
+use bevy::ecs::{
     component::Component,
     system::{Res, SystemParam},
 };
+use bevy::ui::{BackgroundColor, BorderColor, Node, RepeatedGridTrack, UiRect, px};
+use bevy::utils::default;
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
@@ -15,15 +16,14 @@ use bevy_immediate::{
         tooltip_plugin::TooltipGlobalSettings,
     },
 };
-use bevy_ui::{BackgroundColor, BorderColor, Node, RepeatedGridTrack, UiRect, px};
 use itertools::Itertools;
 
 use crate::styles::compact_button_bundle;
 
 pub struct TooltipExamplePlugin;
 
-impl bevy_app::Plugin for TooltipExamplePlugin {
-    fn build(&self, app: &mut bevy_app::App) {
+impl bevy::app::Plugin for TooltipExamplePlugin {
+    fn build(&self, app: &mut bevy::app::App) {
         app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, TooltipExampleRoot>::new());
     }
 }
@@ -66,7 +66,7 @@ impl ImmediateAttach<CapsUi> for TooltipExampleRoot {
         );
         ui.ch()
             .on_spawn_insert(|| Node {
-                display: bevy_ui::Display::Grid,
+                display: bevy::ui::Display::Grid,
                 grid_template_columns: vec![
                     RepeatedGridTrack::auto(1),
                     RepeatedGridTrack::fr(10, 1.),
@@ -118,9 +118,9 @@ impl ImmediateAttach<CapsUi> for TooltipExampleRoot {
                                                     ..default()
                                                 },
                                                 BackgroundColor(
-                                                    bevy_color::palettes::css::DARK_GRAY.into(),
+                                                    bevy::color::palettes::css::DARK_GRAY.into(),
                                                 ),
-                                                BorderColor::all(bevy_color::palettes::css::WHITE),
+                                                BorderColor::all(bevy::color::palettes::css::WHITE),
                                             )
                                         })
                                         .add(|ui| {

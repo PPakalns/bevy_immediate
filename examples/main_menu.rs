@@ -1,23 +1,23 @@
-use bevy::{ui_render::UiDebugOptions, utils::default};
-use bevy_ecs::{
+use bevy::ecs::{
     component::Component,
     resource::Resource,
     system::{ResMut, SystemParam},
 };
+use bevy::ui::{FlexDirection, Node, Val};
+use bevy::{ui_render::UiDebugOptions, utils::default};
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
     ui::{CapsUi, clicked::ImmUiClicked, selected::ImmUiSelectable, text::ImmUiText},
 };
-use bevy_ui::{FlexDirection, Node, Val};
 use strum::IntoEnumIterator;
 
 use crate::styles::{self, button_bundle, fill_parent_node, text_style};
 
 pub struct MainMenuExamplePlugin;
 
-impl bevy_app::Plugin for MainMenuExamplePlugin {
-    fn build(&self, app: &mut bevy_app::App) {
+impl bevy::app::Plugin for MainMenuExamplePlugin {
+    fn build(&self, app: &mut bevy::app::App) {
         app.insert_resource(CurrentExample::BevyWidgets);
 
         app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, MenuUiRoot>::new());
@@ -40,7 +40,7 @@ impl ImmediateAttach<CapsUi> for MenuUiRoot {
         ui.ch()
             .on_spawn_insert(|| Node {
                 flex_direction: FlexDirection::Column,
-                align_items: bevy_ui::AlignItems::Stretch,
+                align_items: bevy::ui::AlignItems::Stretch,
                 ..fill_parent_node()
             })
             .add(|ui| {

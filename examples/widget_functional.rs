@@ -1,15 +1,15 @@
+use bevy::ui::{AlignItems, FlexDirection, Node, UiRect};
 use bevy_immediate::{
     Imm,
     ui::{CapsUi, ImplCapsUi, clicked::ImmUiClicked, text::ImmUiText},
 };
-use bevy_ui::{AlignItems, FlexDirection, Node, UiRect};
 
 use crate::styles;
 
 pub struct WidgetFunctionalExamplePlugin;
 
-impl bevy_app::Plugin for WidgetFunctionalExamplePlugin {
-    fn build(&self, _app: &mut bevy_app::App) {
+impl bevy::app::Plugin for WidgetFunctionalExamplePlugin {
+    fn build(&self, _app: &mut bevy::app::App) {
         // No need to even create a plugin in this case
     }
 }

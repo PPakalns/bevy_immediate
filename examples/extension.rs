@@ -1,4 +1,4 @@
-use bevy_ecs::component::Component;
+use bevy::ecs::component::Component;
 use bevy_immediate::{CapSet, ImmCapability, ImmEntity, ImplCap};
 
 // This extension example tries to showcase the WORST case.
@@ -9,8 +9,8 @@ use bevy_immediate::{CapSet, ImmCapability, ImmEntity, ImplCap};
 
 pub struct ExtensionExamplePlugin;
 
-impl bevy_app::Plugin for ExtensionExamplePlugin {
-    fn build(&self, _app: &mut bevy_app::App) {
+impl bevy::app::Plugin for ExtensionExamplePlugin {
+    fn build(&self, _app: &mut bevy::app::App) {
         // No need to implement plugin in this case
     }
 }
@@ -23,7 +23,7 @@ pub struct CapUiToggle;
 
 impl ImmCapability for CapUiToggle {
     fn build<Cap: CapSet>(
-        app: &mut bevy_app::App,
+        app: &mut bevy::app::App,
         cap_req: &mut bevy_immediate::ImmCapAccessRequests<Cap>,
     ) {
         // Require necessary plugins

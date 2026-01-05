@@ -1,7 +1,7 @@
-use bevy_ecs::system::ResMut;
+use bevy::ecs::system::ResMut;
+use bevy::input_focus::tab_navigation::TabGroup;
+use bevy::ui::Node;
 use bevy_immediate::{BevyImmediatePlugin, ImmCtx, ui::CapsUi};
-use bevy_input_focus::tab_navigation::TabGroup;
-use bevy_ui::Node;
 
 use crate::{
     anchored::AnchoredUiExampleRoot,
@@ -23,13 +23,13 @@ use crate::{
 /// UI that is not attached to anything
 pub struct PlainUiExamplePlugin;
 
-impl bevy_app::Plugin for PlainUiExamplePlugin {
-    fn build(&self, app: &mut bevy_app::App) {
+impl bevy::app::Plugin for PlainUiExamplePlugin {
+    fn build(&self, app: &mut bevy::app::App) {
         // Initialize plugin (it can be initialized multiple times)
         app.add_plugins(BevyImmediatePlugin::<CapsUi>::new());
 
         // Build your UI as a simple system
-        app.add_systems(bevy_app::Update, ui_system);
+        app.add_systems(bevy::app::Update, ui_system);
     }
 }
 
@@ -43,8 +43,8 @@ fn ui_system(ctx: ImmCtx<CapsUi>, example: ResMut<CurrentExample>) {
         .on_spawn_insert(|| {
             (
                 Node {
-                    flex_direction: bevy_ui::FlexDirection::Row,
-                    column_gap: bevy_ui::Val::Px(10.),
+                    flex_direction: bevy::ui::FlexDirection::Row,
+                    column_gap: bevy::ui::Val::Px(10.),
                     ..styles::fill_parent_node()
                 },
                 TabGroup::new(0),

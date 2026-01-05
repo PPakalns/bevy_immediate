@@ -15,6 +15,9 @@ pub mod utils;
 /// Required by impl_capability_set macro
 pub use paste;
 
+/// Required by impl_capability_set macro
+pub use bevy_app;
+
 /// Helper macro to create child nodes
 /// with macro location used as source for id value generation   
 ///

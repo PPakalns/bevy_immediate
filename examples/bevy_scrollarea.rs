@@ -1,6 +1,5 @@
-use bevy::{math::Vec2, text::TextLayout, utils::default};
-use bevy_color::Color;
-use bevy_ecs::{
+use bevy::color::Color;
+use bevy::ecs::{
     component::Component,
     hierarchy::Children,
     lifecycle,
@@ -9,32 +8,33 @@ use bevy_ecs::{
     spawn::{Spawn, SpawnRelated},
     system::{Commands, Query, Res, SystemParam},
 };
-use bevy_immediate::{
-    CapSet, Imm, ImmEntity,
-    attach::{BevyImmediateAttachPlugin, ImmediateAttach},
-    ui::{CapsUiWidget, ImplCapsUiWidget, text::ImmUiText},
-};
-use bevy_input::{ButtonInput, keyboard::KeyCode};
-use bevy_input_focus::InputDispatchPlugin;
-use bevy_picking::{
+use bevy::input::{ButtonInput, keyboard::KeyCode};
+use bevy::input_focus::InputDispatchPlugin;
+use bevy::picking::{
     events::{Drag, DragStart, Pointer, Scroll},
     hover::Hovered,
 };
-use bevy_ui::{
+use bevy::ui::{
     BackgroundColor, BorderRadius, ComputedNode, Display, FlexDirection, FlexWrap, GridPlacement,
     Node, Overflow, OverflowAxis, PositionType, RepeatedGridTrack, ScrollPosition, UiRect, UiScale,
     px,
 };
-use bevy_ui_widgets::{
+use bevy::ui_widgets::{
     ControlOrientation, CoreScrollbarDragState, CoreScrollbarThumb, Scrollbar, ScrollbarPlugin,
+};
+use bevy::{math::Vec2, text::TextLayout, utils::default};
+use bevy_immediate::{
+    CapSet, Imm, ImmEntity,
+    attach::{BevyImmediateAttachPlugin, ImmediateAttach},
+    ui::{CapsUiWidget, ImplCapsUiWidget, text::ImmUiText},
 };
 
 use crate::{bevy_scrollarea::colors::GRAY1, styles::title_text_style};
 
 pub struct BevyScrollareaExamplePlugin;
 
-impl bevy_app::Plugin for BevyScrollareaExamplePlugin {
-    fn build(&self, app: &mut bevy_app::App) {
+impl bevy::app::Plugin for BevyScrollareaExamplePlugin {
+    fn build(&self, app: &mut bevy::app::App) {
         // You will need bevy feature `experimental_bevy_ui_widgets`
         //
         // and bevy_immediate feature bevy_ui_widgets.
@@ -59,7 +59,7 @@ impl bevy_app::Plugin for BevyScrollareaExamplePlugin {
             BevyScrollareaExampleRoot,
         >::new());
 
-        app.add_systems(bevy_app::Update, update_scrollbar_style_on_drag);
+        app.add_systems(bevy::app::Update, update_scrollbar_style_on_drag);
 
         app.add_observer(
             |event: On<lifecycle::Add, MyScrollableNode>, mut commands: Commands| {
@@ -337,10 +337,10 @@ fn scroll_on_mouse(
         let inverse_scale_factor: f32 = node.inverse_scale_factor;
 
         match scroll.unit {
-            bevy_input::mouse::MouseScrollUnit::Line => {
+            bevy::input::mouse::MouseScrollUnit::Line => {
                 delta *= 28.;
             }
-            bevy_input::mouse::MouseScrollUnit::Pixel => {
+            bevy::input::mouse::MouseScrollUnit::Pixel => {
                 delta *= 1.0 / inverse_scale_factor;
             }
         }

@@ -13,7 +13,7 @@ use bevy_picking::events::{Click, Pointer};
 use bevy_platform::collections::HashSet;
 use bevy_ui::InteractionDisabled;
 
-use crate::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap};
+use bevy_immediate_core::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap};
 
 /// Immediate mode capability for `.activated()`
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]

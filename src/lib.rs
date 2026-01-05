@@ -29,7 +29,7 @@ pub use bevy_immediate_attach as attach;
 /// Extensions to provide ergonomic functionality for working with
 /// creating UI ([`bevy_ui`]) in immediate mode
 #[cfg(feature = "ui")]
-pub mod ui;
+pub use bevy_immediate_ui as ui;
 
 /// For capability set macro
-pub use paste;
+pub use bevy_immediate_core::paste;

@@ -1,4 +1,4 @@
-use bevy_ecs::{component::Component, system::SystemParam};
+use bevy::ecs::{component::Component, system::SystemParam};
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
@@ -39,8 +39,8 @@ impl_capability_set!(
 
 pub struct ExtensionUseExamplePlugin;
 
-impl bevy_app::Plugin for ExtensionUseExamplePlugin {
-    fn build(&self, app: &mut bevy_app::App) {
+impl bevy::app::Plugin for ExtensionUseExamplePlugin {
+    fn build(&self, app: &mut bevy::app::App) {
         // Initialize plugin with your custom capability set and root component
         app.add_plugins(BevyImmediateAttachPlugin::<CapsMyUi, ExtensionUseExampleRoot>::new());
     }

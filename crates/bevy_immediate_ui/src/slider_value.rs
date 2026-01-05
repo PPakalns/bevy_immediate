@@ -1,15 +1,13 @@
 use bevy_ui_widgets::SliderValue;
 
-use crate::{
-    CapSet, ImmCapability, ImmEntity, ImplCap,
-    ui::track_value_change_plugin::{NewValueChange, TrackValueChangePlugin},
-};
+use crate::track_value_change_plugin::{NewValueChange, TrackValueChangePlugin};
+use bevy_immediate_core::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap};
 
 /// Implements capability to set slider value
 pub struct CapabilityUiSliderValue;
 
 impl ImmCapability for CapabilityUiSliderValue {
-    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
+    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<Cap>) {
         let _ = cap_req;
         let _ = app;
         cap_req.request_component_write::<NewValueChange<f32>>(app.world_mut());

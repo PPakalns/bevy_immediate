@@ -1,5 +1,9 @@
+use bevy::ecs::component::Component;
+use bevy::ui::{
+    AlignItems, AlignSelf, BackgroundColor, BorderColor, FlexDirection, JustifyContent,
+    JustifySelf, Node, px,
+};
 use bevy::utils::default;
-use bevy_ecs::component::Component;
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
@@ -15,17 +19,13 @@ use bevy_immediate::{
     },
     utils::ImmLocalHashMemoryHelper,
 };
-use bevy_ui::{
-    AlignItems, AlignSelf, BackgroundColor, BorderColor, FlexDirection, JustifyContent,
-    JustifySelf, Node, px,
-};
 
 use crate::styles::{compact_button_bundle, compact_node_container, row_node_container};
 
 pub struct AnchoredUiExamplePlugin;
 
-impl bevy_app::Plugin for AnchoredUiExamplePlugin {
-    fn build(&self, app: &mut bevy_app::App) {
+impl bevy::app::Plugin for AnchoredUiExamplePlugin {
+    fn build(&self, app: &mut bevy::app::App) {
         app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, AnchoredUiExampleRoot>::new());
     }
 }
@@ -117,8 +117,8 @@ fn dropdown_content(ui: &mut Imm<'_, '_, CapsUi>) {
                 border: px(1.).into(),
                 ..compact_node_container()
             },
-            BackgroundColor(bevy_color::palettes::css::BLACK.into()),
-            BorderColor::all(bevy_color::palettes::css::WHITE),
+            BackgroundColor(bevy::color::palettes::css::BLACK.into()),
+            BorderColor::all(bevy::color::palettes::css::WHITE),
         )
     });
 
@@ -168,9 +168,9 @@ fn dropdown_content(ui: &mut Imm<'_, '_, CapsUi>) {
                                                 ..compact_node_container()
                                             },
                                             BackgroundColor(
-                                                bevy_color::palettes::css::BLACK.into(),
+                                                bevy::color::palettes::css::BLACK.into(),
                                             ),
-                                            BorderColor::all(bevy_color::palettes::css::DARK_GRAY),
+                                            BorderColor::all(bevy::color::palettes::css::DARK_GRAY),
                                         )
                                     })
                                     .add(|ui| {

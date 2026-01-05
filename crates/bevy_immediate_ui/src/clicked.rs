@@ -10,7 +10,7 @@ use bevy_picking::{
 };
 use bevy_platform::collections::HashMap;
 
-use crate::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap};
+use bevy_immediate_core::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap};
 
 /// Immediate mode capability for pointer related events
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]

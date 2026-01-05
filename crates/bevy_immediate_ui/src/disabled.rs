@@ -1,12 +1,12 @@
 use bevy_ui::InteractionDisabled;
 
-use crate::{CapSet, ImmCapability, ImmEntity, ImplCap};
+use bevy_immediate_core::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap};
 
 /// Implements capability to interaction disable ui
 pub struct CapabilityUiDisabled;
 
 impl ImmCapability for CapabilityUiDisabled {
-    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut crate::ImmCapAccessRequests<Cap>) {
+    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<Cap>) {
         let _ = cap_req;
         let _ = app;
     }

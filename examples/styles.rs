@@ -1,16 +1,16 @@
+use bevy::input_focus::{InputFocus, InputFocusVisible};
+use bevy::picking::hover::Hovered;
+use bevy::ui::Pressed;
 use bevy::{
     color::{Color, palettes::basic::*},
     prelude::*,
 };
 use bevy_immediate::ui::{floating_window_plugin::WindowResizeDragDirection, selected::Selectable};
-use bevy_input_focus::{InputFocus, InputFocusVisible};
-use bevy_picking::hover::Hovered;
-use bevy_ui::Pressed;
 
 pub struct DemoStylePlugin;
 
-impl bevy_app::Plugin for DemoStylePlugin {
-    fn build(&self, app: &mut bevy_app::App) {
+impl bevy::app::Plugin for DemoStylePlugin {
+    fn build(&self, app: &mut bevy::app::App) {
         app.add_systems(
             Update,
             (button_system, focus_system, resizable_style_system),
@@ -194,7 +194,7 @@ pub fn button_bundle() -> MyButtonBundle {
     MyButtonBundle {
         button: Button,
         // Has Implementation for adding, removing Pressed
-        widget_button: bevy_ui_widgets::Button,
+        widget_button: bevy::ui_widgets::Button,
         // For bevy_picking to track entity hovered state
         picking: Hovered::default(),
 
@@ -236,7 +236,7 @@ pub struct MyButtonBundle {
     pub picking: Hovered,
     pub my_style: MyStyle,
     pub style: MyStyleBundle,
-    pub widget_button: bevy_ui_widgets::Button,
+    pub widget_button: bevy::ui_widgets::Button,
 }
 
 #[allow(clippy::type_complexity)]

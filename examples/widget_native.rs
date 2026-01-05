@@ -1,20 +1,20 @@
-use bevy_ecs::{
+use bevy::ecs::{
     component::Component,
     system::{Query, SystemParam},
 };
+use bevy::ui::{AlignItems, FlexDirection, Node, UiRect};
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
     ui::{CapsUi, clicked::ImmUiClicked, text::ImmUiText},
 };
-use bevy_ui::{AlignItems, FlexDirection, Node, UiRect};
 
 use crate::styles;
 
 pub struct WidgetNativeExamplePlugin;
 
-impl bevy_app::Plugin for WidgetNativeExamplePlugin {
-    fn build(&self, app: &mut bevy_app::App) {
+impl bevy::app::Plugin for WidgetNativeExamplePlugin {
+    fn build(&self, app: &mut bevy::app::App) {
         app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, NativeWidgetComp>::new());
     }
 }

@@ -17,7 +17,7 @@ use bevy_ui::{
 };
 use bevy_window::{PrimaryWindow, Window};
 
-use crate::ui::utils::aabb_overlap;
+use crate::utils::aabb_overlap;
 
 /// Implements floating UI placement against other entities
 pub struct AnchoredUiPlugin;

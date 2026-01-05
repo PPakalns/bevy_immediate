@@ -1,12 +1,13 @@
 use std::{iter::Peekable, marker::PhantomData};
 
-use bevy::utils::default;
-use bevy_color::palettes::css::NAVY;
-use bevy_ecs::{
+use bevy::color::palettes::css::NAVY;
+use bevy::ecs::{
     change_detection::{DetectChanges, DetectChangesMut},
     component::Component,
     system::{Local, SystemParam},
 };
+use bevy::ui::{BackgroundColor, FlexDirection, Node, px};
+use bevy::utils::default;
 use bevy_immediate::{
     CapSet, Imm, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
@@ -14,7 +15,6 @@ use bevy_immediate::{
     ui::text::ImmUiText,
     utils::ImmLocalHashMemoryHelper,
 };
-use bevy_ui::{BackgroundColor, FlexDirection, Node, px};
 use bevy_ui_text_input::{
     TextInputBuffer, TextInputMode, TextInputNode, TextInputPlugin, TextInputPrompt,
 };
@@ -24,8 +24,8 @@ use crate::extension_use::CapsMyUi;
 
 pub struct TextEditExamplePlugin;
 
-impl bevy_app::Plugin for TextEditExamplePlugin {
-    fn build(&self, app: &mut bevy_app::App) {
+impl bevy::app::Plugin for TextEditExamplePlugin {
+    fn build(&self, app: &mut bevy::app::App) {
         app.add_plugins(BevyImmediateAttachPlugin::<CapsMyUi, TextEditExampleRoot>::new());
     }
 }
@@ -82,7 +82,7 @@ impl ImmediateAttach<CapsMyUi> for TextEditExampleRoot {
 pub struct CapabilityUiTextInput;
 
 impl ImmCapability for CapabilityUiTextInput {
-    fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<Cap>) {
+    fn build<Cap: CapSet>(app: &mut bevy::app::App, cap_req: &mut ImmCapAccessRequests<Cap>) {
         // See bevy_immediate dev-dependencies for bevy_ui_text_input version
         // that works correctly in newest bevy
         if !app.is_plugin_added::<TextInputPlugin>() {

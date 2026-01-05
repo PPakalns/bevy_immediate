@@ -1,7 +1,18 @@
-use bevy_app::PluginGroup;
-use bevy_input_focus::tab_navigation::TabNavigationPlugin;
-use std::ops::DerefMut;
-
+use bevy::app::PluginGroup;
+use bevy::color::palettes::css::DARK_BLUE;
+use bevy::ecs::{
+    component::Component,
+    hierarchy::Children,
+    query::Without,
+    resource::Resource,
+    system::{Query, ResMut, SystemParam},
+};
+use bevy::feathers::controls::{
+    self, button, checkbox, color_slider, color_swatch, radio, slider, toggle_switch,
+};
+use bevy::input_focus::tab_navigation::TabNavigationPlugin;
+use bevy::ui::{BackgroundColor, Display, GridPlacement, Node, RepeatedGridTrack, Val, px};
+use bevy::ui_widgets::{RadioGroup, SliderStep};
 use bevy::{
     color::Hsva,
     feathers::{
@@ -13,17 +24,6 @@ use bevy::{
     },
     utils::default,
 };
-use bevy_color::palettes::css::DARK_BLUE;
-use bevy_ecs::{
-    component::Component,
-    hierarchy::Children,
-    query::Without,
-    resource::Resource,
-    system::{Query, ResMut, SystemParam},
-};
-use bevy_feathers::controls::{
-    self, button, checkbox, color_slider, color_swatch, radio, slider, toggle_switch,
-};
 use bevy_immediate::{
     CapSet, Imm, ImmMarker,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
@@ -34,16 +34,15 @@ use bevy_immediate::{
         text::ImmUiText,
     },
 };
-use bevy_ui::{BackgroundColor, Display, GridPlacement, Node, RepeatedGridTrack, Val, px};
-use bevy_ui_widgets::{RadioGroup, SliderStep};
 use feathers::controls::ColorChannel;
+use std::ops::DerefMut;
 
 use crate::styles::{self, title_text_style};
 
 pub struct BevyWidgetExamplePlugin;
 
-impl bevy_app::Plugin for BevyWidgetExamplePlugin {
-    fn build(&self, app: &mut bevy_app::App) {
+impl bevy::app::Plugin for BevyWidgetExamplePlugin {
+    fn build(&self, app: &mut bevy::app::App) {
         // You will need bevy features `experimental_bevy_feathers` and/or `experimental_bevy_ui_widgets`
         // For bevy feather prestyled bevy UI components
 
@@ -139,10 +138,10 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
 
         ui.ch()
             .on_spawn_insert(|| Node {
-                flex_direction: bevy_ui::FlexDirection::Row,
+                flex_direction: bevy::ui::FlexDirection::Row,
                 column_gap: Val::Px(4.),
-                justify_content: bevy_ui::JustifyContent::FlexStart,
-                align_self: bevy_ui::AlignSelf::FlexStart,
+                justify_content: bevy::ui::JustifyContent::FlexStart,
+                align_self: bevy::ui::AlignSelf::FlexStart,
                 ..default()
             })
             .add(|ui| {

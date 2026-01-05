@@ -9,7 +9,9 @@ use bevy_ecs::{
 };
 use bevy_platform::collections::HashMap;
 
-use crate::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImmediateSystemSet};
+use bevy_immediate_core::{
+    CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImmediateSystemSet,
+};
 
 /// Base capability for UI that sets up correct order of immediate system execution
 pub struct CapabilityUiLayoutOrder;

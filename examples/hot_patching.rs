@@ -1,19 +1,19 @@
+use bevy::ecs::component::Component;
+use bevy::ui::{Node, px};
 use bevy::utils::default;
-use bevy_ecs::component::Component;
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
     lch, lid,
     ui::{CapsUi, text::ImmUiText},
 };
-use bevy_ui::{Node, px};
 
 use crate::styles::{self, title_text_style};
 
 pub struct HotPatchingExamplePlugin;
 
-impl bevy_app::Plugin for HotPatchingExamplePlugin {
-    fn build(&self, app: &mut bevy_app::App) {
+impl bevy::app::Plugin for HotPatchingExamplePlugin {
+    fn build(&self, app: &mut bevy::app::App) {
         // Add bevy immediate plugin with UI support which will construct UI
         // rooted at entity with `HelloWorldRoot` component
         app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, HotPatchingRoot>::new());
