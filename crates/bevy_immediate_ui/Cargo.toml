@@ -21,18 +21,18 @@ bevy_input = { workspace = true }
 bevy_input_focus = { workspace = true }
 bevy_platform = { workspace = true }
 bevy_text = { workspace = true }
+bevy_color = { workspace = true }
 
 bevy_immediate_core = { workspace = true }
 bevy_immediate_floating_ui = { workspace = true }
 
-bevy_color = { workspace = true, optional = true }
 bevy_ui_widgets = { workspace = true, optional = true }
 bevy_feathers = { workspace = true, optional = true }
 
 
 [features]
 default = []
-bevy_ui_widgets = ["dep:bevy_ui_widgets", "dep:bevy_color"]
+bevy_ui_widgets = ["dep:bevy_ui_widgets"]
 bevy_feathers = [
   "bevy_ui_widgets",
   "dep:bevy_feathers",
