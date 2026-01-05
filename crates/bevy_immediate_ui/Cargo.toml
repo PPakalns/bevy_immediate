@@ -32,10 +32,9 @@ bevy_feathers = { workspace = true, optional = true }
 
 [features]
 default = []
-bevy_ui_widgets = ["dep:bevy_ui_widgets"]
+bevy_ui_widgets = ["dep:bevy_ui_widgets", "dep:bevy_color"]
 bevy_feathers = [
   "bevy_ui_widgets",
   "dep:bevy_feathers",
   "bevy_immediate_floating_ui/bevy_feathers",
-  "dep:bevy_color",
 ]
