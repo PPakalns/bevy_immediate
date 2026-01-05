@@ -27,11 +27,11 @@ impl<Caps: Send + Sync + 'static> Default for ImmediateModeEntityMapping<Caps> {
 
 pub fn init<Caps: Send + Sync + 'static>(app: &mut bevy_app::App) {
     app.insert_resource(ImmediateModeEntityMapping::<Caps>::default());
-    app.add_observer(on_sui_marker_added::<Caps>)
-        .add_observer(on_sui_marker_removed::<Caps>);
+    app.add_observer(on_imm_marker_added::<Caps>)
+        .add_observer(on_imm_marker_removed::<Caps>);
 }
 
-fn on_sui_marker_added<Caps: Send + Sync + 'static>(
+fn on_imm_marker_added<Caps: Send + Sync + 'static>(
     trigger: On<lifecycle::Add, ImmMarker<Caps>>,
     marker: Query<&ImmMarker<Caps>>,
     mut mapping: ResMut<ImmediateModeEntityMapping<Caps>>,
@@ -49,7 +49,7 @@ fn on_sui_marker_added<Caps: Send + Sync + 'static>(
     }
 }
 
-fn on_sui_marker_removed<Caps: Send + Sync + 'static>(
+fn on_imm_marker_removed<Caps: Send + Sync + 'static>(
     trigger: On<lifecycle::Remove, ImmMarker<Caps>>,
     marker: Query<&ImmMarker<Caps>>,
     mut mapping: ResMut<ImmediateModeEntityMapping<Caps>>,

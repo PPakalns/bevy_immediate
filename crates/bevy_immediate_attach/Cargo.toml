@@ -1,0 +1,12 @@
+[package]
+name = "bevy_immediate_attach"
+version = "0.3.3"
+edition = "2024"
+
+[dependencies]
+bevy_ecs = { workspace = true }
+bevy_app = { workspace = true }
+
+bevy_immediate_core = { workspace = true }
+
+log = { workspace = true }

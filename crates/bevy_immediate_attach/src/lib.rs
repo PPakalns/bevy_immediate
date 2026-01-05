@@ -1,3 +1,5 @@
+//! Logic to provide immediate mode api
+//! to attach entity tree to already existing entity
 use std::{any::TypeId, marker::PhantomData};
 
 use bevy_ecs::{
@@ -9,7 +11,7 @@ use bevy_ecs::{
     system::{Commands, In, Query, StaticSystemParam, SystemParam},
 };
 
-use crate::{BevyImmediatePlugin, CapSet, Imm, ImmCtx, ImmId};
+use bevy_immediate_core::{BevyImmediatePlugin, CapSet, Imm, ImmCtx, ImmId};
 
 /// Implement trait to be able to attach immediate tree in arbitrary place
 ///

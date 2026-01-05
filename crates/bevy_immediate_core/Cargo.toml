@@ -1,0 +1,19 @@
+[package]
+name = "bevy_immediate_core"
+version = "0.3.3"
+edition = "2024"
+
+[dependencies]
+bevy_ecs = { workspace = true }
+bevy_platform = { workspace = true }
+bevy_app = { workspace = true }
+bevy_derive = { workspace = true }
+
+type-map = { workspace = true }
+ahash = { workspace = true }
+log = { workspace = true }
+paste = { workspace = true }
+
+[features]
+deault = []
+hotpatching = ["bevy_ecs/hotpatching"]
