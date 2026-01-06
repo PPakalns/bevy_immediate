@@ -79,7 +79,7 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapQueryParam<'_, '_, Caps> {
         state: &'state mut Self::State,
         system_meta: &bevy_ecs::system::SystemMeta,
         world: bevy_ecs::world::unsafe_world_cell::UnsafeWorldCell<'world>,
-        change_tick: bevy_ecs::component::Tick,
+        change_tick: bevy_ecs::change_detection::Tick,
     ) -> Self::Item<'world, 'state> {
         let query = unsafe { Query::get_param(&mut state.state, system_meta, world, change_tick) };
 
@@ -126,7 +126,7 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapResourcesParam<'_, '_, Caps> {
         state: &'state mut Self::State,
         system_meta: &bevy_ecs::system::SystemMeta,
         world: bevy_ecs::world::unsafe_world_cell::UnsafeWorldCell<'world>,
-        change_tick: bevy_ecs::component::Tick,
+        change_tick: bevy_ecs::change_detection::Tick,
     ) -> Self::Item<'world, 'state> {
         let resources = unsafe {
             FilteredResourcesMut::get_param(&mut state.access, system_meta, world, change_tick)

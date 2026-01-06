@@ -796,7 +796,7 @@ pub type WithoutImm<Caps = ()> = Without<ImmMarker<Caps>>;
 
 /// Helper structure for immediate mode compatbile state change detection
 pub struct ChangeDetector {
-    last_run: bevy_ecs::component::Tick,
+    last_run: bevy_ecs::change_detection::Tick,
 }
 
 impl ChangeDetector {
