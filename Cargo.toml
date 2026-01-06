@@ -9,7 +9,7 @@ description = "A simple, fast, and modular immediate mode UI library for Bevy"
 keywords = ["bevy", "ui", "immediate", "simple", "ecs"]
 categories = ["gui", "graphics", "game-development"]
 license = "MIT"
-rust-version = "1.88"
+rust-version = "1.89"
 exclude = ["/.github"]
 autoexamples = false
 
@@ -22,24 +22,24 @@ members = [
 ]
 
 [workspace.dependencies]
-bevy_ecs = { version = "0.17.2", default-features = false }
-bevy_app = { version = "0.17.2", default-features = false }
-bevy_platform = { version = "0.17.2", default-features = false }
-bevy_derive = { version = "0.17.2", default-features = false }
-bevy_internal = { version = "0.17.2", default-features = false }
+bevy_ecs = { version = "0.18.0-rc.2", default-features = false }
+bevy_app = { version = "0.18.0-rc.2", default-features = false }
+bevy_platform = { version = "0.18.0-rc.2", default-features = false }
+bevy_derive = { version = "0.18.0-rc.2", default-features = false }
+bevy_internal = { version = "0.18.0-rc.2", default-features = false }
 
-bevy_math = { version = "0.17.2", default-features = false }
-bevy_window = { version = "0.17.2", default-features = false }
-bevy_ui = { version = "0.17.2", default-features = false }
-bevy_text = { version = "0.17.2", default-features = false }
-bevy_transform = { version = "0.17.2", default-features = false }
-bevy_picking = { version = "0.17.2", default-features = false }
-bevy_color = { version = "0.17.2", default-features = false }
-bevy_input = { version = "0.17.2", default-features = false }
-bevy_input_focus = { version = "0.17.2", default-features = false }
-bevy_ui_widgets = { version = "0.17.2", default-features = false }
-bevy_feathers = { version = "0.17.2", default-features = false }
-bevy_time = { version = "0.17.2", default-features = false }
+bevy_math = { version = "0.18.0-rc.2", default-features = false }
+bevy_window = { version = "0.18.0-rc.2", default-features = false }
+bevy_ui = { version = "0.18.0-rc.2", default-features = false }
+bevy_text = { version = "0.18.0-rc.2", default-features = false }
+bevy_transform = { version = "0.18.0-rc.2", default-features = false }
+bevy_picking = { version = "0.18.0-rc.2", default-features = false }
+bevy_color = { version = "0.18.0-rc.2", default-features = false }
+bevy_input = { version = "0.18.0-rc.2", default-features = false }
+bevy_input_focus = { version = "0.18.0-rc.2", default-features = false }
+bevy_ui_widgets = { version = "0.18.0-rc.2", default-features = false }
+bevy_feathers = { version = "0.18.0-rc.2", default-features = false }
+bevy_time = { version = "0.18.0-rc.2", default-features = false }
 
 log = "0.4.28"
 ahash = "0.8.12"
@@ -69,7 +69,7 @@ bevy_ui_widgets = ["ui", "bevy_immediate_ui/bevy_ui_widgets"]
 bevy_feathers = ["bevy_ui_widgets", "bevy_immediate_ui/bevy_feathers"]
 
 [dev-dependencies]
-bevy = { version = "0.17.2", default-features = false, features = [
+bevy = { version = "0.18.0-rc.2", default-features = false, features = [
   "bevy_ui",
   "bevy_ui_debug",
   "bevy_ui_render",
@@ -93,7 +93,7 @@ itertools = "0.14"
 strum = { version = "0.27.2", features = ["derive"] }
 
 # bevy_ui_text_input = "0.6.0-rc.2" # Patched in patch.crates-io
-bevy_ui_text_input = { git = "https://github.com/PPakalns/bevy_ui_text_input.git", rev = "db1f0ffdec5830428afbe62358c25a6a72416aff" }
+bevy_ui_text_input = { git = "https://github.com/PPakalns/bevy_ui_text_input.git", rev = "8df21f0d4588fd27c8c888f685cc3ec7db8eab6a" }
 
 cosmic-text = { version = "0.14.2", default-features = false }
 bevy_framepace = "0.20"
@@ -117,7 +117,7 @@ wasm-opt = ["-Oz", "--enable-bulk-memory"]
 [patch.crates-io]
 
 # Not yet released
-bevy_ui_text_input = { git = "https://github.com/PPakalns/bevy_ui_text_input.git", rev = "db1f0ffdec5830428afbe62358c25a6a72416aff" }
+bevy_ui_text_input = { git = "https://github.com/PPakalns/bevy_ui_text_input.git", rev = "8df21f0d4588fd27c8c888f685cc3ec7db8eab6a" }
 
 # bevy = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
 # bevy_ecs = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
