@@ -1,5 +1,10 @@
 # Changelog
 
+# 0.5.0
+
+* Upgraded to bevy 0.18
+* Currently bevy_ui_text_input and related example has been disabled until it has been ported to bevy 0.18.
+
 # 0.4.0
 * bevy_immediate implementation has been split into multiple crates. Migration shouldn't require any changes
   because `bevy_immediate` reexports all necessary types.

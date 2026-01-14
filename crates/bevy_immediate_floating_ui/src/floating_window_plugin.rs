@@ -10,7 +10,6 @@ use bevy_ecs::{
     query::{Added, Changed, Or, With},
     resource::Resource,
     schedule::IntoScheduleConfigs,
-    spawn::SpawnRelated,
     system::{Commands, Query, Res, ResMut},
 };
 use bevy_math::{I8Vec2, Vec2, bounding::Aabb2d};
