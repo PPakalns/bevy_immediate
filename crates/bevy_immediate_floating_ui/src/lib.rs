@@ -1,3 +1,6 @@
+#![warn(missing_docs)]
+#![doc = include_str!("../README.md")]
+
 /// Implements plugin for floating windows
 pub mod floating_window_plugin;
 

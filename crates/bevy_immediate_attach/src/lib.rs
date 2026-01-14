@@ -1,3 +1,6 @@
+#![warn(missing_docs)]
+#![doc = include_str!("../README.md")]
+
 //! Logic to provide immediate mode api
 //! to attach entity tree to already existing entity
 use std::{any::TypeId, marker::PhantomData};

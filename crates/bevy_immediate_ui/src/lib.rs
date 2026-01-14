@@ -1,3 +1,6 @@
+#![warn(missing_docs)]
+#![doc = include_str!("../README.md")]
+
 use bevy_immediate_core::{capabilities::ImplCapsEmpty, impl_capability_set};
 
 /// Defines capability set for Ui

@@ -1,3 +1,6 @@
+#![warn(missing_docs)]
+#![doc = include_str!("../README.md")]
+
 /// Base logic to provide immediate mode api
 pub mod immediate;
 pub use immediate::*;

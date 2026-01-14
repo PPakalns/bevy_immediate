@@ -1,6 +1,6 @@
 # bevy_immediate: Immediate Mode UI for Bevy
 
-[![bevy_version](https://img.shields.io/badge/bevy-0.17-blue)](https://github.com/bevyengine/bevy)
+[![bevy_version](https://img.shields.io/badge/bevy-0.18-blue)](https://github.com/bevyengine/bevy)
 [![Latest version](https://img.shields.io/crates/v/bevy_immediate.svg)](https://crates.io/crates/bevy_immediate)
 [![Documentation](https://docs.rs/bevy_immediate/badge.svg)](https://docs.rs/bevy_immediate)
 [![License](https://img.shields.io/crates/l/bevy_immediate.svg)](https://crates.io/crates/bevy_immediate)
