@@ -126,11 +126,6 @@ pub mod button_variant;
 /// Implements capabilities for floating anchored elements
 pub mod anchored;
 
-/// Contains implementation to work around inconsistent
-/// radio button implementation in bevy
-#[cfg(feature = "bevy_ui_widgets")]
-pub mod radio_button_fix_plugin;
-
 pub use bevy_immediate_floating_ui::{
     anchored_ui_plugin, floating_ui_focus_plugin, floating_ui_ordering_plugin,
     floating_window_plugin, tooltip_plugin, utils,

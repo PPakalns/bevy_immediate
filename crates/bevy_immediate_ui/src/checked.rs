@@ -17,14 +17,6 @@ impl ImmCapability for CapabilityUiChecked {
         if !app.is_plugin_added::<TrackValueChangePlugin<bool>>() {
             app.add_plugins(TrackValueChangePlugin::<bool>::default());
         }
-
-        #[cfg(feature = "bevy_ui_widgets")]
-        {
-            use crate::radio_button_fix_plugin::RadioButtonFixPlugin;
-            if !app.is_plugin_added::<RadioButtonFixPlugin>() {
-                app.add_plugins(RadioButtonFixPlugin);
-            }
-        }
     }
 }
 
