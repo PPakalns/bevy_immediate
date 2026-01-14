@@ -96,7 +96,7 @@ strum = { version = "0.27.2", features = ["derive"] }
 # bevy_ui_text_input = { git = "https://github.com/PPakalns/bevy_ui_text_input.git", rev = "8df21f0d4588fd27c8c888f685cc3ec7db8eab6a" }
 # cosmic-text = { version = "0.15.0", default-features = false }
 
-bevy_framepace = "0.20"
+# bevy_framepace = "0.20"
 
 [[example]]
 name = "demo"

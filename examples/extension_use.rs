@@ -33,7 +33,7 @@ impl_capability_set!(
         //
         // Add your own capabilities
         crate::extension::CapUiToggle,
-        crate::text_edit::CapabilityUiTextInput,
+        // crate::text_edit::CapabilityUiTextInput,
     )
 );
 

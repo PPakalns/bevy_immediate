@@ -181,11 +181,11 @@ pub fn container_with_background() -> MyStyleBundle {
     let mut node = node_container();
     node.overflow = Overflow::clip();
     node.border = UiRect::all(Val::Px(5.0));
+    node.border_radius = BorderRadius::all(Val::Px(5.));
 
     MyStyleBundle {
         node,
         border_color: BorderColor::all(Color::srgb(1., 0., 0.)),
-        border_radius: BorderRadius::all(Val::Px(5.)),
         background_color: BackgroundColor(BACKGROUND),
     }
 }
@@ -205,10 +205,10 @@ pub fn button_bundle() -> MyButtonBundle {
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 padding: UiRect::all(Val::Px(5.)),
+                border_radius: BorderRadius::all(Val::Px(5.)),
                 ..default()
             },
             border_color: BorderColor::all(Color::BLACK),
-            border_radius: BorderRadius::all(Val::Px(5.)),
             background_color: BackgroundColor(NORMAL_BUTTON),
         },
     }
@@ -218,7 +218,7 @@ pub fn compact_button_bundle() -> MyButtonBundle {
     let mut bundle = button_bundle();
     bundle.style.node.border = UiRect::all(Val::Px(2.));
     bundle.style.node.padding = UiRect::all(Val::Px(2.));
-    bundle.style.border_radius = BorderRadius::all(Val::Px(2.));
+    bundle.style.node.border_radius = BorderRadius::all(Val::Px(2.));
     bundle
 }
 
@@ -226,7 +226,6 @@ pub fn compact_button_bundle() -> MyButtonBundle {
 pub struct MyStyleBundle {
     pub node: Node,
     pub border_color: BorderColor,
-    pub border_radius: BorderRadius,
     pub background_color: BackgroundColor,
 }
 

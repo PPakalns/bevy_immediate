@@ -267,11 +267,11 @@ where
                         Children::spawn(Spawn((
                             Node {
                                 position_type: PositionType::Absolute,
+                                border_radius: BorderRadius::all(px(4)),
                                 ..default()
                             },
                             Hovered::default(),
                             BackgroundColor(colors::GRAY2.into()),
-                            BorderRadius::all(px(4)),
                             CoreScrollbarThumb,
                         ))),
                     )
@@ -296,11 +296,11 @@ where
                         Children::spawn(Spawn((
                             Node {
                                 position_type: PositionType::Absolute,
+                                border_radius: BorderRadius::all(px(4)),
                                 ..default()
                             },
                             Hovered::default(),
                             BackgroundColor(colors::GRAY2.into()),
-                            BorderRadius::all(px(4)),
                             CoreScrollbarThumb,
                         ))),
                     )

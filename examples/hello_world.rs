@@ -38,10 +38,10 @@ impl ImmediateAttach<CapsUi> for HelloWorldRoot {
                         padding: UiRect::all(Val::Px(10.)),
                         column_gap: Val::Px(10.),
                         row_gap: Val::Px(10.),
+                        border_radius: BorderRadius::all(Val::Px(5.)),
                         ..default()
                     },
                     BorderColor::all(Color::srgb(1., 0., 0.)),
-                    BorderRadius::all(Val::Px(5.)),
                     BackgroundColor(Color::srgb(0.05, 0.05, 0.05)),
                 )
             })

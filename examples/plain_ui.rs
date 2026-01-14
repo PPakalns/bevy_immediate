@@ -2,6 +2,7 @@ use bevy::ecs::system::ResMut;
 use bevy::input_focus::tab_navigation::TabGroup;
 use bevy::ui::Node;
 use bevy_immediate::{BevyImmediatePlugin, ImmCtx, ui::CapsUi};
+use bevy_immediate_ui::text::ImmUiText;
 
 use crate::{
     anchored::AnchoredUiExampleRoot,
@@ -14,7 +15,7 @@ use crate::{
     main_menu::{CurrentExample, MenuUiRoot},
     power_user::PowerUserExampleRoot,
     styles,
-    text_edit::TextEditExampleRoot,
+    // text_edit::TextEditExampleRoot,
     tooltip::TooltipExampleRoot,
     widget_use::WidgetUseExampleRoot,
 };
@@ -98,7 +99,8 @@ fn ui_system(ctx: ImmCtx<CapsUi>, example: ResMut<CurrentExample>) {
                     content.on_spawn_insert(|| AnchoredUiExampleRoot);
                 }
                 CurrentExample::TextEdit => {
-                    content.on_spawn_insert(|| TextEditExampleRoot);
+                    // content.on_spawn_insert(|| TextEditExampleRoot);
+                    content.text("bevy_ui_text_input not available for bevy 0.18 yet!");
                 }
             }
         });
