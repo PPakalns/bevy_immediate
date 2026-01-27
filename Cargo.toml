@@ -1,6 +1,6 @@
 [package]
 name = "bevy_immediate"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2024"
 authors = ["Pēteris Pakalns"]
 repository = "https://github.com/PPakalns/bevy_immediate/"
@@ -49,10 +49,10 @@ rand = { version = "0.9.2", features = [
   "thread_rng",
 ], default-features = false }
 
-bevy_immediate_core = { version = "0.5.0", path = "./crates/bevy_immediate_core/" }
-bevy_immediate_attach = { version = "0.5.0", path = "./crates/bevy_immediate_attach/" }
-bevy_immediate_floating_ui = { version = "0.5.0", path = "./crates/bevy_immediate_floating_ui/" }
-bevy_immediate_ui = { version = "0.5.0", path = "./crates/bevy_immediate_ui/" }
+bevy_immediate_core = { version = "0.5.1", path = "./crates/bevy_immediate_core/" }
+bevy_immediate_attach = { version = "0.5.1", path = "./crates/bevy_immediate_attach/" }
+bevy_immediate_floating_ui = { version = "0.5.1", path = "./crates/bevy_immediate_floating_ui/" }
+bevy_immediate_ui = { version = "0.5.1", path = "./crates/bevy_immediate_ui/" }
 
 [dependencies]
 bevy_immediate_core = { workspace = true }
@@ -92,11 +92,9 @@ bevy = { version = "0.18.0", default-features = false, features = [
 itertools = "0.14"
 strum = { version = "0.27.2", features = ["derive"] }
 
-# bevy_ui_text_input = "0.6.0-rc.2" # Patched in patch.crates-io
-# bevy_ui_text_input = { git = "https://github.com/PPakalns/bevy_ui_text_input.git", rev = "8df21f0d4588fd27c8c888f685cc3ec7db8eab6a" }
-# cosmic-text = { version = "0.15.0", default-features = false }
-
-# bevy_framepace = "0.20"
+bevy_ui_text_input = { git = "https://github.com/PPakalns/bevy_ui_text_input.git", rev = "a0c2e18897857c2e4ee3a659ddba93ef498d860a" }
+cosmic-text = { version = "0.16.0", default-features = false }
+bevy_framepace = { git = "https://github.com/aevyrie/bevy_framepace.git", rev = "9be8f16" }
 
 [[example]]
 name = "demo"

@@ -10,7 +10,7 @@ fn main() {
             ..default()
         }))
         //
-        // .add_plugins(bevy_framepace::FramepacePlugin) // Reduces input latency
+        .add_plugins(bevy_framepace::FramepacePlugin) // Reduces input latency
         //
         // Reusable code for demo examples and effects
         .add_plugins(styles::DemoStylePlugin)
@@ -33,7 +33,7 @@ fn main() {
         .add_plugins(power_user::PowerUserExamplePlugin)
         .add_plugins(hot_patching::HotPatchingExamplePlugin)
         .add_plugins(tooltip::TooltipExamplePlugin)
-        // .add_plugins(text_edit::TextEditExamplePlugin)
+        .add_plugins(text_edit::TextEditExamplePlugin)
         .add_plugins(anchored::AnchoredUiExamplePlugin)
         .add_plugins(floating_window::FloatingWindowExamplePlugin)
         .run();
@@ -73,6 +73,6 @@ mod floating_window;
 
 mod anchored;
 
-// mod text_edit;
+mod text_edit;
 
 mod styles;

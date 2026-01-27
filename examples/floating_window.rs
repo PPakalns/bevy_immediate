@@ -43,7 +43,7 @@ use crate::{
     main_menu::CurrentExample,
     power_user::PowerUserExampleRoot,
     styles::{self, MyStyle, button_bundle, node_container},
-    // text_edit::TextEditExampleRoot,
+    text_edit::TextEditExampleRoot,
     tooltip::TooltipExampleRoot,
     widget_use::WidgetUseExampleRoot,
 };
@@ -269,8 +269,7 @@ fn show_example_window(
                     content.on_spawn_insert(|| AnchoredUiExampleRoot);
                 }
                 CurrentExample::TextEdit => {
-                    // content.on_spawn_insert(|| TextEditExampleRoot);
-                    content.text("bevy_ui_text_input not available for bevy 0.18 yet!");
+                    content.on_spawn_insert(|| TextEditExampleRoot);
                 }
             }
         },

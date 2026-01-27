@@ -1,5 +1,10 @@
 # Changelog
 
+# 0.5.1
+
+* No changes to crate
+* Support bevy_ui_text_input, bevy_framepace in demo example
+
 # 0.5.0
 
 * Upgraded to bevy 0.18
