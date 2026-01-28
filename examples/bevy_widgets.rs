@@ -12,7 +12,7 @@ use bevy::feathers::controls::{
 };
 use bevy::input_focus::tab_navigation::TabNavigationPlugin;
 use bevy::ui::{BackgroundColor, Display, GridPlacement, Node, RepeatedGridTrack, Val, px};
-use bevy::ui_widgets::{RadioGroup, SliderStep};
+use bevy::ui_widgets::{RadioGroup, SliderPrecision, SliderStep};
 use bevy::{
     color::Hsva,
     feathers::{
@@ -423,7 +423,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
                             min: 0.,
                             max: 1.,
                         },
-                        SliderStep(0.05),
+                        (SliderStep(0.05), SliderPrecision(2)),
                     )
                 })
                 .slider_base_color((*hsva).into())
