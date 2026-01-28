@@ -1,8 +1,11 @@
 # Changelog
 
-# 0.5.1
+# 0.5.2
+
+## Internal changes
 * Use the new bevy 0.18 mechanism to override bevy_feathers cursor while resizing floating window.  
   At the end of dragging library tries to restore original override cursor, if such existed.
+* Fixed slider in bevy widget example that was broken in bevy 0.18.
 
 # 0.5.1
 
