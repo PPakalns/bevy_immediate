@@ -1,6 +1,10 @@
 # Changelog
 
 # 0.5.1
+* Use the new bevy 0.18 mechanism to override bevy_feathers cursor while resizing floating window.  
+  At the end of dragging library tries to restore original override cursor, if such existed.
+
+# 0.5.1
 
 * No changes to crate
 * Support bevy_ui_text_input, bevy_framepace in demo example

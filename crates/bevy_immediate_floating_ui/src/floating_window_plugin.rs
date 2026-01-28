@@ -369,17 +369,17 @@ fn resolve_y(
 /// Function to update bevy feathers cursor while resizing window
 #[cfg(feature = "bevy_feathers")]
 fn update_bevy_feathers_cursor(
-    default_cursor: Option<ResMut<cursor::DefaultCursor>>,
-    resize_state: ResMut<FloatingWindowResizeState>,
+    override_cursor: Option<ResMut<cursor::OverrideCursor>>,
+    resize_state: Res<FloatingWindowResizeState>,
     q: Query<&cursor::EntityCursor>,
-    mut stored_cursor: Local<Option<Option<cursor::EntityCursor>>>,
+
+    mut stored_cursor: Local<Option<Option<Option<cursor::EntityCursor>>>>,
 ) {
-    // TODO: IN bevy 0.18 use the new mechanism
-    let Some(mut default_cursor) = default_cursor else {
+    let Some(mut override_cursor) = override_cursor else {
         return;
     };
 
-    match (resize_state.dragging, stored_cursor.as_mut()) {
+    match (resize_state.dragging, &*stored_cursor) {
         (None, None) | (Some(_), Some(_)) => {
             // State didn't change
         }
@@ -387,14 +387,14 @@ fn update_bevy_feathers_cursor(
             // Restore stored cursor
             let cursor = stored_cursor.take().unwrap();
             if let Some(cursor) = cursor {
-                default_cursor.0 = cursor;
+                override_cursor.0 = cursor;
             }
         }
         (Some(entity), None) => {
-            let new_cursor = q.get(entity).ok().cloned();
+            let mut new_cursor = q.get(entity).ok().cloned();
 
-            if let Some(mut new_cursor) = new_cursor {
-                std::mem::swap(&mut new_cursor, &mut default_cursor.0);
+            if new_cursor.is_some() {
+                std::mem::swap(&mut new_cursor, &mut override_cursor.0);
                 *stored_cursor = Some(Some(new_cursor));
             } else {
                 *stored_cursor = Some(None);
