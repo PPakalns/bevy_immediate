@@ -3,14 +3,18 @@ use std::{any::TypeId, marker::PhantomData};
 use bevy_ecs::{
     entity::Entity,
     resource::Resource,
+    schedule::IntoScheduleConfigs,
     system::{Query, ResMut},
 };
 use bevy_platform::collections::{HashMap, hash_map::Entry};
 
-use crate::ImmId;
+use crate::{ImmId, ImmediateSystemSet};
 
 pub fn init<Caps: Send + Sync + 'static>(app: &mut bevy_app::App) {
-    app.add_systems(bevy_app::PostUpdate, clean_cached::<Caps>);
+    app.add_systems(
+        bevy_app::PostUpdate,
+        clean_cached::<Caps>.in_set(ImmediateSystemSet::<Caps>::default()),
+    );
     app.insert_resource(CachedHash::<Caps>::default());
 }
 
