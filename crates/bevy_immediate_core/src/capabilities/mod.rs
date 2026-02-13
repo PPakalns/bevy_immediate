@@ -33,25 +33,25 @@ pub trait ImplCap<T>: CapSet {}
 /// See examples for correct use!
 #[macro_export]
 macro_rules! impl_capability_set {
-    ($name:ty, $set_trait:ident > $subset_check:ident, ($($t:ty),+ $(,)?)) => {
+    ($name:ty, $set_trait:ident > $subset_check:ident, ($($t:ty),* $(,)?)) => {
         impl $crate::CapSet for $name {
             fn initialize<Caps: $crate::CapSet>(
                 app: &mut $crate::bevy_app::App,
                 cap_req: &mut $crate::ImmCapAccessRequests<Caps>,
             ) {
-                $(<$t as $crate::ImmCapability>::build(app, cap_req);)+
+                $(<$t as $crate::ImmCapability>::build(app, cap_req);)*
             }
         }
 
         #[doc = "Trait to check for set of capabilities to be implemented"]
-        pub trait $set_trait: $crate::CapSet $(+ $crate::ImplCap<$t>)+ {}
+        pub trait $set_trait: $crate::CapSet $(+ $crate::ImplCap<$t>)* {}
         impl<T> $set_trait for T
-        where T: $crate::CapSet $(+ $crate::ImplCap<$t>)+
+        where T: $crate::CapSet $(+ $crate::ImplCap<$t>)*
         {}
 
         $(
             impl $crate::ImplCap<$t> for $name {}
-        )+
+        )*
 
         $crate::paste::paste!{
             #[allow(warnings)]
