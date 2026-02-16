@@ -28,6 +28,9 @@ pub trait ImmUiChecked {
     /// Synchronise checked value
     fn checked(self, value: &mut bool) -> Self;
 
+    /// Set checked value to provided value
+    fn checked_set(self, value: bool) -> Self;
+
     /// Synchronise checked value
     ///
     /// Useful for radio buttons.
@@ -53,15 +56,30 @@ where
         self
     }
 
-    fn checked(mut self, value: &mut bool) -> Self {
-        fn update_checked(commands: &mut EntityCommands, value: bool) {
-            if value {
-                commands.insert(Checked);
-            } else {
-                commands.remove::<Checked>();
+    fn checked_set(mut self, value: bool) -> Self {
+        'initialized: {
+            let Ok(entity) = self.cap_get_entity() else {
+                break 'initialized;
+            };
+
+            let last_value = entity.contains::<Checked>();
+            if last_value != value {
+                update_checked(&mut self.entity_commands(), value);
             }
+
+            return self;
         }
 
+        let mut commands = self.entity_commands();
+        commands.insert(Checkable);
+        if value {
+            commands.insert(Checked);
+        }
+
+        self
+    }
+
+    fn checked(mut self, value: &mut bool) -> Self {
         'initialized: {
             let Ok(mut entity) = self.cap_get_entity_mut() else {
                 break 'initialized;
@@ -108,5 +126,13 @@ where
             *current = this;
         }
         self
+    }
+}
+
+fn update_checked(commands: &mut EntityCommands, value: bool) {
+    if value {
+        commands.insert(Checked);
+    } else {
+        commands.remove::<Checked>();
     }
 }
