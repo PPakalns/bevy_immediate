@@ -262,7 +262,7 @@ ui.ch(); // Has internal counter for id generation, but can not be used
 for idx in 0..count {
     // In case of many items inside block, you can add additional id to auto id generation
     // In that case you have a new unique scope for which unique id requirements are restored.
-    let mut ui = ui.with_local_auto_id_guard(("my_loop", idx));
+    let mut ui = ui.with_add_id_pref(("my_loop", idx));
     ui.ch();
     ui.ch();
     ui.ch();
