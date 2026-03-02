@@ -6,7 +6,7 @@ use bevy_ecs::{
     system::{Query, Res, ResMut},
 };
 use bevy_picking::events::{Out, Over, Pointer};
-use bevy_time::Time;
+use bevy_time::{Real, Time};
 
 /// Implements functionality to calculate when tooltip should be displayed
 pub struct TooltipPlugin;
@@ -84,7 +84,7 @@ fn on_source(
     pointer: On<Pointer<Over>>,
     query: Query<(), With<TooltipSource>>,
     mut res: ResMut<TooltipGlobalState>,
-    time: Res<Time>,
+    time: Res<Time<Real>>,
 ) {
     if query.contains(pointer.entity) {
         match &res.state {
@@ -111,7 +111,7 @@ fn out_sorce(
     pointer: On<Pointer<Out>>,
     query: Query<(), With<TooltipSource>>,
     mut res: ResMut<TooltipGlobalState>,
-    time: Res<Time>,
+    time: Res<Time<Real>>,
 ) {
     if query.contains(pointer.entity) {
         res.state = match res.state {
@@ -129,7 +129,7 @@ fn out_sorce(
 
 fn update_tooltip_global_state(
     mut res: ResMut<TooltipGlobalState>,
-    time: Res<Time>,
+    time: Res<Time<Real>>,
     global: Res<TooltipGlobalSettings>,
 ) {
     match &res.state {
