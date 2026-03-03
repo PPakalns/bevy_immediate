@@ -23,7 +23,7 @@ use bevy_ui::{
     ComputedNode, ComputedUiRenderTargetInfo, LayoutConfig, Node, Pressed, RepeatedGridTrack,
     UiGlobalTransform, UiScale, UiSystems, Val, px,
 };
-use rand::Rng;
+use rand::RngExt;
 
 use crate::{
     floating_ui_ordering_plugin::{FloatingUiOrderingPlugin, UiBringForward, UiZOrderLayer},
