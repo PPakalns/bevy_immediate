@@ -22,6 +22,7 @@ type-map = { workspace = true }
 ahash = { workspace = true }
 log = { workspace = true }
 paste = { workspace = true }
+stackbox_2 = { workspace = true }
 
 [features]
 deault = []

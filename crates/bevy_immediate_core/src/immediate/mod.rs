@@ -312,18 +312,24 @@ impl<'w, 's, Caps: CapSet> Imm<'w, 's, Caps> {
         params: EntityParams,
         f: impl FnOnce(&mut Imm<'w, 's, Caps>) -> R,
     ) -> R {
-        self.add_child_entities_dyn(params, Box::new(f))
+        // Use stackbox to avoid heap allocation
+        let mut slot = stackbox_2::Slot::VACANT;
+        let stackbox: StackBoxDynFnOnceImmDyn<'_, '_, '_, _, _> = slot.stackbox(f).into_dyn();
+
+        self.add_child_entities_dyn(params, stackbox)
     }
 
     /// Manage entity with provided [`ImmId`] and [`Entity`] attributes with provided closure
+    ///
+    /// Dyn variant used to improve compile times
     #[allow(clippy::type_complexity)]
     fn add_child_entities_dyn<R>(
         &mut self,
         params: EntityParams,
-        f: Box<dyn FnOnce(&mut Imm<'w, 's, Caps>) -> R + '_>,
+        f: StackBoxDynFnOnceImmDyn<'_, 'w, 's, Caps, R>,
     ) -> R {
         let mut imm = self.add_child_entities_scope(params);
-        f(&mut imm)
+        f.call(&mut imm)
     }
 
     /// Manage current context as entity
@@ -859,6 +865,30 @@ impl<'r, 'w, 's, Caps: CapSet> ImmScopeGuard<'r, 'w, 's, Caps> {
         Self {
             imm,
             stored_current: new_current,
+        }
+    }
+}
+
+trait FnOnceImm<'w, 's, Caps: CapSet, R> {
+    fn call(self, imm: &mut Imm<'w, 's, Caps>) -> R;
+}
+
+impl<'w, 's, T, Caps: CapSet, R> FnOnceImm<'w, 's, Caps, R> for T
+where
+    T: FnOnce(&mut Imm<'w, 's, Caps>) -> R,
+{
+    fn call(self, imm: &mut Imm<'w, 's, Caps>) -> R {
+        self(imm)
+    }
+}
+
+stackbox_2::custom_dyn! {
+    dyn FnOnceImmDyn<'w, 's, Caps, R> : FnOnceImm<'w, 's, Caps, R>
+    where { Caps: CapSet }
+    {
+        fn call (self: Self, arg: &mut Imm<'w, 's, Caps>) -> R
+        {
+            self.call(arg)
         }
     }
 }

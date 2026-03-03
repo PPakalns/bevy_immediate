@@ -48,6 +48,7 @@ paste = "1.0.15"
 rand = { version = "0.9.2", features = [
   "thread_rng",
 ], default-features = false }
+stackbox_2 = "0.2.2"
 
 bevy_immediate_core = { version = "0.5.1", path = "./crates/bevy_immediate_core/" }
 bevy_immediate_attach = { version = "0.5.1", path = "./crates/bevy_immediate_attach/" }
