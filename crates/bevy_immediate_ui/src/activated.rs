@@ -4,16 +4,11 @@ use bevy_ecs::{
     query::{Has, With},
     system::{Query, ResMut},
 };
-use bevy_input::{
-    ButtonState,
-    keyboard::{KeyCode, KeyboardInput},
-};
-use bevy_input_focus::FocusedInput;
-use bevy_picking::events::{Click, Pointer};
 use bevy_platform::collections::HashSet;
 use bevy_ui::InteractionDisabled;
 
 use bevy_immediate_core::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap};
+use bevy_ui_widgets::Activate;
 
 /// Immediate mode capability for `.activated()`
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -70,8 +65,7 @@ impl bevy_app::Plugin for TrackActivatedPlugin {
     fn build(&self, app: &mut bevy_app::App) {
         app.insert_resource(TrackActivetedEntitiesResource::default());
         app.add_systems(bevy_app::First, reset_activated);
-        app.add_observer(button_on_key_event)
-            .add_observer(button_on_pointer_click);
+        app.add_observer(on_activate);
     }
 }
 
@@ -88,43 +82,16 @@ fn reset_activated(mut res: ResMut<TrackActivetedEntitiesResource>) {
     res.activated.clear();
 }
 
-// Code duplicated from
-// https://docs.rs/bevy_ui_widgets/latest/src/bevy_ui_widgets/button.rs.html#26-30
-//
-// Hopefully there will be Activated trigger in future.
-// This should be implemented in bevy 0.18
-
-fn button_on_key_event(
-    event: On<FocusedInput<KeyboardInput>>,
+fn on_activate(
+    event: On<Activate>,
     q_state: Query<Has<InteractionDisabled>, With<TrackActivated>>,
     mut activated: ResMut<TrackActivetedEntitiesResource>,
 ) {
-    let Ok(disabled) = q_state.get(event.focused_entity) else {
+    let Ok(disabled) = q_state.get(event.entity) else {
         return;
     };
 
     if !disabled {
-        let input_event = &event.input;
-        if !input_event.repeat
-            && input_event.state == ButtonState::Pressed
-            && (input_event.key_code == KeyCode::Enter || input_event.key_code == KeyCode::Space)
-        {
-            activated.activated.insert(event.focused_entity);
-        }
-    }
-}
-
-fn button_on_pointer_click(
-    mut click: On<Pointer<Click>>,
-    mut q_state: Query<Has<InteractionDisabled>, With<TrackActivated>>,
-    mut activated: ResMut<TrackActivetedEntitiesResource>,
-) {
-    let Ok(disabled) = q_state.get_mut(click.entity) else {
-        return;
-    };
-
-    click.propagate(false);
-    if !disabled {
-        activated.activated.insert(click.entity);
+        activated.activated.insert(event.entity);
     }
 }
