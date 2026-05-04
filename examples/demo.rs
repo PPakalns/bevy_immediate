@@ -18,7 +18,7 @@ fn main() {
         .add_systems(Startup, setup_camera)
         //
         //
-        // All examples are implemented in seperate modules
+        // All examples are implemented in separate modules
         //
         .add_plugins(hello_world::HelloWorldPlugin)
         .add_plugins(bevy_widgets::BevyWidgetExamplePlugin)
