@@ -27,8 +27,8 @@ impl ImmId {
     pub fn with(self, child: impl std::hash::Hash) -> Self {
         use std::hash::{BuildHasher as _, Hasher as _};
         let mut hasher = ahash::RandomState::with_seeds(1, 2, 3, 4).build_hasher();
-        hasher.write_u64(self.id);
         child.hash(&mut hasher);
+        hasher.write_u64(self.id);
         Self {
             id: hasher.finish(),
         }
