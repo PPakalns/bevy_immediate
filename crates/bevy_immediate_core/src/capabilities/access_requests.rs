@@ -88,7 +88,7 @@ impl<Caps: CapSet> ImmCapAccessRequests<Caps> {
     }
 
     fn request_resource_inner<R: Resource>(&mut self, world: &mut World, mutable: bool) {
-        let component_id = world.register_resource::<R>();
+        let component_id = world.register_component::<R>();
         let value = self
             .resources
             .entry(component_id)

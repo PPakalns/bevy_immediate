@@ -511,7 +511,7 @@ impl<'r, 'w, 's, Caps: CapSet> ImmEntity<'r, 'w, 's, Caps> {
     }
 
     /// Issue [`EntityCommands`] if condition is met.
-    /// (issued only when entity is created).
+    /// (issued only when entity is created)
     pub fn on_spawn_apply_commands_if<F>(self, f: F, condition: impl FnOnce() -> bool) -> Self
     where
         F: FnOnce(&mut EntityCommands<'_>),
@@ -521,6 +521,36 @@ impl<'r, 'w, 's, Caps: CapSet> ImmEntity<'r, 'w, 's, Caps> {
         } else {
             self
         }
+    }
+
+    /// Apply [`bevy_scene::Scene`] similarly to [`bevy_scene::EntityCommandsSceneExt::apply_scene`].
+    /// (scene applied on entity only when entity is created)
+    #[cfg(feature = "bevy_scene")]
+    pub fn on_spawn_apply_scene<F, S>(self, f: F) -> Self
+    where
+        F: FnOnce() -> S,
+        S: bevy_scene::Scene,
+    {
+        self.on_spawn_apply_commands(|commands| {
+            use bevy_scene::EntityCommandsSceneExt;
+
+            commands.apply_scene(f());
+        })
+    }
+
+    /// Queue apply [`bevy_scene::Scene`] similarly to [`bevy_scene::EntityCommandsSceneExt::queue_apply_scene`].
+    /// (scene applied on entity only when entity is created)
+    #[cfg(feature = "bevy_scene")]
+    pub fn on_spawn_queue_apply_scene<F, S>(self, f: F) -> Self
+    where
+        F: FnOnce() -> S,
+        S: bevy_scene::Scene,
+    {
+        self.on_spawn_apply_commands(|commands| {
+            use bevy_scene::EntityCommandsSceneExt;
+
+            commands.queue_apply_scene(f());
+        })
     }
 
     /// Insert [`Bundle`] similarly to [`EntityCommands::insert`].

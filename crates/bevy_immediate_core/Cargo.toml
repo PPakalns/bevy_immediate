@@ -17,6 +17,7 @@ bevy_ecs = { workspace = true }
 bevy_platform = { workspace = true }
 bevy_app = { workspace = true }
 bevy_derive = { workspace = true }
+bevy_scene = { workspace = true, optional = true }
 
 type-map = { workspace = true }
 ahash = { workspace = true }
@@ -27,3 +28,4 @@ stackbox_2 = { workspace = true }
 [features]
 deault = []
 hotpatching = ["bevy_ecs/hotpatching"]
+bevy_scene = ["dep:bevy_scene"]

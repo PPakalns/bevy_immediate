@@ -40,6 +40,7 @@ bevy_input_focus = { version = "0.19.0-rc.1", default-features = false }
 bevy_ui_widgets = { version = "0.19.0-rc.1", default-features = false }
 bevy_feathers = { version = "0.19.0-rc.1", default-features = false }
 bevy_time = { version = "0.19.0-rc.1", default-features = false }
+bevy_scene = { version = "0.19.0-rc.1", default-features = false }
 
 log = "0.4.28"
 ahash = "0.8.12"
@@ -61,13 +62,14 @@ bevy_immediate_attach = { workspace = true }
 bevy_immediate_ui = { workspace = true, optional = true }
 
 [features]
-default = ["ui", "bevy_ui_widgets", "bevy_feathers"]
+default = ["ui", "bevy_ui_widgets", "bevy_feathers", "bevy_scene"]
 
 hotpatching = ["bevy_immediate_core/hotpatching"]
 
 ui = ["dep:bevy_immediate_ui"]
 bevy_ui_widgets = ["ui", "bevy_immediate_ui/bevy_ui_widgets"]
 bevy_feathers = ["bevy_ui_widgets", "bevy_immediate_ui/bevy_feathers"]
+bevy_scene = ["bevy_immediate_core/bevy_scene"]
 
 [dev-dependencies]
 bevy = { version = "0.19.0-rc.1", default-features = false, features = [
@@ -77,6 +79,7 @@ bevy = { version = "0.19.0-rc.1", default-features = false, features = [
   "bevy_log",
   "bevy_window",
   "bevy_winit",
+  "bevy_scene",
   "webgl2",
   "x11",
   "wayland",

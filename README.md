@@ -21,6 +21,8 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
   Build interactive entity hierarchies with a clean API.
 - **Fully compatible with Bevy**  
   Heavy lifting is done by Bevy ECS and `bevy_ui` retained mode UI.
+- **Supports Bevy Scene Notation (BSN)**  
+  Add scenes on components by calling `.on_spawn_apply_scene`, `.on_spawn_queue_apply_scene`.
 - **Custom extension support**  
   Add custom capabilities like `.clicked()`, `.selected(true)`, `.hovered()`. 
   Extension use integrated with rust type system for autocompletion and compile time check support.
@@ -94,24 +96,30 @@ Examples are located in [`./examples/`](./examples/)
 Using `bevy_feathers` and `bevy_ui_widgets`.
 
 ```rust,ignore
-// Checkbox
+// Checkbox using bsn
 ui.ch()
-    .on_spawn_insert(|| checkbox((), Text("Checkbox")))
+    .on_spawn_apply_scene(|| {
+        bsn! { :FeathersCheckbox { @caption: {bsn!{ Text("Checkbox") }} } }
+    })
+    .checked(&mut checkbox_value);
+
+// Checkbox using mixed style
+ui.ch()
+    .on_spawn_apply_scene(|| bsn! { :FeathersCheckbox })
+    .add(|ui| {
+        ui.ch().text("Checkbox");
+    })
     .checked(&mut checkbox_value);
 
 // Toggle switch
 ui.ch()
-    .on_spawn_insert(|| toggle_switch(()))
+    .on_spawn_apply_scene(|| bsn! {:FeathersToggleSwitch})
     .interactions_disabled(state.disabled) // Control whether interactions are enabled
     .checked(&mut toggle_value);
 
 // Button that counts clicks
-let mut button = ui.ch().on_spawn_insert(|| controls::button(
-        ButtonProps {
-            variant: ButtonVariant::Normal,
-            corners: RoundedCorners::All,
-        },(),()
-    ))
+let mut button = ui.ch()
+    .on_spawn_apply_scene(|| { bsn! { :FeathersButton } });
     .add(|ui| {
         ui.ch().text(format!("Clicked: {}", count));
     });
