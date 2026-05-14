@@ -107,6 +107,10 @@ pub struct FloatingWindow {
     pub max_width: Val,
     /// See [`Node::max_height`]
     pub max_height: Val,
+    /// Initial window position in pixels.
+    ///
+    /// Randomized when unset.
+    pub initial_position: Option<Vec2>,
 
     /// Ratio of how much floating window should be inside
     /// window.
@@ -125,6 +129,7 @@ impl Default for FloatingWindow {
             max_height: Val::Vh(90.),
             initial_width: Val::Auto,
             initial_height: Val::Auto,
+            initial_position: None,
             overlap_ratio: Some(0.075),
         }
     }
@@ -160,9 +165,14 @@ fn floating_window_node_init_system(
             node.max_width = floating.initial_width;
             node.max_height = floating.initial_height;
 
-            // TODO: Improve logic to decide window start location
-            node.left = px(rng.random_range(10..500i32) as f32);
-            node.top = px(rng.random_range(10..500i32) as f32);
+            if let Some(position) = floating.initial_position {
+                node.left = px(position.x);
+                node.top = px(position.y);
+            } else {
+                // TODO: Improve logic to decide window start location
+                node.left = px(rng.random_range(10..500i32) as f32);
+                node.top = px(rng.random_range(10..500i32) as f32);
+            }
         }
     }
 }
