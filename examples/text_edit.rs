@@ -1,15 +1,11 @@
-use std::marker::PhantomData;
-
-use bevy::color::Color;
-use bevy::color::palettes::css::{NAVY, WHITE};
-use bevy::color::palettes::tailwind::{GRAY_100, GRAY_300, GRAY_400, GRAY_500, GRAY_700, GRAY_950};
+use bevy::color::palettes::tailwind::{GRAY_100, GRAY_300, GRAY_500, GRAY_700};
 use bevy::ecs::system::EntityCommand;
 use bevy::ecs::{
     change_detection::DetectChanges,
     component::Component,
     system::{Local, SystemParam},
 };
-use bevy::text::{EditableText, TextCursorStyle, TextFont, TextLayout};
+use bevy::text::{EditableText, TextCursorStyle, TextLayout};
 use bevy::ui::{BackgroundColor, FlexDirection, Node, px};
 use bevy::utils::default;
 use bevy_immediate::{
@@ -19,6 +15,7 @@ use bevy_immediate::{
     ui::text::ImmUiText,
     utils::ImmLocalHashMemoryHelper,
 };
+use std::marker::PhantomData;
 
 use crate::extension_use::CapsMyUi;
 
