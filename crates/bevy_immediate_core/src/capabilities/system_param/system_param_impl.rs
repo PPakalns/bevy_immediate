@@ -4,7 +4,7 @@ use bevy_ecs::{
     query::With,
     system::{
         FilteredResourcesMutParamBuilder, Query, QueryParamBuilder, SystemMeta, SystemParam,
-        SystemParamBuilder,
+        SystemParamBuilder, SystemParamValidationError,
     },
     world::{FilteredEntityMut, FilteredResourcesMut, World},
 };
@@ -67,23 +67,15 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapQueryParam<'_, '_, Caps> {
         Query::queue(&mut state.state, system_meta, world)
     }
 
-    unsafe fn validate_param(
-        state: &mut Self::State,
-        system_meta: &SystemMeta,
-        world: bevy_ecs::world::unsafe_world_cell::UnsafeWorldCell,
-    ) -> Result<(), bevy_ecs::system::SystemParamValidationError> {
-        unsafe { Query::validate_param(&mut state.state, system_meta, world) }
-    }
-
     unsafe fn get_param<'world, 'state>(
         state: &'state mut Self::State,
         system_meta: &bevy_ecs::system::SystemMeta,
         world: bevy_ecs::world::unsafe_world_cell::UnsafeWorldCell<'world>,
         change_tick: bevy_ecs::change_detection::Tick,
-    ) -> Self::Item<'world, 'state> {
-        let query = unsafe { Query::get_param(&mut state.state, system_meta, world, change_tick) };
+    ) -> Result<Self::Item<'world, 'state>, SystemParamValidationError> {
+        let query = unsafe { Query::get_param(&mut state.state, system_meta, world, change_tick) }?;
 
-        Self::Item::<'world, 'state> { query }
+        Ok(Self::Item::<'world, 'state> { query })
     }
 }
 
@@ -127,15 +119,15 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapResourcesParam<'_, '_, Caps> {
         system_meta: &bevy_ecs::system::SystemMeta,
         world: bevy_ecs::world::unsafe_world_cell::UnsafeWorldCell<'world>,
         change_tick: bevy_ecs::change_detection::Tick,
-    ) -> Self::Item<'world, 'state> {
+    ) -> Result<Self::Item<'world, 'state>, SystemParamValidationError> {
         let resources = unsafe {
             FilteredResourcesMut::get_param(&mut state.access, system_meta, world, change_tick)
-        };
+        }?;
 
-        Self::Item::<'world, 'state> {
+        Ok(Self::Item::<'world, 'state> {
             resources,
             _ph: PhantomData,
-        }
+        })
     }
 
     fn apply(state: &mut Self::State, system_meta: &SystemMeta, world: &mut World) {
@@ -148,14 +140,6 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapResourcesParam<'_, '_, Caps> {
         world: bevy_ecs::world::DeferredWorld,
     ) {
         FilteredResourcesMut::queue(&mut state.access, system_meta, world)
-    }
-
-    unsafe fn validate_param(
-        state: &mut Self::State,
-        system_meta: &SystemMeta,
-        world: bevy_ecs::world::unsafe_world_cell::UnsafeWorldCell,
-    ) -> Result<(), bevy_ecs::system::SystemParamValidationError> {
-        unsafe { FilteredResourcesMut::validate_param(&mut state.access, system_meta, world) }
     }
 
     fn init_access(
