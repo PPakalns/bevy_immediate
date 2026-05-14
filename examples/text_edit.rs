@@ -1,11 +1,13 @@
-use std::{iter::Peekable, marker::PhantomData};
+use std::marker::PhantomData;
 
 use bevy::color::palettes::css::NAVY;
+use bevy::ecs::system::EntityCommand;
 use bevy::ecs::{
-    change_detection::{DetectChanges, DetectChangesMut},
+    change_detection::DetectChanges,
     component::Component,
     system::{Local, SystemParam},
 };
+use bevy::text::EditableText;
 use bevy::ui::{BackgroundColor, FlexDirection, Node, px};
 use bevy::utils::default;
 use bevy_immediate::{
@@ -15,10 +17,6 @@ use bevy_immediate::{
     ui::text::ImmUiText,
     utils::ImmLocalHashMemoryHelper,
 };
-use bevy_ui_text_input::{
-    TextInputBuffer, TextInputMode, TextInputNode, TextInputPlugin, TextInputPrompt,
-};
-use cosmic_text::{Buffer, BufferLine, Cursor, Edit};
 
 use crate::extension_use::CapsMyUi;
 
@@ -60,14 +58,10 @@ impl ImmediateAttach<CapsMyUi> for TextEditExampleRoot {
                                     ..default()
                                 },
                                 BackgroundColor(NAVY.into()),
-                                TextInputNode {
-                                    mode: TextInputMode::SingleLine,
-                                    max_chars: Some(100),
-                                    clear_on_submit: false,
-                                    ..Default::default()
+                                EditableText {
+                                    max_characters: Some(100),
+                                    ..default()
                                 },
-                                TextInputPrompt::default(),
-                                TextInputBuffer::default(),
                             )
                         })
                         .input_text(&mut params.text);
@@ -83,14 +77,7 @@ pub struct CapabilityUiTextInput;
 
 impl ImmCapability for CapabilityUiTextInput {
     fn build<Cap: CapSet>(app: &mut bevy::app::App, cap_req: &mut ImmCapAccessRequests<Cap>) {
-        // See bevy_immediate dev-dependencies for bevy_ui_text_input version
-        // that works correctly in newest bevy
-        if !app.is_plugin_added::<TextInputPlugin>() {
-            app.add_plugins(TextInputPlugin);
-        }
-
-        cap_req.request_component_write::<TextInputBuffer>(app.world_mut());
-        cap_req.request_component_write::<TextInputNode>(app.world_mut());
+        cap_req.request_component_write::<EditableText>(app.world_mut());
     }
 }
 
@@ -112,7 +99,7 @@ where
                 break 'exist;
             };
 
-            let Some(mut input_buffer) = entity.get_mut::<TextInputBuffer>() else {
+            let Some(mut input_buffer) = entity.get_mut::<EditableText>() else {
                 break 'exist;
             };
 
@@ -120,32 +107,14 @@ where
                 helper.store(&text_hash);
 
                 // External value updated
-                input_buffer.editor.with_buffer_mut(|buffer| {
-                    buffer.lines.clear();
-                });
-                input_buffer.editor.insert_at(Cursor::new(0, 0), text, None);
-
-                if let Some(mut text_input_node) = entity.get_mut::<TextInputNode>() {
-                    text_input_node.set_changed(); // Trigger text formatting
-                }
+                input_buffer.editor.set_text(text);
             } else {
                 let not_equal = input_buffer.is_changed() // Fast check
-                    && !input_buffer.editor.with_buffer(|buffer| { // Slow check
-                        let mut remaining: &str = &text;
-                        for part in BufferTextIterator::new(buffer) {
-                            if !remaining.starts_with(part) {
-                                return false;
-                            }
-                            remaining = &remaining[part.len()..];
-                        }
-
-                        return remaining.is_empty();
-                    });
+                    && input_buffer.editor.text() != text;
 
                 if not_equal {
-                    input_buffer.editor.with_buffer(|buffer| {
-                        *text = BufferTextIterator::new(buffer).collect();
-                    });
+                    input_buffer.editor.set_text(text);
+
                     helper.store(&imm_id(&text));
                 }
             }
@@ -154,55 +123,26 @@ where
             return self;
         }
 
-        let mut input_buffer = TextInputBuffer::default();
-        let editor = &mut input_buffer.editor;
-        editor.insert_string(text, None);
-
-        self.entity_commands().insert(input_buffer);
         helper.finalize(&mut self);
+        if self.will_be_spawned() {
+            self.entity_commands()
+                .queue_silenced(SetText { text: text.clone() });
+        }
 
         self
     }
 }
 
-struct BufferTextIterator<'a> {
-    lines: Peekable<std::slice::Iter<'a, BufferLine>>,
-    newline: bool,
-    insert_newline: bool,
+struct SetText {
+    text: String,
 }
 
-impl<'a> BufferTextIterator<'a> {
-    pub fn new(buffer: &'a Buffer) -> Self {
-        Self {
-            lines: buffer.lines.iter().peekable(),
-            newline: false,
-            insert_newline: false,
+impl EntityCommand for SetText {
+    type Out = ();
+
+    fn apply(self, mut entity: bevy::ecs::world::EntityWorldMut) -> Self::Out {
+        if let Some(mut textedit) = entity.get_mut::<EditableText>() {
+            textedit.editor.set_text(&self.text);
         }
-    }
-}
-
-impl<'a> Iterator for BufferTextIterator<'a> {
-    type Item = &'a str;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.lines.peek().is_none() {
-            return None;
-        }
-
-        if self.insert_newline {
-            self.insert_newline = false;
-            return Some("\n");
-        }
-
-        let next = self.lines.next()?;
-        if !self.newline && !next.text().is_empty() {
-            self.newline = true;
-        }
-
-        if self.newline {
-            self.insert_newline = true;
-        }
-
-        Some(next.text())
     }
 }

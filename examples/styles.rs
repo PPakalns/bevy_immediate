@@ -108,7 +108,7 @@ fn focus_system(
         }
 
         if focus_visible.0
-            && let Some(entity) = focus.0
+            && let Some(entity) = focus.get()
         {
             commands.entity(entity).insert((
                 Focus,
@@ -174,13 +174,13 @@ pub fn centered_text_style() -> impl Bundle + use<> {
     (
         TextColor(Color::srgb(0.9, 0.9, 0.9)),
         TextShadow::default(),
-        TextLayout::new_with_justify(Justify::Center),
+        TextLayout::justify(Justify::Center),
     )
 }
 
 pub fn title_text_style() -> impl Bundle + use<> {
     let mut text = TextFont::default();
-    text.font_size *= 2.0;
+    text.font_size = text.font_size * 2.0;
 
     (
         text,

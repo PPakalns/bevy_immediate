@@ -89,7 +89,7 @@ where
         self.on_spawn_insert(styles::text_style)
             .on_spawn_insert(|| {
                 let mut text_font = TextFont::default();
-                text_font.font_size *= 1.5;
+                text_font.font_size = text_font.font_size * 1.5;
                 text_font
             })
             .text(text)
@@ -99,7 +99,7 @@ where
         self.on_spawn_insert(styles::text_style)
             .on_spawn_insert(|| {
                 let mut text_font = TextFont::default();
-                text_font.font_size *= 1.2;
+                text_font.font_size = text_font.font_size * 1.2;
                 text_font
             })
             .text(text)

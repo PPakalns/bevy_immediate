@@ -1,10 +1,13 @@
-use bevy::ecs::{
-    component::Component,
-    resource::Resource,
-    system::{ResMut, SystemParam},
-};
 use bevy::ui::{FlexDirection, Node, Val};
-use bevy::{ui_render::UiDebugOptions, utils::default};
+use bevy::utils::default;
+use bevy::{
+    ecs::{
+        component::Component,
+        resource::Resource,
+        system::{ResMut, SystemParam},
+    },
+    ui_render::GlobalUiDebugOptions,
+};
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
@@ -30,7 +33,7 @@ pub struct MenuUiRoot;
 #[derive(SystemParam)]
 pub struct Params<'w> {
     current_example: ResMut<'w, CurrentExample>,
-    debug_options: ResMut<'w, UiDebugOptions>,
+    debug_options: ResMut<'w, GlobalUiDebugOptions>,
 }
 
 impl ImmediateAttach<CapsUi> for MenuUiRoot {

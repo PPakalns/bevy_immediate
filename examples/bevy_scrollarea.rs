@@ -20,7 +20,7 @@ use bevy::ui::{
     px,
 };
 use bevy::ui_widgets::{
-    ControlOrientation, CoreScrollbarDragState, CoreScrollbarThumb, Scrollbar, ScrollbarPlugin,
+    ControlOrientation, Scrollbar, ScrollbarDragState, ScrollbarPlugin, ScrollbarThumb,
 };
 use bevy::{math::Vec2, text::TextLayout, utils::default};
 use bevy_immediate::{
@@ -265,12 +265,14 @@ where
                         Children::spawn(Spawn((
                             Node {
                                 position_type: PositionType::Absolute,
-                                border_radius: BorderRadius::all(px(4)),
                                 ..default()
                             },
                             Hovered::default(),
                             BackgroundColor(colors::GRAY2.into()),
-                            CoreScrollbarThumb,
+                            ScrollbarThumb {
+                                border_radius: BorderRadius::all(px(4)),
+                                ..default()
+                            },
                         ))),
                     )
                 });
@@ -299,7 +301,10 @@ where
                             },
                             Hovered::default(),
                             BackgroundColor(colors::GRAY2.into()),
-                            CoreScrollbarThumb,
+                            ScrollbarThumb {
+                                border_radius: BorderRadius::all(px(4)),
+                                ..default()
+                            },
                         ))),
                     )
                 });
@@ -388,10 +393,10 @@ fn scroll_on_drag(
 #[allow(clippy::type_complexity)]
 fn update_scrollbar_style_on_drag(
     mut q_thumb: Query<
-        (&mut BackgroundColor, &Hovered, &CoreScrollbarDragState),
+        (&mut BackgroundColor, &Hovered, &ScrollbarDragState),
         (
-            With<CoreScrollbarThumb>,
-            Or<(Changed<Hovered>, Changed<CoreScrollbarDragState>)>,
+            With<ScrollbarThumb>,
+            Or<(Changed<Hovered>, Changed<ScrollbarDragState>)>,
         ),
     >,
 ) {
