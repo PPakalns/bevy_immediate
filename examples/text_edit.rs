@@ -1,13 +1,15 @@
 use std::marker::PhantomData;
 
-use bevy::color::palettes::css::NAVY;
+use bevy::color::Color;
+use bevy::color::palettes::css::{NAVY, WHITE};
+use bevy::color::palettes::tailwind::{GRAY_100, GRAY_300, GRAY_400, GRAY_500, GRAY_700, GRAY_950};
 use bevy::ecs::system::EntityCommand;
 use bevy::ecs::{
     change_detection::DetectChanges,
     component::Component,
     system::{Local, SystemParam},
 };
-use bevy::text::EditableText;
+use bevy::text::{EditableText, TextCursorStyle, TextFont, TextLayout};
 use bevy::ui::{BackgroundColor, FlexDirection, Node, px};
 use bevy::utils::default;
 use bevy_immediate::{
@@ -57,11 +59,18 @@ impl ImmediateAttach<CapsMyUi> for TextEditExampleRoot {
                                     height: px(30.),
                                     ..default()
                                 },
-                                BackgroundColor(NAVY.into()),
+                                BackgroundColor(GRAY_700.into()),
                                 EditableText {
                                     max_characters: Some(100),
                                     ..default()
                                 },
+                                TextCursorStyle {
+                                    color: GRAY_100.into(),
+                                    selection_color: GRAY_300.into(),
+                                    unfocused_selection_color: GRAY_500.into(),
+                                    selected_text_color: None,
+                                },
+                                TextLayout::no_wrap(),
                             )
                         })
                         .input_text(&mut params.text);
@@ -113,7 +122,7 @@ where
                     && input_buffer.editor.text() != text;
 
                 if not_equal {
-                    input_buffer.editor.set_text(text);
+                    *text = input_buffer.editor.text().to_string();
 
                     helper.store(&imm_id(&text));
                 }
