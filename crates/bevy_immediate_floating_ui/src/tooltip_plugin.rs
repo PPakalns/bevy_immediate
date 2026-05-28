@@ -1,11 +1,12 @@
 use bevy_ecs::{
     component::Component,
+    hierarchy::ChildOf,
     observer::On,
     query::With,
     resource::Resource,
     system::{Query, Res, ResMut},
 };
-use bevy_picking::events::{Out, Over, Pointer};
+use bevy_picking::events::{Move, Pointer};
 use bevy_time::{Real, Time};
 
 /// Implements functionality to calculate when tooltip should be displayed
@@ -21,8 +22,7 @@ impl bevy_app::Plugin for TooltipPlugin {
 
         app.insert_resource(TooltipGlobalState::default());
 
-        app.add_observer(on_source)
-            .add_observer(out_sorce)
+        app.add_observer(on_mouse_move)
             .add_systems(bevy_app::PostUpdate, update_tooltip_global_state);
     }
 }
@@ -80,13 +80,24 @@ impl TooltipGlobalState {
     }
 }
 
-fn on_source(
-    pointer: On<Pointer<Over>>,
+fn on_mouse_move(
+    pointer: On<Pointer<Move>>,
     query: Query<(), With<TooltipSource>>,
+    q_parents: Query<&ChildOf>,
     mut res: ResMut<TooltipGlobalState>,
     time: Res<Time<Real>>,
 ) {
-    if query.contains(pointer.entity) {
+    if pointer.entity != pointer.original_event_target() {
+        return;
+    }
+
+    let entity = pointer.entity;
+
+    let has_tooltip_source = std::iter::once(entity)
+        .chain(q_parents.iter_ancestors(entity))
+        .any(|entity| query.contains(entity));
+
+    if has_tooltip_source {
         match &res.state {
             TooltipGlobalStateInner::Nothing => {
                 res.state = TooltipGlobalStateInner::Waiting {
@@ -104,16 +115,7 @@ fn on_source(
                 };
             }
         }
-    }
-}
-
-fn out_sorce(
-    pointer: On<Pointer<Out>>,
-    query: Query<(), With<TooltipSource>>,
-    mut res: ResMut<TooltipGlobalState>,
-    time: Res<Time<Real>>,
-) {
-    if query.contains(pointer.entity) {
+    } else {
         res.state = match res.state {
             TooltipGlobalStateInner::Nothing | TooltipGlobalStateInner::Waiting { since: _ } => {
                 TooltipGlobalStateInner::Nothing
