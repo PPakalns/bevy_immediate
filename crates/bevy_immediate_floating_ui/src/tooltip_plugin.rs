@@ -1,5 +1,6 @@
 use bevy_ecs::{
     component::Component,
+    entity::Entity,
     hierarchy::ChildOf,
     observer::On,
     query::With,
@@ -63,9 +64,11 @@ enum TooltipGlobalStateInner {
     Nothing,
     Waiting {
         since: f64,
+        wait_entity: Entity,
     },
     PointerWaiting {
         since: f64,
+        wait_entity: Entity,
     },
     Tooltip,
     Reset {
@@ -93,38 +96,63 @@ fn on_mouse_move(
 
     let entity = pointer.entity;
 
-    let has_tooltip_source = std::iter::once(entity)
+    let tooltip_entity = std::iter::once(entity)
         .chain(q_parents.iter_ancestors(entity))
-        .any(|entity| query.contains(entity));
+        .find(|entity| query.contains(*entity));
 
-    if has_tooltip_source {
-        match &res.state {
+    if let Some(wait_entity) = tooltip_entity {
+        match &mut res.state {
             TooltipGlobalStateInner::Nothing => {
                 res.state = TooltipGlobalStateInner::Waiting {
                     since: time.elapsed_secs_f64(),
+                    wait_entity,
                 };
             }
-            TooltipGlobalStateInner::Waiting { since: _ }
-            | TooltipGlobalStateInner::PointerWaiting { since: _ } => {}
+            TooltipGlobalStateInner::Waiting {
+                since,
+                wait_entity: old_entity,
+            } => {
+                if *old_entity != wait_entity {
+                    *since = time.elapsed_secs_f64();
+                }
+            }
+            TooltipGlobalStateInner::PointerWaiting {
+                since,
+                wait_entity: old_entity,
+            } => {
+                if *old_entity != wait_entity {
+                    *since = time.elapsed_secs_f64();
+                }
+            }
             TooltipGlobalStateInner::Tooltip => {
                 res.state = TooltipGlobalStateInner::Tooltip;
             }
             TooltipGlobalStateInner::Reset { since: _ } => {
                 res.state = TooltipGlobalStateInner::PointerWaiting {
                     since: time.elapsed_secs_f64(),
+                    wait_entity,
                 };
             }
         }
     } else {
-        res.state = match res.state {
-            TooltipGlobalStateInner::Nothing | TooltipGlobalStateInner::Waiting { since: _ } => {
-                TooltipGlobalStateInner::Nothing
+        match res.state {
+            TooltipGlobalStateInner::Nothing
+            | TooltipGlobalStateInner::Waiting {
+                since: _,
+                wait_entity: _,
+            } => {
+                res.state = TooltipGlobalStateInner::Nothing;
             }
-            TooltipGlobalStateInner::PointerWaiting { since: _ }
-            | TooltipGlobalStateInner::Tooltip => TooltipGlobalStateInner::Reset {
-                since: time.elapsed_secs_f64(),
-            },
-            TooltipGlobalStateInner::Reset { since } => TooltipGlobalStateInner::Reset { since },
+            TooltipGlobalStateInner::PointerWaiting {
+                since: _,
+                wait_entity: _,
+            }
+            | TooltipGlobalStateInner::Tooltip => {
+                res.state = TooltipGlobalStateInner::Reset {
+                    since: time.elapsed_secs_f64(),
+                };
+            }
+            TooltipGlobalStateInner::Reset { since: _ } => {}
         };
     }
 }
@@ -136,12 +164,18 @@ fn update_tooltip_global_state(
 ) {
     match &res.state {
         TooltipGlobalStateInner::Nothing => {}
-        TooltipGlobalStateInner::Waiting { since } => {
+        TooltipGlobalStateInner::Waiting {
+            since,
+            wait_entity: _,
+        } => {
             if (time.elapsed_secs_f64() - since) > global.tooltip_delay as f64 {
                 res.state = TooltipGlobalStateInner::Tooltip;
             }
         }
-        TooltipGlobalStateInner::PointerWaiting { since } => {
+        TooltipGlobalStateInner::PointerWaiting {
+            since,
+            wait_entity: _,
+        } => {
             if (time.elapsed_secs_f64() - since) > global.pointer_changed_delay as f64 {
                 res.state = TooltipGlobalStateInner::Tooltip;
             }
