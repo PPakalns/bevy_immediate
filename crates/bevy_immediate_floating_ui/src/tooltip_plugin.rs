@@ -60,26 +60,35 @@ pub struct TooltipGlobalState {
 
 #[derive(Default)]
 enum TooltipGlobalStateInner {
+    /// Tooltip inactive
     #[default]
     Nothing,
-    Waiting {
-        since: f64,
-        wait_entity: Entity,
-    },
-    PointerWaiting {
-        since: f64,
-        wait_entity: Entity,
-    },
-    Tooltip,
-    Reset {
-        since: f64,
-    },
+    /// Cursor waiting on tooltip
+    Waiting { since: f64, wait_entity: Entity },
+    /// Tooltip was active a moment ago, new tooltip will be shown with different rule
+    PointerWaiting { since: f64, wait_entity: Entity },
+    /// Tooltip active for entity
+    Tooltip { wait_entity: Entity },
+    /// When cursor left tooltip area
+    Reset { since: f64 },
 }
 
 impl TooltipGlobalState {
     /// Returns if tooltip can be shown based on global tooltip timers.
-    pub fn show_tooltip(&self) -> bool {
-        matches!(self.state, TooltipGlobalStateInner::Tooltip)
+    pub fn show_tooltip(&self) -> Option<Entity> {
+        match self.state {
+            TooltipGlobalStateInner::Nothing => None,
+            TooltipGlobalStateInner::Waiting {
+                since: _,
+                wait_entity: _,
+            }
+            | TooltipGlobalStateInner::PointerWaiting {
+                since: _,
+                wait_entity: _,
+            }
+            | TooltipGlobalStateInner::Reset { since: _ } => None,
+            TooltipGlobalStateInner::Tooltip { wait_entity } => Some(wait_entity),
+        }
     }
 }
 
@@ -124,8 +133,16 @@ fn on_mouse_move(
                     *since = time.elapsed_secs_f64();
                 }
             }
-            TooltipGlobalStateInner::Tooltip => {
-                res.state = TooltipGlobalStateInner::Tooltip;
+            TooltipGlobalStateInner::Tooltip {
+                wait_entity: old_entity,
+            } => {
+                if *old_entity != wait_entity {
+                    // Pointer moved to another entity
+                    res.state = TooltipGlobalStateInner::PointerWaiting {
+                        since: time.elapsed_secs_f64(),
+                        wait_entity,
+                    };
+                }
             }
             TooltipGlobalStateInner::Reset { since: _ } => {
                 res.state = TooltipGlobalStateInner::PointerWaiting {
@@ -147,7 +164,7 @@ fn on_mouse_move(
                 since: _,
                 wait_entity: _,
             }
-            | TooltipGlobalStateInner::Tooltip => {
+            | TooltipGlobalStateInner::Tooltip { wait_entity: _ } => {
                 res.state = TooltipGlobalStateInner::Reset {
                     since: time.elapsed_secs_f64(),
                 };
@@ -164,23 +181,21 @@ fn update_tooltip_global_state(
 ) {
     match &res.state {
         TooltipGlobalStateInner::Nothing => {}
-        TooltipGlobalStateInner::Waiting {
-            since,
-            wait_entity: _,
-        } => {
+        TooltipGlobalStateInner::Waiting { since, wait_entity } => {
             if (time.elapsed_secs_f64() - since) > global.tooltip_delay as f64 {
-                res.state = TooltipGlobalStateInner::Tooltip;
+                res.state = TooltipGlobalStateInner::Tooltip {
+                    wait_entity: *wait_entity,
+                };
             }
         }
-        TooltipGlobalStateInner::PointerWaiting {
-            since,
-            wait_entity: _,
-        } => {
+        TooltipGlobalStateInner::PointerWaiting { since, wait_entity } => {
             if (time.elapsed_secs_f64() - since) > global.pointer_changed_delay as f64 {
-                res.state = TooltipGlobalStateInner::Tooltip;
+                res.state = TooltipGlobalStateInner::Tooltip {
+                    wait_entity: *wait_entity,
+                };
             }
         }
-        TooltipGlobalStateInner::Tooltip => {}
+        TooltipGlobalStateInner::Tooltip { wait_entity: _ } => {}
         TooltipGlobalStateInner::Reset { since } => {
             if (time.elapsed_secs_f64() - since) > global.reset_delay as f64 {
                 res.state = TooltipGlobalStateInner::Nothing;

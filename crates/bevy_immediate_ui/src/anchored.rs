@@ -104,16 +104,17 @@ where
             self.entity_commands().insert(TooltipSource);
         }
 
+        let entity = self.entity();
         if self.hovered()
             && self
                 .cap_get_resource::<TooltipGlobalState>()
                 .unwrap()
                 .show_tooltip()
+                == Some(entity)
         {
-            let entity = self.entity();
             self = self.add(|ui| {
                 ui.unrooted("with_tooltip", |ui| {
-                    let entity = ui.ch().on_spawn_insert(|| {
+                    let tooltip_entity = ui.ch().on_spawn_insert(|| {
                         (
                             Node {
                                 position_type: bevy_ui::PositionType::Absolute,
@@ -128,7 +129,7 @@ where
                             }),
                         )
                     });
-                    f(entity);
+                    f(tooltip_entity);
                 });
             });
         }
