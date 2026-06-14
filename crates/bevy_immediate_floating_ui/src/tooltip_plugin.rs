@@ -117,7 +117,7 @@ fn on_mouse_move(
                 };
             }
             TooltipGlobalStateInner::Waiting {
-                since,
+                since: _,
                 wait_entity: old_entity,
             } => {
                 if *old_entity != wait_entity {
@@ -128,7 +128,7 @@ fn on_mouse_move(
                 }
             }
             TooltipGlobalStateInner::PointerWaiting {
-                since,
+                since: _,
                 wait_entity: old_entity,
             } => {
                 if *old_entity != wait_entity {
