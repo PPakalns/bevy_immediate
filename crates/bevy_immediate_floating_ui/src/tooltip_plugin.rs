@@ -23,8 +23,9 @@ impl bevy_app::Plugin for TooltipPlugin {
 
         app.insert_resource(TooltipGlobalState::default());
 
-        app.add_observer(on_mouse_move)
-            .add_systems(bevy_app::PostUpdate, update_tooltip_global_state);
+        app.add_observer(on_mouse_move);
+
+        app.add_systems(bevy_app::PostUpdate, update_tooltip_global_state);
     }
 }
 
@@ -103,10 +104,8 @@ fn on_mouse_move(
         return;
     }
 
-    let entity = pointer.entity;
-
-    let tooltip_entity = std::iter::once(entity)
-        .chain(q_parents.iter_ancestors(entity))
+    let tooltip_entity = std::iter::once(pointer.entity)
+        .chain(q_parents.iter_ancestors(pointer.entity))
         .find(|entity| query.contains(*entity));
 
     if let Some(wait_entity) = tooltip_entity {
@@ -122,7 +121,10 @@ fn on_mouse_move(
                 wait_entity: old_entity,
             } => {
                 if *old_entity != wait_entity {
-                    *since = time.elapsed_secs_f64();
+                    res.state = TooltipGlobalStateInner::Waiting {
+                        since: time.elapsed_secs_f64(),
+                        wait_entity,
+                    };
                 }
             }
             TooltipGlobalStateInner::PointerWaiting {
@@ -130,7 +132,10 @@ fn on_mouse_move(
                 wait_entity: old_entity,
             } => {
                 if *old_entity != wait_entity {
-                    *since = time.elapsed_secs_f64();
+                    res.state = TooltipGlobalStateInner::PointerWaiting {
+                        since: time.elapsed_secs_f64(),
+                        wait_entity,
+                    };
                 }
             }
             TooltipGlobalStateInner::Tooltip {
