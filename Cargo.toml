@@ -95,6 +95,7 @@ bevy = { version = "0.19.0", default-features = false, features = [
 ] }
 itertools = "0.14"
 strum = { version = "0.28.0", features = ["derive"] }
+accesskit = "0.24.0"
 
 # bevy_framepace = { git = "https://github.com/aevyrie/bevy_framepace.git", rev = "9be8f16" }
 

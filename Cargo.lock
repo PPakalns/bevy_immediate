@@ -788,6 +788,7 @@ dependencies = [
 name = "bevy_immediate"
 version = "0.8.0"
 dependencies = [
+ "accesskit",
  "bevy",
  "bevy_immediate_attach",
  "bevy_immediate_core",

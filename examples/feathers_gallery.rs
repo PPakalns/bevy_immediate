@@ -4,12 +4,13 @@ use bevy::color::{Alpha, Color, Hsla, Srgba};
 use bevy::ecs::{
     component::Component,
     entity::Entity,
-    hierarchy::{ChildOf, Children},
+    hierarchy::Children,
     observer::On,
     query::With,
     resource::Resource,
-    system::{Commands, In, Query, Res, ResMut, SystemParam},
+    system::{Commands, Query, ResMut, SystemParam},
 };
+use bevy::feathers::controls::FeathersListRow;
 use bevy::feathers::{
     FeathersCorePlugin, FeathersPlugins,
     constants::{fonts, icons},
@@ -32,30 +33,34 @@ use bevy::feathers::{
     theme::{ThemeBackgroundColor, ThemedText, UiTheme},
     tokens,
 };
-use bevy::input_focus::{AcquireFocus, FocusGained, InputFocus, tab_navigation::TabGroup};
+use bevy::input_focus::tab_navigation::TabGroup;
+use bevy::input_focus::tab_navigation::TabIndex;
 use bevy::log::info;
 use bevy::math::Vec3;
 use bevy::scene::bsn;
 use bevy::ui::widget::Text;
-use bevy::ui::{AlignItems, FlexDirection, JustifyContent, Node, Overflow, UiRect, percent, px};
+use bevy::ui::{
+    AlignItems, FlexDirection, JustifyContent, Node, Overflow, PositionType, UiRect, percent, px,
+};
 use bevy::ui_widgets::{
-    ActivateOnPress, ControlOrientation, RadioGroup, ScrollArea, ScrollIntoView, SliderPrecision,
-    SliderStep,
+    Activate, ActivateOnPress, ControlOrientation, ListBox, RadioGroup, ScrollArea,
+    SliderPrecision, SliderStep, ValueChange,
 };
 use bevy::utils::default;
-use bevy::window::{PrimaryWindow, SystemCursorIcon};
+use bevy::window::SystemCursorIcon;
 use bevy_immediate::ImmEntity;
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
     ui::{
-        CapsUiFeathers, activated::ImmUiActivated, button_variant::ImmUiFeathersButtonVariant,
-        checked::ImmUiChecked, color_plane::ImmUiColorPlane, color_swatch::ImmUiColorSwatch,
+        CapsUiFeathers, activated::ImmUiActivated, checked::ImmUiChecked,
+        color_plane::ImmUiColorPlane, color_swatch::ImmUiColorSwatch,
         disabled::ImmUiInteractionsDisabled, number_input::ImmUiNumberInput,
         slider_base_color::ImmUiSliderBaseColor, slider_value::ImmUiSliderValue,
         text_input::ImmUiTextInput,
     },
 };
+use bevy_immediate_ui::selected::ImmUiSelected;
 pub struct FeathersGalleryExamplePlugin;
 
 const LIST_ITEMS: [&str; 12] = [
@@ -101,42 +106,18 @@ impl Plugin for FeathersGalleryExamplePlugin {
             FeathersGalleryExampleRoot,
         >::new());
 
-        app.add_observer(scroll_focused_item_into_view);
+        app.add_observer(trigger_activate_event_on_listbox_item);
     }
 }
 
-// Bevy immediate uses manual implementation for listbox, we want to scroll item into view on focus
-fn scroll_focused_item_into_view(
-    _focus: On<FocusGained>,
-    input_focus: Res<InputFocus>,
-    scroll_areas: Query<(), With<ScrollArea>>,
-    parents: Query<&ChildOf>,
+// ListBox only triggers ValueChange event on itself, we activate affected entity
+fn trigger_activate_event_on_listbox_item(
+    on: On<ValueChange<Entity>>,
+    query: Query<(), With<ListBox>>,
     mut commands: Commands,
 ) {
-    let Some(focused) = input_focus.get() else {
-        return;
-    };
-
-    let inside_scroll_area = scroll_areas.contains(focused)
-        || parents
-            .iter_ancestors(focused)
-            .any(|ancestor| scroll_areas.contains(ancestor));
-
-    if inside_scroll_area {
-        commands.trigger(ScrollIntoView { entity: focused });
-    }
-}
-
-fn acquire_list_row_focus(
-    In(row_entity): In<Entity>,
-    windows: Query<Entity, With<PrimaryWindow>>,
-    mut commands: Commands,
-) {
-    if let Ok(window) = windows.single() {
-        commands.trigger(AcquireFocus {
-            focused_entity: row_entity,
-            window,
-        });
+    if query.contains(on.source) {
+        commands.trigger(Activate { entity: on.value });
     }
 }
 
@@ -862,11 +843,9 @@ fn demo_column_2(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
 }
 
 fn demo_list_view(ui: &mut Imm<CapsUiFeathers>, state: &mut GalleryState) {
-    // WARN: Bevy Feathers does not trigger events on the list items, instead
-    // it triggers them on ListBox.
+    // We need to manually create FeathersListView from components
     //
-    // Instead we create our own list view widget (which can be improved even further yourself)
-
+    // Additionally see ['trigger_activate_event_on_listbox_item'] observer
     ui.ch()
         .on_spawn_insert(|| Node {
             display: bevy::ui::Display::Flex,
@@ -882,66 +861,62 @@ fn demo_list_view(ui: &mut Imm<CapsUiFeathers>, state: &mut GalleryState) {
             ..default()
         })
         .add(|ui| {
-            let scroll_container = ui.ch().on_spawn_insert(|| {
-                (
-                    Node {
-                        display: bevy::ui::Display::Flex,
-                        flex_direction: FlexDirection::Column,
-                        align_items: AlignItems::Stretch,
-                        justify_content: JustifyContent::Start,
-                        flex_grow: 1.0,
-                        min_height: px(0),
-                        overflow: Overflow::scroll_y(),
-                        ..default()
-                    },
-                    ScrollArea,
-                    TabGroup::default(),
-                )
-            });
-            let scroll_target = scroll_container.entity();
+            let scroll_container = ui
+                .ch()
+                .on_spawn_insert(|| {
+                    (
+                        Node {
+                            display: bevy::ui::Display::Flex,
+                            flex_direction: FlexDirection::Column,
+                            align_items: AlignItems::Stretch,
+                            justify_content: JustifyContent::Start,
+                            flex_grow: 1.0,
+                            min_height: px(0),
+                            overflow: Overflow::scroll_y(),
+                            ..default()
+                        },
+                        ScrollArea,
+                        TabIndex(0),
+                        ListBox,
+                        bevy::a11y::AccessibilityNode(accesskit::Node::new(
+                            accesskit::Role::ListBox,
+                        )),
+                    )
+                })
+                .add(|ui| {
+                    for (index, &label) in LIST_ITEMS.iter().enumerate() {
+                        let disabled = index == 3;
+                        let selected = index == state.list_selected;
 
-            scroll_container.add(|ui| {
-                for (index, &label) in LIST_ITEMS.iter().enumerate() {
-                    let disabled = index == 3;
-                    let selected = index == state.list_selected;
-
-                    let mut row = ui
-                        .ch_id(("list_row", index))
-                        .on_spawn_apply_scene(move || {
-                            bsn! {
-                                @FeathersButton {
-                                    @variant: ButtonVariant::Plain,
-                                    @caption: bsn! { Text(label) ThemedText },
+                        if ui
+                            .ch_id(("list_row", index))
+                            .on_spawn_apply_scene(move || {
+                                bsn! {
+                                    @FeathersListRow Children [ (Text(label) ThemedText) ]
                                 }
-                                Node {
-                                    justify_content: JustifyContent::Start,
-                                    padding: px(4),
-                                }
-                            }
-                        })
-                        .interactions_disabled(disabled)
-                        .button_variant(if selected {
-                            ButtonVariant::Normal
-                        } else {
-                            ButtonVariant::Plain
-                        });
-
-                    let activated = !disabled && row.activated();
-                    let row_entity = row.entity();
-
-                    if activated {
-                        state.list_selected = index;
-                        ui.commands_mut()
-                            .run_system_cached_with(acquire_list_row_focus, row_entity);
+                            })
+                            .selected_set(selected)
+                            .interactions_disabled(disabled)
+                            .activated()
+                        {
+                            state.list_selected = index;
+                        }
                     }
-                }
-            });
+                });
+            let scroll_target = scroll_container.entity();
 
             ui.ch().on_spawn_queue_apply_scene(move || {
                 bsn! {
                     @FeathersScrollbar {
                         @target: {scroll_target},
                         @orientation: {ControlOrientation::Vertical},
+                    }
+                    Node {
+                        position_type: PositionType::Absolute,
+                        right: px(0),
+                        top: px(0),
+                        bottom: px(0),
+                        width: px(6),
                     }
                 }
             });
