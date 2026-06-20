@@ -1,7 +1,3 @@
-use bevy::color::{
-    Srgba,
-    palettes::css::{BLACK, LIGHT_GRAY},
-};
 use bevy::ecs::{
     bundle::Bundle,
     children,
@@ -13,10 +9,16 @@ use bevy::picking::hover::Hovered;
 use bevy::platform::collections::{HashMap, HashSet, hash_set::Entry};
 use bevy::ui::{
     AlignItems, BackgroundColor, BorderColor, FlexDirection, JustifyContent, Node, Overflow,
-    percent, px, vh, vw,
-    widget::{Button, Text},
+    percent, px, vh, vw, widget::Text,
 };
 use bevy::utils::default;
+use bevy::{
+    color::{
+        Srgba,
+        palettes::css::{BLACK, LIGHT_GRAY},
+    },
+    ui_widgets::Button,
+};
 use bevy_immediate::{
     Imm, ImmCtx, ImmEntity,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},

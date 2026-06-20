@@ -19,7 +19,6 @@ impl_capability_set!(
         selected::CapabilityUiSelectable,
         checked::CapabilityUiChecked,
         clicked::CapabilityUiClicked,
-        activated::CapabilityUiActivated,
         anchored::CapabilityUiAnchored,
     )
 );
@@ -105,6 +104,7 @@ pub mod selected;
 pub mod checked;
 
 /// Implements capabilities for detecting activated entity
+#[cfg(feature = "bevy_ui_widgets")]
 pub mod activated;
 
 /// Module implments `Pointer<Click>` related

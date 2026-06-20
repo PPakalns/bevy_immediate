@@ -1,10 +1,22 @@
+use bevy::color::{Alpha, Mix};
+use bevy::color::{Color, palettes::basic::*};
+use bevy::ecs::bundle::Bundle;
+use bevy::ecs::change_detection::DetectChanges;
+use bevy::ecs::component::Component;
+use bevy::ecs::entity::Entity;
+use bevy::ecs::lifecycle::RemovedComponents;
+use bevy::ecs::query::{Changed, Has, Or, With};
+use bevy::ecs::system::{Commands, Query, Res};
 use bevy::input_focus::{InputFocus, InputFocusVisible};
 use bevy::picking::hover::Hovered;
-use bevy::ui::Pressed;
-use bevy::{
-    color::{Color, palettes::basic::*},
-    prelude::*,
+use bevy::text::{Justify, TextColor, TextFont, TextLayout};
+use bevy::ui::widget::TextShadow;
+use bevy::ui::{
+    AlignItems, BackgroundColor, BorderColor, BorderRadius, FlexDirection, JustifyContent, Node,
+    Outline, Overflow, Pressed, UiRect, Val,
 };
+use bevy::ui_widgets::Button;
+use bevy::utils::default;
 use bevy_immediate::ui::{floating_window_plugin::WindowResizeDragDirection, selected::Selectable};
 
 pub struct DemoStylePlugin;
@@ -12,7 +24,7 @@ pub struct DemoStylePlugin;
 impl bevy::app::Plugin for DemoStylePlugin {
     fn build(&self, app: &mut bevy::app::App) {
         app.add_systems(
-            Update,
+            bevy::app::Update,
             (button_system, focus_system, resizable_style_system),
         );
     }
@@ -192,8 +204,6 @@ pub fn container_with_background() -> MyStyleBundle {
 
 pub fn button_bundle() -> MyButtonBundle {
     MyButtonBundle {
-        button: Button,
-        // Has Implementation for adding, removing Pressed
         widget_button: bevy::ui_widgets::Button,
         // For bevy_picking to track entity hovered state
         picking: Hovered::default(),
@@ -231,7 +241,6 @@ pub struct MyStyleBundle {
 
 #[derive(Bundle)]
 pub struct MyButtonBundle {
-    pub button: Button,
     pub picking: Hovered,
     pub my_style: MyStyle,
     pub style: MyStyleBundle,

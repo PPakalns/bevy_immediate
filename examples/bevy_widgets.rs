@@ -430,6 +430,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
                 .slider(&mut hsva.alpha);
         });
 
+        ui.ch().on_spawn_text("Color");
         // WARN: Requires manual support
         // Background color must be updated not for entity, but for the first child
         let entity = ui

@@ -1,11 +1,23 @@
 # Changelog
 
-# 0.5.2
+# 0.6.0
+
+## Breaking changes
+* `TooltipGlobalState::show_tooltip()` now returns `Option<Entity>` instead of `bool`
+* Tooltip improvements to avoid flickering when moving over nested tooltip sources and when the entity under cursor changes
+* `.activated()` now uses bevy_ui_widgets `Activate` event. Make sure that correct `bevy::ui_widgets::Button` is used, not `bevy::ui::Button`.
+
+## Changes
+* Upgraded to bevy 0.18.1
+* Added `FloatingWindow::initial_position` to set initial floating window position in pixels
+* Added `checked_set` method to set checked value without synchronization
 
 ## Internal changes
+* Use stackbox to avoid heap allocation in `add_child_entities`
+* Support capability set implementations with zero extensions
 * Use the new bevy 0.18 mechanism to override bevy_feathers cursor while resizing floating window.  
   At the end of dragging library tries to restore original override cursor, if such existed.
-* Fixed slider in bevy widget example that was broken in bevy 0.18.
+* Fixed slider in bevy widget example that was broken in bevy 0.18
 
 # 0.5.1
 
