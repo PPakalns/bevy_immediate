@@ -73,7 +73,7 @@ Examples can be viewed: (`cargo run --example demo`).
 - **Bevy inbuilt widgets**:
   - [Widgets](./examples/bevy_widgets.rs) - Showcases how to use widgets from bevy
   - [Scrollarea](./examples/bevy_scrollbars.rs) - Showcases how to create reusable scrollareas 
-- [Text edit](./examples/text_edit.rs) - Showcases text edit integration using bevy_ui_text_input crate.
+- [Text edit](./examples/text_edit.rs) - Showcases text edit integration using Bevy's `EditableText`.
 - **Reusable widget implementation**
   - [Functional widget](./examples/widget_functional.rs) - Implement widgets as plain functions
   - [Native widget](./examples/widget_native.rs) - Implement native Bevy-like widgets

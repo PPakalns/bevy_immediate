@@ -25,6 +25,7 @@ impl_capability_set!(
         bevy_immediate::ui::disabled::CapabilityUiDisabled,
         bevy_immediate::ui::interaction::CapabilityUiInteraction,
         bevy_immediate::ui::text::CapabilityUiText,
+        bevy_immediate::ui::text_input::CapabilityUiTextInput,
         bevy_immediate::ui::selected::CapabilityUiSelectable,
         bevy_immediate::ui::checked::CapabilityUiChecked,
         bevy_immediate::ui::clicked::CapabilityUiClicked,
@@ -35,7 +36,6 @@ impl_capability_set!(
         //
         // Add your own capabilities
         crate::extension::CapUiToggle,
-        crate::text_edit::CapabilityUiTextInput,
     )
 );
 

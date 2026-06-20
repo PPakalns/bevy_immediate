@@ -1,5 +1,10 @@
 # Changelog
 
+# Upcoming
+
+## Changes
+* Moved `input_text` capability from the text edit example into `bevy_immediate_ui` as `text_input::CapabilityUiTextInput` and `ImmUiTextInput`
+
 # 0.7.0
 
 ## Breaking changes

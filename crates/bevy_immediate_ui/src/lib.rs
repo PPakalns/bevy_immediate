@@ -17,6 +17,7 @@ impl_capability_set!(
         disabled::CapabilityUiDisabled,
         interaction::CapabilityUiInteraction,
         text::CapabilityUiText,
+        text_input::CapabilityUiTextInput,
         selected::CapabilityUiSelectable,
         checked::CapabilityUiChecked,
         clicked::CapabilityUiClicked,
@@ -41,6 +42,7 @@ impl_capability_set!(
         disabled::CapabilityUiDisabled,
         interaction::CapabilityUiInteraction,
         text::CapabilityUiText,
+        text_input::CapabilityUiTextInput,
         selected::CapabilityUiSelectable,
         checked::CapabilityUiChecked,
         clicked::CapabilityUiClicked,
@@ -60,6 +62,7 @@ impl_capability_set!(
         disabled::CapabilityUiDisabled,
         interaction::CapabilityUiInteraction,
         text::CapabilityUiText,
+        text_input::CapabilityUiTextInput,
         selected::CapabilityUiSelectable,
         checked::CapabilityUiChecked,
         clicked::CapabilityUiClicked,
@@ -84,6 +87,7 @@ impl_capability_set!(
         disabled::CapabilityUiDisabled,
         interaction::CapabilityUiInteraction,
         text::CapabilityUiText,
+        text_input::CapabilityUiTextInput,
         selected::CapabilityUiSelectable,
         checked::CapabilityUiChecked,
         clicked::CapabilityUiClicked,
@@ -117,6 +121,9 @@ pub mod interaction;
 
 /// Implements capabilities for working with nodes that contain [`bevy_ui::widget::Text`]
 pub mod text;
+
+/// Implements capabilities for working with nodes that contain [`bevy_text::EditableText`]
+pub mod text_input;
 
 /// Implements capabilities for Selected marker component
 pub mod selected;

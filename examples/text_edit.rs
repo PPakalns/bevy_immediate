@@ -1,7 +1,5 @@
 use bevy::color::palettes::tailwind::{GRAY_100, GRAY_300, GRAY_500, GRAY_700};
-use bevy::ecs::system::EntityCommand;
 use bevy::ecs::{
-    change_detection::DetectChanges,
     component::Component,
     system::{Local, SystemParam},
 };
@@ -9,11 +7,9 @@ use bevy::text::{EditableText, TextCursorStyle, TextLayout};
 use bevy::ui::{BackgroundColor, FlexDirection, Node, px};
 use bevy::utils::default;
 use bevy_immediate::{
-    CapSet, Imm, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap,
+    Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
-    imm_id,
-    ui::text::ImmUiText,
-    utils::ImmLocalHashMemoryHelper,
+    ui::{text::ImmUiText, text_input::ImmUiTextInput},
 };
 use std::marker::PhantomData;
 
@@ -75,80 +71,5 @@ impl ImmediateAttach<CapsMyUi> for TextEditExampleRoot {
 
                 ui.ch().text(params.text.as_str());
             });
-    }
-}
-
-/// Capability that allows to write, read ui input text in immediate mode
-pub struct CapabilityUiTextInput;
-
-impl ImmCapability for CapabilityUiTextInput {
-    fn build<Cap: CapSet>(app: &mut bevy::app::App, cap_req: &mut ImmCapAccessRequests<Cap>) {
-        cap_req.request_component_write::<EditableText>(app.world_mut());
-    }
-}
-
-pub trait ImmUiTextInput {
-    fn input_text(self, text: &mut String) -> Self;
-}
-
-impl<Cap> ImmUiTextInput for ImmEntity<'_, '_, '_, Cap>
-where
-    Cap: ImplCap<CapabilityUiTextInput>,
-{
-    fn input_text(mut self, text: &mut String) -> Self {
-        let text_hash = imm_id(&text);
-        let mut helper =
-            ImmLocalHashMemoryHelper::new(&mut self, "__bevy_ui_text_input", &text_hash);
-
-        'exist: {
-            let Ok(mut entity) = self.cap_get_entity_mut() else {
-                break 'exist;
-            };
-
-            let Some(mut input_buffer) = entity.get_mut::<EditableText>() else {
-                break 'exist;
-            };
-
-            if !helper.is_stored(&text_hash) {
-                helper.store(&text_hash);
-
-                // External value updated
-                input_buffer.editor.set_text(text);
-            } else {
-                let not_equal = input_buffer.is_changed() // Fast check
-                    && input_buffer.editor.text() != text;
-
-                if not_equal {
-                    *text = input_buffer.editor.text().to_string();
-
-                    helper.store(&imm_id(&text));
-                }
-            }
-
-            helper.finalize(&mut self);
-            return self;
-        }
-
-        helper.finalize(&mut self);
-        if self.will_be_spawned() {
-            self.entity_commands()
-                .queue_silenced(SetText { text: text.clone() });
-        }
-
-        self
-    }
-}
-
-struct SetText {
-    text: String,
-}
-
-impl EntityCommand for SetText {
-    type Out = ();
-
-    fn apply(self, mut entity: bevy::ecs::world::EntityWorldMut) -> Self::Out {
-        if let Some(mut textedit) = entity.get_mut::<EditableText>() {
-            textedit.editor.set_text(&self.text);
-        }
     }
 }
