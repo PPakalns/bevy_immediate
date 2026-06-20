@@ -25,6 +25,15 @@ jobs:
       - name: Install bevy_cli
         run: cargo install --git https://github.com/TheBevyFlock/bevy_cli bevy_cli --force
 
+      - name: Enable getrandom web backend for Wasm
+        run: |
+          cat >> Cargo.toml <<'EOF'
+
+          [target.'cfg(all(target_family = "wasm", any(target_os = "unknown", target_os = "none")))'.dependencies]
+          getrandom = { version = "0.4", features = ["wasm_js"] }
+          getrandom_03 = { version = "0.3", features = ["wasm_js"], package = "getrandom" }
+          EOF
+
       - name: Build demo
         # The first run may prompt to install dependencies, hence the `--yes` flag.
         env:
