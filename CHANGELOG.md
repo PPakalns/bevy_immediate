@@ -1,5 +1,13 @@
 # Changelog
 
+# 0.6.1
+
+## Bugfix and Breaking change
+* Removed CapsUiWidget, use CapsUi, which will include necessary capabilities
+  if bevy_ui_widgets are enabled.
+* Minimal set of UI capabilities are located in CapsUiBase.
+* You may need to update impl_capability_set! with bevy_ui_widgets related capabilities. See `extension_use` example.
+
 # 0.6.0
 
 ## Breaking changes

@@ -3,12 +3,13 @@
 
 use bevy_immediate_core::{capabilities::ImplCapsEmpty, impl_capability_set};
 
-/// Defines capability set for Ui
-pub struct CapsUi;
+/// Capabilities for bevy_ui.
+pub struct CapsUiBase;
 
+// Definition without bevy_ui_widgets
 impl_capability_set!(
-    CapsUi,
-    ImplCapsUi > ImplCapsEmpty,
+    CapsUiBase,
+    ImplCapsUiBase > ImplCapsEmpty,
     (
         base::CapabilityUiBase,
         layout_order::CapabilityUiLayoutOrder,
@@ -23,15 +24,35 @@ impl_capability_set!(
     )
 );
 
-/// Defines capability set for Ui with bevy_ui_widgets support
+/// Defines capability set for Ui
 ///
-/// If you want to use bevy feathers, you probably want to use [CapsUiFeathers]
-pub struct CapsUiWidget;
+/// If bevy_ui_widgets feature is enabled, will include capabilities for it too.
+pub struct CapsUi;
 
+// Definition without bevy_ui_widgets
+#[cfg(not(feature = "bevy_ui_widgets"))]
+impl_capability_set!(
+    CapsUi,
+    ImplCapsUi > ImplCapsUiBase,
+    (
+        base::CapabilityUiBase,
+        layout_order::CapabilityUiLayoutOrder,
+        look::CapabilityUiLook,
+        disabled::CapabilityUiDisabled,
+        interaction::CapabilityUiInteraction,
+        text::CapabilityUiText,
+        selected::CapabilityUiSelectable,
+        checked::CapabilityUiChecked,
+        clicked::CapabilityUiClicked,
+        anchored::CapabilityUiAnchored,
+    )
+);
+
+// Definition with bevy_ui_widgets capabilities
 #[cfg(feature = "bevy_ui_widgets")]
 impl_capability_set!(
-    CapsUiWidget,
-    ImplCapsUiWidget > ImplCapsUi,
+    CapsUi,
+    ImplCapsUi > ImplCapsUiBase,
     (
         base::CapabilityUiBase,
         layout_order::CapabilityUiLayoutOrder,
@@ -44,7 +65,7 @@ impl_capability_set!(
         clicked::CapabilityUiClicked,
         activated::CapabilityUiActivated,
         anchored::CapabilityUiAnchored,
-        //
+        // bevy_ui_widgets
         slider_value::CapabilityUiSliderValue,
     )
 );
@@ -55,7 +76,7 @@ pub struct CapsUiFeathers;
 #[cfg(feature = "bevy_feathers")]
 impl_capability_set!(
     CapsUiFeathers,
-    ImplCapsUiFeathers > ImplCapsUiWidget,
+    ImplCapsUiFeathers > ImplCapsUi,
     (
         base::CapabilityUiBase,
         layout_order::CapabilityUiLayoutOrder,

@@ -26,8 +26,9 @@ use bevy::{math::Vec2, text::TextLayout, utils::default};
 use bevy_immediate::{
     CapSet, Imm, ImmEntity,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
-    ui::{CapsUiWidget, ImplCapsUiWidget, text::ImmUiText},
+    ui::text::ImmUiText,
 };
+use bevy_immediate_ui::{CapsUi, ImplCapsUi};
 
 use crate::{bevy_scrollarea::colors::GRAY1, styles::title_text_style};
 
@@ -54,10 +55,7 @@ impl bevy::app::Plugin for BevyScrollareaExamplePlugin {
         }
 
         // Initialize plugin with your root component
-        app.add_plugins(BevyImmediateAttachPlugin::<
-            CapsUiWidget,
-            BevyScrollareaExampleRoot,
-        >::new());
+        app.add_plugins(BevyImmediateAttachPlugin::<CapsUi, BevyScrollareaExampleRoot>::new());
 
         app.add_systems(bevy::app::Update, update_scrollbar_style_on_drag);
 
@@ -84,10 +82,10 @@ pub struct BevyScrollareaExampleRoot;
 #[derive(SystemParam)]
 pub struct Params {}
 
-impl ImmediateAttach<CapsUiWidget> for BevyScrollareaExampleRoot {
+impl ImmediateAttach<CapsUi> for BevyScrollareaExampleRoot {
     type Params = Params;
 
-    fn construct(ui: &mut Imm<CapsUiWidget>, _params: &mut Params) {
+    fn construct(ui: &mut Imm<CapsUi>, _params: &mut Params) {
         ui.ch()
             .on_spawn_insert(title_text_style)
             .on_spawn_text("Bevy scrollareas");
@@ -203,7 +201,7 @@ pub trait ScrollBar<Caps: CapSet> {
 
 impl<Caps> ScrollBar<Caps> for ImmEntity<'_, '_, '_, Caps>
 where
-    Caps: ImplCapsUiWidget,
+    Caps: ImplCapsUi,
 {
     fn scrollarea(
         self,
