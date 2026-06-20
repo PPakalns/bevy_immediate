@@ -11,7 +11,7 @@ use bevy::{
 use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
-    ui::{CapsUi, clicked::ImmUiClicked, selected::ImmUiSelectable, text::ImmUiText},
+    ui::{CapsUi, clicked::ImmUiClicked, selected::ImmUiSelected, text::ImmUiText},
 };
 use strum::IntoEnumIterator;
 
@@ -63,7 +63,7 @@ impl ImmediateAttach<CapsUi> for MenuUiRoot {
                     let mut button = ui
                         .ch()
                         .on_spawn_insert(styles::button_bundle)
-                        .selected(example == *params.current_example)
+                        .selected_set(example == *params.current_example)
                         .add(|ui| {
                             ui.ch()
                                 .on_spawn_insert(styles::centered_text_style)
@@ -83,7 +83,7 @@ impl ImmediateAttach<CapsUi> for MenuUiRoot {
                 let mut button = ui
                     .ch()
                     .on_spawn_insert(button_bundle)
-                    .selected(params.debug_options.enabled)
+                    .selected_set(params.debug_options.enabled)
                     .add(|ui| {
                         ui.ch().on_spawn_insert(text_style).text("Debug");
                     });
@@ -98,6 +98,7 @@ impl ImmediateAttach<CapsUi> for MenuUiRoot {
 pub enum CurrentExample {
     HelloWorld,
     BevyWidgets,
+    FeathersGallery,
     BevyScrollbar,
     Tooltip,
     Anchored,
@@ -123,6 +124,7 @@ impl CurrentExample {
             CurrentExample::PowerUser => "Power user",
             CurrentExample::HotPatching => "Hot patching",
             CurrentExample::TextEdit => "Text edit",
+            CurrentExample::FeathersGallery => "Feathers gallery",
         }
     }
 }

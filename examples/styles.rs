@@ -5,6 +5,7 @@ use bevy::ecs::change_detection::DetectChanges;
 use bevy::ecs::component::Component;
 use bevy::ecs::entity::Entity;
 use bevy::ecs::lifecycle::RemovedComponents;
+use bevy::ecs::hierarchy::ChildOf;
 use bevy::ecs::query::{Changed, Has, Or, With};
 use bevy::ecs::system::{Commands, Query, Res};
 use bevy::input_focus::{InputFocus, InputFocusVisible};
@@ -13,11 +14,14 @@ use bevy::text::{Justify, TextColor, TextFont, TextLayout};
 use bevy::ui::widget::TextShadow;
 use bevy::ui::{
     AlignItems, BackgroundColor, BorderColor, BorderRadius, FlexDirection, JustifyContent, Node,
-    Outline, Overflow, Pressed, UiRect, Val,
+    Outline, Overflow, Pressed, Selectable, Selected, UiRect, Val,
 };
 use bevy::ui_widgets::Button;
 use bevy::utils::default;
-use bevy_immediate::ui::{floating_window_plugin::WindowResizeDragDirection, selected::Selectable};
+use bevy_immediate::ui::floating_window_plugin::WindowResizeDragDirection;
+
+use crate::bevy_widgets::BevyWidgetExampleRoot;
+use crate::feathers_gallery::FeathersGalleryExampleRoot;
 
 pub struct DemoStylePlugin;
 
@@ -42,26 +46,31 @@ fn button_system(
             &Hovered,
             &mut BackgroundColor,
             &mut BorderColor,
-            Option<&Selectable>,
+            Has<Selected>,
             Has<Pressed>,
         ),
-        (With<Button>, With<MyStyle>),
+        (With<Button>, With<MyStyle>, With<Selectable>),
     >,
     changed: Query<
         Entity,
         (
-            Or<(Changed<Hovered>, Changed<Selectable>, Changed<Pressed>)>,
-            (With<Button>, With<MyStyle>),
+            Or<(Changed<Hovered>, Changed<Selected>, Changed<Pressed>)>,
+            (With<Button>, With<MyStyle>, With<Selectable>),
         ),
     >,
     mut removed_pressed: RemovedComponents<Pressed>,
+    mut removed_selected: RemovedComponents<Selected>,
 ) {
     // Set interactable element
     // background and border colors
     // when inactive, pressed, hovered and when selected
 
-    for entity in changed.iter().chain(removed_pressed.read()) {
-        let Ok((hovered, mut color, mut border_color, selected, pressed)) =
+    for entity in changed
+        .iter()
+        .chain(removed_pressed.read())
+        .chain(removed_selected.read())
+    {
+        let Ok((hovered, mut color, mut border_color, is_selected, pressed)) =
             interaction_query.get_mut(entity)
         else {
             continue;
@@ -78,7 +87,7 @@ fn button_system(
             border_color.set_all(Color::BLACK);
         }
 
-        if selected.map(|s| s.selected) == Some(true) {
+        if is_selected {
             fn assign_color(color: &mut Color) {
                 *color = color.mix(&SELECTED, 0.5);
             }
@@ -100,15 +109,28 @@ fn focus_system(
     mut commands: Commands,
     focus: Res<InputFocus>,
     focus_visible: Res<InputFocusVisible>,
-    mut focus_entities: Query<Entity, With<Focus>>,
+    focus_entities: Query<Entity, With<Focus>>,
+    parents: Query<&ChildOf>,
+    excluded_roots: Query<
+        (),
+        Or<(With<FeathersGalleryExampleRoot>, With<BevyWidgetExampleRoot>)>,
+    >,
 ) {
+    let has_excluded_root_ancestor = |entity: Entity| {
+        excluded_roots.contains(entity)
+            || parents
+                .iter_ancestors(entity)
+                .any(|ancestor| excluded_roots.contains(ancestor))
+    };
+
     if focus.is_changed() || focus_visible.is_changed() {
-        for entity in focus_entities.iter_mut() {
+        for entity in focus_entities.iter() {
             commands.entity(entity).remove::<(Focus, Outline)>();
         }
 
         if focus_visible.0
             && let Some(entity) = focus.get()
+            && !has_excluded_root_ancestor(entity)
         {
             commands.entity(entity).insert((
                 Focus,

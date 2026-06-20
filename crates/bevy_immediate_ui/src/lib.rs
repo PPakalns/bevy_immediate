@@ -43,7 +43,7 @@ impl_capability_set!(
         interaction::CapabilityUiInteraction,
         text::CapabilityUiText,
         text_input::CapabilityUiTextInput,
-        selected::CapabilityUiSelectable,
+        selected::CapabilityUiSelected,
         checked::CapabilityUiChecked,
         clicked::CapabilityUiClicked,
         anchored::CapabilityUiAnchored,
@@ -95,9 +95,12 @@ impl_capability_set!(
         anchored::CapabilityUiAnchored,
         // bevy_ui_widgets
         slider_value::CapabilityUiSliderValue,
+        number_input::CapabilityUiNumberInput,
         // bevy_feathers
         slider_base_color::CapabilityUiSliderBaseColor,
         button_variant::CapabilityUiFeathersButtonVariant,
+        color_swatch::CapabilityUiColorSwatch,
+        color_plane::CapabilityUiColorPlane,
     )
 );
 
@@ -125,7 +128,7 @@ pub mod text;
 /// Implements capabilities for working with nodes that contain [`bevy_text::EditableText`]
 pub mod text_input;
 
-/// Implements capabilities for Selected marker component
+/// Implements capabilities for synchronising [`bevy_ui::Selected`]
 pub mod selected;
 
 /// Implements capabilities for checked status
@@ -146,6 +149,10 @@ pub mod track_value_change_plugin;
 #[cfg(feature = "bevy_ui_widgets")]
 pub mod slider_value;
 
+/// Module implements functionality for synchronising feathers number inputs
+#[cfg(feature = "bevy_feathers")]
+pub mod number_input;
+
 /// Module implements functionality for setting feathers Slider base color
 #[cfg(feature = "bevy_feathers")]
 pub mod slider_base_color;
@@ -153,6 +160,14 @@ pub mod slider_base_color;
 /// Module implements functionality for setting feathers button variant
 #[cfg(feature = "bevy_feathers")]
 pub mod button_variant;
+
+/// Module implements functionality for synchronising feathers color swatches
+#[cfg(feature = "bevy_feathers")]
+pub mod color_swatch;
+
+/// Module implements functionality for synchronising feathers color planes
+#[cfg(feature = "bevy_feathers")]
+pub mod color_plane;
 
 /// Implements capabilities for floating anchored elements
 pub mod anchored;

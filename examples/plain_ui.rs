@@ -1,6 +1,6 @@
-use bevy::ecs::system::ResMut;
 use bevy::input_focus::tab_navigation::TabGroup;
 use bevy::ui::Node;
+use bevy::{ecs::system::ResMut, ui::JustifyContent};
 use bevy_immediate::{BevyImmediatePlugin, ImmCtx, ui::CapsUi};
 
 use crate::{
@@ -8,6 +8,7 @@ use crate::{
     bevy_scrollarea::BevyScrollareaExampleRoot,
     bevy_widgets::BevyWidgetExampleRoot,
     extension_use::ExtensionUseExampleRoot,
+    feathers_gallery::FeathersGalleryExampleRoot,
     floating_window::FloatingWindowRoot,
     hello_world::HelloWorldRoot,
     hot_patching::HotPatchingRoot,
@@ -45,6 +46,7 @@ fn ui_system(ctx: ImmCtx<CapsUi>, example: ResMut<CurrentExample>) {
                 Node {
                     flex_direction: bevy::ui::FlexDirection::Row,
                     column_gap: bevy::ui::Val::Px(10.),
+                    justify_content: JustifyContent::Stretch,
                     ..styles::fill_parent_node()
                 },
                 TabGroup::new(0),
@@ -99,6 +101,9 @@ fn ui_system(ctx: ImmCtx<CapsUi>, example: ResMut<CurrentExample>) {
                 }
                 CurrentExample::TextEdit => {
                     content.on_spawn_insert(|| TextEditExampleRoot);
+                }
+                CurrentExample::FeathersGallery => {
+                    content.on_spawn_insert(|| FeathersGalleryExampleRoot);
                 }
             }
         });

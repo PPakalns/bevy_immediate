@@ -28,6 +28,7 @@ bevy_immediate_floating_ui = { workspace = true }
 
 bevy_ui_widgets = { workspace = true, optional = true }
 bevy_feathers = { workspace = true, optional = true }
+bevy_math = { workspace = true, optional = true }
 
 
 [features]
@@ -36,5 +37,6 @@ bevy_ui_widgets = ["dep:bevy_ui_widgets"]
 bevy_feathers = [
   "bevy_ui_widgets",
   "dep:bevy_feathers",
+  "dep:bevy_math",
   "bevy_immediate_floating_ui/bevy_feathers",
 ]

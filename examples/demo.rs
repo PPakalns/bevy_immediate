@@ -36,6 +36,7 @@ fn main() {
         .add_plugins(text_edit::TextEditExamplePlugin)
         .add_plugins(anchored::AnchoredUiExamplePlugin)
         .add_plugins(floating_window::FloatingWindowExamplePlugin)
+        .add_plugins(feathers_gallery::FeathersGalleryExamplePlugin)
         .run();
 }
 
@@ -74,5 +75,7 @@ mod floating_window;
 mod anchored;
 
 mod text_edit;
+
+mod feathers_gallery;
 
 mod styles;

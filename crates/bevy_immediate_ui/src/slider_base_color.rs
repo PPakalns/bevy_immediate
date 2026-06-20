@@ -16,7 +16,7 @@ impl ImmCapability for CapabilityUiSliderBaseColor {
 
 /// Implements capability to set slider base color
 pub trait ImmUiSliderBaseColor {
-    /// Update slider base color [SliderBaseColor].
+    /// Update slider base color [`SliderBaseColor`].
     fn slider_base_color(self, value: Color) -> Self;
 }
 
@@ -32,8 +32,7 @@ where
             return self;
         }
 
-        let mut commands = self.entity_commands();
-        commands.insert(SliderBaseColor(value));
+        self.entity_commands().insert(SliderBaseColor(value));
         self
     }
 }

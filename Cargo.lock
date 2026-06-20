@@ -852,6 +852,7 @@ dependencies = [
  "bevy_immediate_floating_ui",
  "bevy_input",
  "bevy_input_focus",
+ "bevy_math",
  "bevy_picking",
  "bevy_platform",
  "bevy_text",

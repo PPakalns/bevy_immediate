@@ -3,7 +3,7 @@ use bevy_immediate::{
     Imm,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
     impl_capability_set,
-    ui::{ImplCapsUi, clicked::ImmUiClicked, selected::ImmUiSelectable, text::ImmUiText},
+    ui::{ImplCapsUi, clicked::ImmUiClicked, selected::ImmUiSelected, text::ImmUiText},
 };
 
 use crate::{extension::ImmCapUiCollapse, styles};
@@ -33,6 +33,7 @@ impl_capability_set!(
         bevy_immediate::ui::anchored::CapabilityUiAnchored,
         // bevy_ui_widgets
         bevy_immediate_ui::slider_value::CapabilityUiSliderValue,
+        bevy_immediate_ui::number_input::CapabilityUiNumberInput,
         //
         // Add your own capabilities
         crate::extension::CapUiToggle,
@@ -63,7 +64,7 @@ impl ImmediateAttach<CapsMyUi> for ExtensionUseExampleRoot {
 
         let toggle = button.get_toggle();
 
-        button = button.selected(toggle).add(|ui| {
+        button = button.selected_set(toggle).add(|ui| {
             if toggle {
                 ui.ch().text("Open");
             } else {

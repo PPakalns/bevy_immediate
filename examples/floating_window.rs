@@ -28,7 +28,7 @@ use bevy_immediate::{
         floating_window_plugin::{
             self, FloatingWindow, FloatingWindowPlugin, FloatingWindowStoreLocationId,
         },
-        selected::ImmUiSelectable,
+        selected::ImmUiSelected,
         text::ImmUiText,
     },
     utils::ImmLocalHashMemoryHelper,
@@ -40,6 +40,7 @@ use crate::{
     bevy_scrollarea::BevyScrollareaExampleRoot,
     bevy_widgets::BevyWidgetExampleRoot,
     extension_use::ExtensionUseExampleRoot,
+    feathers_gallery::FeathersGalleryExampleRoot,
     hello_world::HelloWorldRoot,
     hot_patching::HotPatchingRoot,
     main_menu::CurrentExample,
@@ -102,7 +103,7 @@ impl ImmediateAttach<CapsUi> for FloatingWindowRoot {
                         .add(|ui| {
                             ui.ch().on_spawn_text_fn(|| example.title().to_string());
                         })
-                        .selected(params.state.windows_with_memory.contains(&example));
+                        .selected_set(params.state.windows_with_memory.contains(&example));
 
                     if button.activated() {
                         match params.state.windows_with_memory.entry(example) {
@@ -162,7 +163,7 @@ impl ImmediateAttach<CapsUi> for FloatingWindowRoot {
 
                 let is_open = is_popup_open_local.is_stored(&true);
 
-                button = button.selected(is_open);
+                button = button.selected_set(is_open);
 
                 if is_open {
                     // Manage new entity tree
@@ -272,6 +273,9 @@ fn show_example_window(
                 }
                 CurrentExample::TextEdit => {
                     content.on_spawn_insert(|| TextEditExampleRoot);
+                }
+                CurrentExample::FeathersGallery => {
+                    content.on_spawn_insert(|| FeathersGalleryExampleRoot);
                 }
             }
         },

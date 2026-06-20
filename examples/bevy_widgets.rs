@@ -11,7 +11,6 @@ use bevy::feathers::controls::{
     FeathersButton, FeathersCheckbox, FeathersColorSlider, FeathersColorSwatch, FeathersRadio,
     FeathersSlider, FeathersToggleSwitch,
 };
-use bevy::input_focus::tab_navigation::TabNavigationPlugin;
 use bevy::scene::bsn;
 use bevy::ui::widget::Text;
 use bevy::ui::{BackgroundColor, Display, GridPlacement, Node, RepeatedGridTrack, Val, px};
@@ -48,7 +47,7 @@ impl bevy::app::Plugin for BevyWidgetExamplePlugin {
 
         // You will need bevy_immediate features `bevy_feathers` and/or `bevy_ui_widgets`
 
-        app.add_plugins(FeathersPlugins.build().disable::<TabNavigationPlugin>())
+        app.add_plugins(FeathersPlugins.build())
             .insert_resource(UiTheme(create_dark_theme()));
 
         // Initialize plugin with your root component

@@ -8,7 +8,7 @@ use bevy::ui::{FlexDirection, UiRect, Val};
 use bevy_immediate::{
     Imm, ImmEntity,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
-    ui::{CapsUi, ImplCapsUi, clicked::ImmUiClicked, selected::ImmUiSelectable, text::ImmUiText},
+    ui::{CapsUi, ImplCapsUi, clicked::ImmUiClicked, selected::ImmUiSelected, text::ImmUiText},
 };
 
 use crate::styles;
@@ -52,7 +52,7 @@ impl ImmediateAttach<CapsUi> for PowerUserExampleRoot {
                 let mut button = ui
                     .ch_id(("choice", state))
                     .my_button()
-                    .selected(params.show_hidden.show == state)
+                    .selected_set(params.show_hidden.show == state)
                     .add(|ui| {
                         ui.ch().my_text(text);
                     });
