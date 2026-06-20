@@ -1,39 +1,50 @@
 use bevy::app::PluginGroup;
-use bevy::color::palettes::css::DARK_BLUE;
+use bevy::color::palettes;
+use bevy::color::{Alpha, Color, Srgba};
 use bevy::ecs::{
     component::Component,
     hierarchy::Children,
-    query::Without,
     resource::Resource,
-    system::{Query, ResMut, SystemParam},
+    system::{ResMut, SystemParam},
 };
-use bevy::feathers::controls::{
-    FeathersButton, FeathersCheckbox, FeathersColorSlider, FeathersColorSwatch, FeathersRadio,
-    FeathersSlider, FeathersToggleSwitch,
+use bevy::feathers::{
+    constants::fonts,
+    containers::{group, group_body, group_header, pane, pane_body, pane_header},
+    controls::{
+        ColorChannel, FeathersButton, FeathersCheckbox, FeathersColorPlane, FeathersColorSlider,
+        FeathersColorSwatch, FeathersNumberInput, FeathersRadio, FeathersTextInput,
+        FeathersTextInputContainer, FeathersToggleSwitch,
+    },
+    display::{label, label_small},
+    font_styles::InheritableFont,
+    tokens,
 };
+use bevy::math::Vec3;
 use bevy::scene::bsn;
 use bevy::ui::widget::Text;
-use bevy::ui::{BackgroundColor, Display, GridPlacement, Node, RepeatedGridTrack, Val, px};
-use bevy::ui_widgets::{RadioGroup, SliderPrecision, SliderStep};
+use bevy::ui::{
+    AlignItems, Display, FlexDirection, GridPlacement, JustifyContent, Node, RepeatedGridTrack,
+    Val, px,
+};
+use bevy::ui_widgets::RadioGroup;
 use bevy::{
-    color::Hsva,
     feathers::{
-        self, FeathersPlugins, controls::ButtonVariant, dark_theme::create_dark_theme,
+        FeathersPlugins, controls::ButtonVariant, dark_theme::create_dark_theme,
         rounded_corners::RoundedCorners, theme::UiTheme,
     },
     utils::default,
 };
 use bevy_immediate::{
-    CapSet, Imm, ImmMarker,
+    Imm, ImmEntity,
     attach::{BevyImmediateAttachPlugin, ImmediateAttach},
     ui::{
         CapsUiFeathers, activated::ImmUiActivated, button_variant::ImmUiFeathersButtonVariant,
-        checked::ImmUiChecked, disabled::ImmUiInteractionsDisabled, look::ImmUiLook,
+        checked::ImmUiChecked, color_plane::ImmUiColorPlane, color_swatch::ImmUiColorSwatch,
+        disabled::ImmUiInteractionsDisabled, look::ImmUiLook, number_input::ImmUiNumberInput,
         slider_base_color::ImmUiSliderBaseColor, slider_value::ImmUiSliderValue as _,
-        text::ImmUiText,
+        text::ImmUiText, text_input::ImmUiTextInput,
     },
 };
-use feathers::controls::ColorChannel;
 use std::ops::DerefMut;
 
 use crate::styles::{self, title_text_style};
@@ -71,7 +82,8 @@ pub struct BevyWidgetExampleRoot;
 #[derive(Resource)]
 struct WidgetState {
     values: Vec<Checkbox>,
-    hsva: Hsva,
+    rgb_color: Srgba,
+    vec3_prop: Vec3,
 }
 
 struct Checkbox {
@@ -98,26 +110,27 @@ impl Default for WidgetState {
                         .map(move |value| Checkbox { value, disabled })
                 })
                 .collect(),
-            hsva: DARK_BLUE.into(),
+            rgb_color: palettes::tailwind::EMERALD_800.with_alpha(0.7),
+            vec3_prop: Vec3::new(10.1, 7.124, 100.0),
         }
     }
 }
 
 #[derive(SystemParam)]
-pub struct Params<'w, 's, Caps: CapSet> {
+pub struct Params<'w> {
     state: ResMut<'w, WidgetState>,
     radio_state: ResMut<'w, RadioState>,
-
-    // Needed for color swatch
-    children: Query<'w, 's, &'static Children>,
-    background: Query<'w, 's, &'static mut BackgroundColor, Without<ImmMarker<Caps>>>,
 }
 
 impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
-    type Params = Params<'static, 'static, CapsUiFeathers>;
+    type Params = Params<'static>;
 
-    fn construct(ui: &mut Imm<CapsUiFeathers>, params: &mut Params<CapsUiFeathers>) {
-        let WidgetState { values, hsva } = params.state.deref_mut();
+    fn construct(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
+        let WidgetState {
+            values,
+            rgb_color,
+            vec3_prop,
+        } = params.state.deref_mut();
 
         fn button_rounded_corners_row(idx: usize, count: usize) -> RoundedCorners {
             if idx == 0 {
@@ -308,132 +321,244 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
                 }
             });
 
-        ui.ch().on_spawn_insert(|| Node {
-            height: px(50.),
-            ..default()
-        });
-
-        ui.ch()
-            .on_spawn_insert(styles::row_node_container)
-            .add(|ui| {
-                ui.ch().on_spawn_text("Radio group:");
-                ui.ch().text(format!("{:?}", *params.radio_state));
+        ui.ch().on_spawn_apply_scene(pane).add(|ui| {
+            ui.ch().on_spawn_apply_scene(pane_header).add(|ui| {
+                ui.ch().on_spawn_apply_scene(|| label("Pane"));
             });
 
-        ui.ch()
-            .on_spawn_insert(styles::row_node_container)
-            .on_spawn_insert(|| RadioGroup)
-            .add(|ui| {
-                for (name, state) in [
-                    ("Dog", RadioState::Dog),
-                    ("Cat", RadioState::Cat),
-                    ("Horse", RadioState::Horse),
-                ] {
-                    ui.ch_id(("radio", state))
-                        .on_spawn_apply_scene(|| bsn! {@FeathersRadio})
-                        .add(|ui| {
-                            ui.ch().on_spawn_text(name);
-                        })
-                        .checked_if_eq(state, &mut params.radio_state);
-                }
+            ui.ch().on_spawn_apply_scene(pane_body).add(|ui| {
+                ui.ch().on_spawn_apply_scene(group).add(|ui| {
+                    ui.ch().on_spawn_apply_scene(group_header).add(|ui| {
+                        ui.ch().on_spawn_apply_scene(|| label("Group1"));
+                    });
+
+                    ui.ch().on_spawn_apply_scene(group_body).add(|ui| {
+                        ui.ch().on_spawn_insert(row_between_node).add(|ui| {
+                            ui.ch().on_spawn_text("Srgba");
+
+                            ui.ch().on_spawn_insert(|| Node {
+                                flex_grow: 1.0,
+                                ..default()
+                            });
+
+                            ui.ch()
+                                .on_spawn_apply_scene(|| {
+                                    bsn! {
+                                        @FeathersTextInputContainer
+                                        Node {
+                                            flex_grow: 0.,
+                                            padding: { px(4).left() },
+                                        }
+                                    }
+                                })
+                                .add(|ui| {
+                                    ui.ch()
+                                        .on_spawn_apply_scene(|| {
+                                            bsn! {
+                                                @FeathersTextInput {
+                                                    @visible_width: 10f32,
+                                                    @max_characters: 9usize,
+                                                }
+                                                InheritableFont {
+                                                    font: fonts::MONO,
+                                                }
+                                            }
+                                        })
+                                        .input_get_set(|value| match value {
+                                            None => rgb_color.to_hex(),
+                                            Some(hex) => {
+                                                if let Ok(color) = Srgba::hex(hex) {
+                                                    *rgb_color = color;
+                                                }
+                                                rgb_color.to_hex()
+                                            }
+                                        });
+                                });
+
+                            ui.ch()
+                                .on_spawn_apply_scene(|| bsn! { @FeathersColorSwatch })
+                                .color_swatch((*rgb_color).into());
+                        });
+
+                        ui.ch()
+                            .on_spawn_apply_scene(|| bsn! { @FeathersColorPlane::RedBlue })
+                            .color_plane_get_set(|value| match value {
+                                None => Vec3::new(rgb_color.red, rgb_color.blue, rgb_color.green),
+                                Some(xy) => {
+                                    rgb_color.red = xy.x;
+                                    rgb_color.blue = xy.y;
+                                    Vec3::new(rgb_color.red, rgb_color.blue, rgb_color.green)
+                                }
+                            });
+
+                        rgba_color_slider(
+                            ui.ch(),
+                            ColorChannel::Red,
+                            Color::from(*rgb_color),
+                            |value| match value {
+                                None => rgb_color.red,
+                                Some(red) => {
+                                    rgb_color.red = red;
+                                    red
+                                }
+                            },
+                        );
+                        rgba_color_slider(
+                            ui.ch(),
+                            ColorChannel::Green,
+                            Color::from(*rgb_color),
+                            |value| match value {
+                                None => rgb_color.green,
+                                Some(green) => {
+                                    rgb_color.green = green;
+                                    green
+                                }
+                            },
+                        );
+                        rgba_color_slider(
+                            ui.ch(),
+                            ColorChannel::Blue,
+                            Color::from(*rgb_color),
+                            |value| match value {
+                                None => rgb_color.blue,
+                                Some(blue) => {
+                                    rgb_color.blue = blue;
+                                    blue
+                                }
+                            },
+                        );
+                        rgba_color_slider(
+                            ui.ch(),
+                            ColorChannel::Alpha,
+                            Color::from(*rgb_color),
+                            |value| match value {
+                                None => rgb_color.alpha,
+                                Some(alpha) => {
+                                    rgb_color.alpha = alpha;
+                                    alpha
+                                }
+                            },
+                        );
+                    });
+                });
+
+                ui.ch().on_spawn_apply_scene(group).add(|ui| {
+                    ui.ch().on_spawn_apply_scene(group_header).add(|ui| {
+                        ui.ch().on_spawn_apply_scene(|| label("Group2"));
+                    });
+
+                    ui.ch().on_spawn_apply_scene(group_body).add(|ui| {
+                        ui.ch()
+                            .on_spawn_apply_scene(|| label_small("Vec3 property"));
+                        ui.ch().on_spawn_insert(vec3_row_node).add(|ui| {
+                            vec3_number_input(
+                                ui.ch(),
+                                &mut vec3_prop.x,
+                                tokens::TEXT_INPUT_X_AXIS,
+                                "X",
+                            );
+                            vec3_number_input(
+                                ui.ch(),
+                                &mut vec3_prop.y,
+                                tokens::TEXT_INPUT_Y_AXIS,
+                                "Y",
+                            );
+                            vec3_number_input(
+                                ui.ch(),
+                                &mut vec3_prop.z,
+                                tokens::TEXT_INPUT_Z_AXIS,
+                                "Z",
+                            );
+                        });
+                    });
+                });
+
+                ui.ch().on_spawn_apply_scene(group).add(|ui| {
+                    ui.ch().on_spawn_apply_scene(group_header).add(|ui| {
+                        ui.ch()
+                            .text(format!("Radio group: {:?}", *params.radio_state));
+                    });
+
+                    ui.ch().on_spawn_apply_scene(group_body).add(|ui| {
+                        ui.ch()
+                            .on_spawn_insert(styles::row_node_container)
+                            .on_spawn_insert(|| RadioGroup)
+                            .add(|ui| {
+                                for (name, state) in [
+                                    ("Dog", RadioState::Dog),
+                                    ("Cat", RadioState::Cat),
+                                    ("Horse", RadioState::Horse),
+                                ] {
+                                    ui.ch_id(("pane_radio", state))
+                                        .on_spawn_apply_scene(|| bsn! {@FeathersRadio})
+                                        .add(|ui| {
+                                            ui.ch().on_spawn_text(name);
+                                        })
+                                        .checked_if_eq(state, &mut params.radio_state);
+                                }
+                            });
+                    });
+                });
             });
+        });
+    }
+}
 
-        ui.ch().on_spawn_insert(|| Node {
-            height: px(50.),
-            ..default()
-        });
-
-        ui.ch().on_spawn_text("Color sliders");
-
-        ui.ch().on_spawn_insert(Node::default).add(|ui| {
-            ui.ch()
-                .on_spawn_apply_scene(|| {
-                    bsn! {
-                        @FeathersColorSlider {
-                            @channel: ColorChannel::HslHue,
-                        }
-                        SliderStep(5.)
-                    }
-                })
-                .slider(&mut hsva.hue);
-        });
-        ui.ch().on_spawn_insert(Node::default).add(|ui| {
-            ui.ch()
-                .on_spawn_apply_scene(|| {
-                    bsn! {
-                        @FeathersColorSlider {
-                            @channel: ColorChannel::HslSaturation,
-                        }
-                        SliderStep(0.05)
-                    }
-                })
-                .slider_base_color(hsva.with_saturation(1.).with_value(1.).into())
-                .slider(&mut hsva.saturation);
-        });
-        ui.ch().on_spawn_insert(Node::default).add(|ui| {
-            ui.ch()
-                .on_spawn_apply_scene(|| {
-                    bsn! {
-                        @FeathersColorSlider {
-                            @channel: ColorChannel::HslLightness,
-                        }
-                        SliderStep(0.05)
-                    }
-                })
-                .slider(&mut hsva.value);
-        });
-        ui.ch().on_spawn_insert(Node::default).add(|ui| {
-            ui.ch()
-                .on_spawn_apply_scene(|| {
-                    bsn! {
-                        @FeathersColorSlider {
-                            @channel: ColorChannel::Alpha,
-                        }
-                        SliderStep(0.05)
-                    }
-                })
-                .slider_base_color((*hsva).into())
-                .slider(&mut hsva.alpha);
-        });
-        ui.ch().on_spawn_insert(Node::default).add(|ui| {
-            ui.ch()
-                .on_spawn_apply_scene(|| {
-                    bsn! {
-                        @FeathersSlider {
-                            @min: 0.,
-                            @max: 1.,
-                        }
-                        SliderStep(0.05)
-                        SliderPrecision(2)
-                    }
-                })
-                .slider_base_color((*hsva).into())
-                .slider(&mut hsva.alpha);
-        });
-
-        ui.ch().on_spawn_text("Color");
-        // WARN: Requires manual support
-        // Background color must be updated not for entity, but for the first child
-        let entity = ui
-            .ch()
-            .on_spawn_apply_scene(|| {
-                bsn! {
-                    @FeathersColorSwatch
-                }
-            })
-            .background_color((*hsva).into());
-
-        if let Some(mut background) = params
-            .children
-            .get(entity.entity())
-            .ok()
-            .and_then(|children| children.first())
-            .and_then(|child| params.background.get_mut(*child).ok())
-        {
-            // Additional check to avoid unnecessary updates
-            if *background != (*hsva).into() {
-                *background = (*hsva).into();
+fn vec3_number_input(
+    ui: ImmEntity<CapsUiFeathers>,
+    value: &mut f32,
+    sigil_color: bevy::feathers::theme::ThemeToken,
+    label_text: &'static str,
+) {
+    ui.on_spawn_apply_scene(move || {
+        bsn! {
+            @FeathersNumberInput {
+                @sigil_color: sigil_color,
+                @label_text: label_text,
+            }
+            Node {
+                flex_grow: 1.0,
             }
         }
+    })
+    .number_input(value);
+}
+
+fn rgba_color_slider(
+    ui: ImmEntity<CapsUiFeathers>,
+    channel: ColorChannel,
+    base_color: Color,
+    value_get_set: impl FnMut(Option<f32>) -> f32,
+) {
+    ui.on_spawn_apply_scene(move || {
+        bsn! {
+            @FeathersColorSlider {
+                @channel: channel,
+            }
+        }
+    })
+    .slider_base_color(base_color)
+    .slider_get_set(value_get_set);
+}
+
+fn vec3_row_node() -> Node {
+    Node {
+        display: Display::Flex,
+        flex_direction: FlexDirection::Row,
+        column_gap: px(6),
+        align_items: AlignItems::Center,
+        justify_content: JustifyContent::SpaceBetween,
+        ..default()
+    }
+}
+
+fn row_between_node() -> Node {
+    Node {
+        display: Display::Flex,
+        flex_direction: FlexDirection::Row,
+        align_items: AlignItems::Center,
+        justify_content: JustifyContent::SpaceBetween,
+        column_gap: px(4),
+        ..default()
     }
 }

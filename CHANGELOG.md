@@ -2,8 +2,12 @@
 
 # Upcoming
 
-## Changes
+## Breaking changes
 * Moved `input_text` capability from the text edit example into `bevy_immediate_ui` as `text_input::CapabilityUiTextInput` and `ImmUiTextInput`
+* Added support for bevy_ui_widgets::{Selectable, Selected}
+* Added support for bevy_feathers color plane, number input, axis buttons etc. See bevy_widgets and feathers gallery examples.
+
+* Updated bevy_widgets example
 
 # 0.7.0
 

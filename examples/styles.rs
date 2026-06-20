@@ -4,8 +4,8 @@ use bevy::ecs::bundle::Bundle;
 use bevy::ecs::change_detection::DetectChanges;
 use bevy::ecs::component::Component;
 use bevy::ecs::entity::Entity;
-use bevy::ecs::lifecycle::RemovedComponents;
 use bevy::ecs::hierarchy::ChildOf;
+use bevy::ecs::lifecycle::RemovedComponents;
 use bevy::ecs::query::{Changed, Has, Or, With};
 use bevy::ecs::system::{Commands, Query, Res};
 use bevy::input_focus::{InputFocus, InputFocusVisible};
@@ -105,6 +105,7 @@ fn button_system(
 #[component(storage = "SparseSet")]
 pub struct Focus;
 
+#[allow(clippy::type_complexity)]
 fn focus_system(
     mut commands: Commands,
     focus: Res<InputFocus>,
@@ -113,7 +114,10 @@ fn focus_system(
     parents: Query<&ChildOf>,
     excluded_roots: Query<
         (),
-        Or<(With<FeathersGalleryExampleRoot>, With<BevyWidgetExampleRoot>)>,
+        Or<(
+            With<FeathersGalleryExampleRoot>,
+            With<BevyWidgetExampleRoot>,
+        )>,
     >,
 ) {
     let has_excluded_root_ancestor = |entity: Entity| {

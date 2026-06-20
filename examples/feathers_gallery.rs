@@ -28,7 +28,6 @@ use bevy::feathers::{
     dark_theme::create_dark_theme,
     display::{icon, label, label_dim, label_small},
     font_styles::InheritableFont,
-    palette,
     rounded_corners::RoundedCorners,
     theme::{ThemeBackgroundColor, ThemedText, UiTheme},
     tokens,
@@ -38,9 +37,7 @@ use bevy::log::info;
 use bevy::math::Vec3;
 use bevy::scene::bsn;
 use bevy::ui::widget::Text;
-use bevy::ui::{
-    AlignItems, BorderColor, FlexDirection, JustifyContent, Node, Overflow, UiRect, percent, px,
-};
+use bevy::ui::{AlignItems, FlexDirection, JustifyContent, Node, Overflow, UiRect, percent, px};
 use bevy::ui_widgets::{
     ActivateOnPress, ControlOrientation, RadioGroup, ScrollArea, ScrollIntoView, SliderPrecision,
     SliderStep,
@@ -611,8 +608,7 @@ fn demo_column_1(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
         });
 
     color_slider(
-        ui,
-        "color_slider_red",
+        ui.ch(),
         ColorChannel::Red,
         Color::from(state.rgb_color),
         |value| match value {
@@ -624,8 +620,7 @@ fn demo_column_1(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
         },
     );
     color_slider(
-        ui,
-        "color_slider_green",
+        ui.ch(),
         ColorChannel::Green,
         Color::from(state.rgb_color),
         |value| match value {
@@ -637,8 +632,7 @@ fn demo_column_1(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
         },
     );
     color_slider(
-        ui,
-        "color_slider_blue",
+        ui.ch(),
         ColorChannel::Blue,
         Color::from(state.rgb_color),
         |value| match value {
@@ -650,8 +644,7 @@ fn demo_column_1(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
         },
     );
     color_slider(
-        ui,
-        "color_slider_alpha",
+        ui.ch(),
         ColorChannel::Alpha,
         Color::from(state.rgb_color),
         |value| match value {
@@ -671,8 +664,7 @@ fn demo_column_1(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
     });
 
     color_slider(
-        ui,
-        "color_slider_hue",
+        ui.ch(),
         ColorChannel::HslHue,
         Color::from(state.hsl_color),
         |value| match value {
@@ -684,8 +676,7 @@ fn demo_column_1(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
         },
     );
     color_slider(
-        ui,
-        "color_slider_saturation",
+        ui.ch(),
         ColorChannel::HslSaturation,
         Color::from(state.hsl_color),
         |value| match value {
@@ -697,8 +688,7 @@ fn demo_column_1(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
         },
     );
     color_slider(
-        ui,
-        "color_slider_lightness",
+        ui.ch(),
         ColorChannel::HslLightness,
         Color::from(state.hsl_color),
         |value| match value {
@@ -834,21 +824,18 @@ fn demo_column_2(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
                                     &mut state.vec3_prop.x,
                                     tokens::TEXT_INPUT_X_AXIS,
                                     "X",
-                                    true,
                                 );
                                 vec3_number_input(
                                     ui.ch(),
                                     &mut state.vec3_prop.y,
                                     tokens::TEXT_INPUT_Y_AXIS,
                                     "Y",
-                                    false,
                                 );
                                 vec3_number_input(
                                     ui.ch(),
                                     &mut state.vec3_prop.z,
                                     tokens::TEXT_INPUT_Z_AXIS,
                                     "Z",
-                                    false,
                                 );
                             });
                         });
@@ -966,25 +953,19 @@ fn vec3_number_input(
     value: &mut f32,
     sigil_color: bevy::feathers::theme::ThemeToken,
     label_text: &'static str,
-    with_x_border: bool,
 ) {
-    let input = ui
-        .on_spawn_apply_scene(move || {
-            bsn! {
-                @FeathersNumberInput {
-                    @sigil_color: sigil_color,
-                    @label_text: label_text,
-                }
-                Node {
-                    flex_grow: 1.0,
-                }
+    ui.on_spawn_apply_scene(move || {
+        bsn! {
+            @FeathersNumberInput {
+                @sigil_color: sigil_color,
+                @label_text: label_text,
             }
-        })
-        .number_input(value);
-
-    if with_x_border {
-        input.on_spawn_insert(|| BorderColor::all(palette::X_AXIS));
-    }
+            Node {
+                flex_grow: 1.0,
+            }
+        }
+    })
+    .number_input(value);
 }
 
 fn vec3_row_node() -> Node {
@@ -1032,20 +1013,18 @@ fn row_between_node() -> Node {
 }
 
 fn color_slider(
-    ui: &mut Imm<CapsUiFeathers>,
-    id: impl std::hash::Hash,
+    ui: ImmEntity<CapsUiFeathers>,
     channel: ColorChannel,
     base_color: Color,
     value_get_set: impl FnMut(Option<f32>) -> f32,
 ) {
-    ui.ch_id(id)
-        .on_spawn_apply_scene(move || {
-            bsn! {
-                @FeathersColorSlider {
-                    @channel: channel,
-                }
+    ui.on_spawn_apply_scene(move || {
+        bsn! {
+            @FeathersColorSlider {
+                @channel: channel,
             }
-        })
-        .slider_base_color(base_color)
-        .slider_get_set(value_get_set);
+        }
+    })
+    .slider_base_color(base_color)
+    .slider_get_set(value_get_set);
 }
