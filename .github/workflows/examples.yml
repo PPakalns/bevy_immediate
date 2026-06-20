@@ -27,6 +27,8 @@ jobs:
 
       - name: Build demo
         # The first run may prompt to install dependencies, hence the `--yes` flag.
+        env:
+          RUSTFLAGS: '--cfg getrandom_backend="wasm_js"'
         run: bevy build --release --yes --example demo web --bundle
 
       - name: Upload the artifacts

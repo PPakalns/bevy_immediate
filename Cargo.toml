@@ -114,6 +114,10 @@ codegen-units = 1
 # Enable wasm-opt with custom flags
 wasm-opt = ["-Oz", "--enable-bulk-memory"]
 
+[target.'cfg(all(target_family = "wasm", any(target_os = "unknown", target_os = "none")))'.dependencies]
+getrandom = { version = "0.4", features = ["wasm_js"] }
+getrandom_03 = { version = "0.3", features = ["wasm_js"], package = "getrandom" }
+
 [patch.crates-io]
 
 # bevy = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
