@@ -1,6 +1,6 @@
 # bevy_immediate: Immediate Mode UI for Bevy
 
-[![bevy_version](https://img.shields.io/badge/bevy-0.18-blue)](https://github.com/bevyengine/bevy)
+[![bevy_version](https://img.shields.io/badge/bevy-0.19-blue)](https://github.com/bevyengine/bevy)
 [![Latest version](https://img.shields.io/crates/v/bevy_immediate.svg)](https://crates.io/crates/bevy_immediate)
 [![Documentation](https://docs.rs/bevy_immediate/badge.svg)](https://docs.rs/bevy_immediate)
 [![License](https://img.shields.io/crates/l/bevy_immediate.svg)](https://crates.io/crates/bevy_immediate)
@@ -51,6 +51,7 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
 
 | bevy_immediate | bevy | MSRV           |
 |------------|------------| ----------------|
+| 0.7        | 0.19           | 1.95 |
 | 0.6        | 0.18.1         | 1.89 |
 | 0.5        | 0.18           | 1.89 |
 | 0.4        | 0.17           | 1.88 |
@@ -99,13 +100,13 @@ Using `bevy_feathers` and `bevy_ui_widgets`.
 // Checkbox using bsn
 ui.ch()
     .on_spawn_apply_scene(|| {
-        bsn! { :FeathersCheckbox { @caption: {bsn!{ Text("Checkbox") }} } }
+        bsn! { @FeathersCheckbox { @caption: {bsn!{ Text("Checkbox") }} } }
     })
     .checked(&mut checkbox_value);
 
 // Checkbox using mixed style
 ui.ch()
-    .on_spawn_apply_scene(|| bsn! { :FeathersCheckbox })
+    .on_spawn_apply_scene(|| bsn! { @FeathersCheckbox })
     .add(|ui| {
         ui.ch().text("Checkbox");
     })
@@ -113,13 +114,13 @@ ui.ch()
 
 // Toggle switch
 ui.ch()
-    .on_spawn_apply_scene(|| bsn! {:FeathersToggleSwitch})
+    .on_spawn_apply_scene(|| bsn! {@FeathersToggleSwitch})
     .interactions_disabled(state.disabled) // Control whether interactions are enabled
     .checked(&mut toggle_value);
 
 // Button that counts clicks
 let mut button = ui.ch()
-    .on_spawn_apply_scene(|| { bsn! { :FeathersButton } });
+    .on_spawn_apply_scene(|| { bsn! { @FeathersButton } });
     .add(|ui| {
         ui.ch().text(format!("Clicked: {}", count));
     });

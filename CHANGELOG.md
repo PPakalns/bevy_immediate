@@ -1,5 +1,17 @@
 # Changelog
 
+# 0.7.0
+
+## Breaking changes
+* MSRV: 1.95
+* Upgraded to bevy 0.19
+* Text edit example and custom `input_text` capability now use Bevy's `EditableText` instead of `bevy_ui_text_input`
+
+## Bevy 0.19 support
+* Added `on_spawn_apply_scene` and `on_spawn_queue_apply_scene` for Bevy Scene Notation (BSN)
+* Added `bevy_scene` feature (enabled by default)
+* Migrated examples to bevy 0.19, including `bevy_feathers` widgets via BSN
+
 # 0.6.1
 
 ## Bugfix and Breaking change

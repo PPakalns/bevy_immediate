@@ -149,7 +149,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
 
                 let mut button = ui.ch().on_spawn_apply_scene(|| {
                     bsn! {
-                        :FeathersButton {
+                        @FeathersButton {
                             @variant: ButtonVariant::Normal,
                             @corners: RoundedCorners::Left,
                         } Children [
@@ -169,7 +169,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
                     .ch()
                     .on_spawn_apply_scene(|| {
                         bsn! {
-                            :FeathersButton {
+                            @FeathersButton {
                                 @variant: ButtonVariant::Normal,
                                 @corners: RoundedCorners::Left,
                             } Children [
@@ -209,7 +209,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
                             .ch_id(("variant", variant_idx, idx))
                             .on_spawn_apply_scene(|| {
                                 bsn! {
-                                    :FeathersButton {
+                                    @FeathersButton {
                                         @variant: {variant.clone()},
                                         @corners: button_rounded_corners_row(idx, column_count),
                                     }
@@ -231,7 +231,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
                         .ch_id(("primary_change", idx))
                         .on_spawn_apply_scene(|| {
                             bsn! {
-                                :FeathersButton {
+                                @FeathersButton {
                                     @corners: button_rounded_corners_row(idx, column_count),
                                 }
                             }
@@ -251,7 +251,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
                     let checkbox = ui
                         .ch_id(("checkbox", idx))
                         .on_spawn_apply_scene(|| {
-                            bsn! { :FeathersCheckbox { @caption: {bsn!{ Text({format!("Checkbox {idx}")})} }}}
+                            bsn! { @FeathersCheckbox { @caption: {bsn!{ Text({format!("Checkbox {idx}")})} }}}
                         })
                         .interactions_disabled(state.disabled);
                     checkbox.checked(&mut state.value);
@@ -259,14 +259,14 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
 
                 for (idx, state) in values.iter_mut().enumerate() {
                     ui.ch_id(("toggle", idx))
-                        .on_spawn_apply_scene(|| bsn! {:FeathersToggleSwitch})
+                        .on_spawn_apply_scene(|| bsn! {@FeathersToggleSwitch})
                         .interactions_disabled(state.disabled)
                         .checked(&mut state.value);
                 }
 
                 for (idx, state) in values.iter_mut().enumerate() {
                     ui.ch_id(("radio", idx))
-                        .on_spawn_apply_scene(|| bsn! {:FeathersRadio})
+                        .on_spawn_apply_scene(|| bsn! {@FeathersRadio})
                         .add(|ui| {
                             ui.ch().on_spawn_text("Radio button");
                         })
@@ -304,7 +304,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
 
                 for (idx, state) in values.iter_mut().enumerate() {
                     ui.ch_id(("disabled", idx))
-                        .on_spawn_apply_scene(|| bsn! {:FeathersToggleSwitch})
+                        .on_spawn_apply_scene(|| bsn! {@FeathersToggleSwitch})
                         .checked(&mut state.disabled);
                 }
             });
@@ -331,7 +331,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
                     ("Horse", RadioState::Horse),
                 ] {
                     ui.ch_id(("radio", state))
-                        .on_spawn_apply_scene(|| bsn! {:FeathersRadio})
+                        .on_spawn_apply_scene(|| bsn! {@FeathersRadio})
                         .add(|ui| {
                             ui.ch().on_spawn_text(name);
                         })
@@ -350,7 +350,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
             ui.ch()
                 .on_spawn_apply_scene(|| {
                     bsn! {
-                        :FeathersColorSlider {
+                        @FeathersColorSlider {
                             @channel: ColorChannel::HslHue,
                         }
                         SliderStep(5.)
@@ -362,7 +362,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
             ui.ch()
                 .on_spawn_apply_scene(|| {
                     bsn! {
-                        :FeathersColorSlider {
+                        @FeathersColorSlider {
                             @channel: ColorChannel::HslSaturation,
                         }
                         SliderStep(0.05)
@@ -375,7 +375,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
             ui.ch()
                 .on_spawn_apply_scene(|| {
                     bsn! {
-                        :FeathersColorSlider {
+                        @FeathersColorSlider {
                             @channel: ColorChannel::HslLightness,
                         }
                         SliderStep(0.05)
@@ -387,7 +387,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
             ui.ch()
                 .on_spawn_apply_scene(|| {
                     bsn! {
-                        :FeathersColorSlider {
+                        @FeathersColorSlider {
                             @channel: ColorChannel::Alpha,
                         }
                         SliderStep(0.05)
@@ -400,7 +400,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
             ui.ch()
                 .on_spawn_apply_scene(|| {
                     bsn! {
-                        :FeathersSlider {
+                        @FeathersSlider {
                             @min: 0.,
                             @max: 1.,
                         }
@@ -419,7 +419,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
             .ch()
             .on_spawn_apply_scene(|| {
                 bsn! {
-                    FeathersColorSwatch
+                    @FeathersColorSwatch
                 }
             })
             .background_color((*hsva).into());
