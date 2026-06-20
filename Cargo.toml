@@ -88,12 +88,13 @@ bevy = { version = "0.19.0", default-features = false, features = [
   "default_font",
   "bevy_picking",
   "ghost_nodes",
+  "png",
 
   # UI widgets
   "bevy_ui_widgets",
   "bevy_feathers",
 ] }
-itertools = "0.14"
+itertools = "0.15"
 strum = { version = "0.28.0", features = ["derive"] }
 accesskit = "0.24.0"
 
