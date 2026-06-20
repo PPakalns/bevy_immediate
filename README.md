@@ -51,6 +51,7 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
 
 | bevy_immediate | bevy | MSRV           |
 |------------|------------| ----------------|
+| 0.8        | 0.19           | 1.95 |
 | 0.7        | 0.19           | 1.95 |
 | 0.6        | 0.18.1         | 1.89 |
 | 0.5        | 0.18           | 1.89 |
@@ -72,6 +73,7 @@ Examples can be viewed: (`cargo run --example demo`).
 - [Plain UI](./examples/plain_ui.rs) - Create your UI as a single system
 - **Bevy inbuilt widgets**:
   - [Widgets](./examples/bevy_widgets.rs) - Showcases how to use widgets from bevy
+  - [Feathers gallery](./examples/feathers_gallery.rs) - Replicates Bevy's [`feathers_gallery`](https://bevy.org/examples/ui-user-interface/feathers-gallery/) example using immediate mode
   - [Scrollarea](./examples/bevy_scrollbars.rs) - Showcases how to create reusable scrollareas 
 - [Text edit](./examples/text_edit.rs) - Showcases text edit integration using Bevy's `EditableText`.
 - **Reusable widget implementation**

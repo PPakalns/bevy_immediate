@@ -43,7 +43,7 @@ impl_capability_set!(
         interaction::CapabilityUiInteraction,
         text::CapabilityUiText,
         text_input::CapabilityUiTextInput,
-        selected::CapabilityUiSelected,
+        selected::CapabilityUiSelectable,
         checked::CapabilityUiChecked,
         clicked::CapabilityUiClicked,
         anchored::CapabilityUiAnchored,
