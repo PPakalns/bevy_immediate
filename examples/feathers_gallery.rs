@@ -266,7 +266,7 @@ fn demo_column_1(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
         ui.ch()
             .on_spawn_apply_scene(|| bsn! { @FeathersMenu })
             .add(|ui| {
-                ui.ch().on_spawn_queue_apply_scene(|| {
+                ui.ch().on_spawn_apply_scene(|| {
                     bsn! {
                         @FeathersMenuButton {
                             @caption: bsn! { Text("Menu") ThemedText }
@@ -681,7 +681,7 @@ fn demo_column_1(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
         },
     );
 
-    ui.ch().on_spawn_queue_apply_scene(|| {
+    ui.ch().on_spawn_apply_scene(|| {
         label_dim("Example is based on bevy feathers_gallery example!");
     });
 }
@@ -717,7 +717,7 @@ fn demo_column_2(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
                 });
             }
             ui.ch().on_spawn_apply_scene(pane_header_divider);
-            ui.ch().on_spawn_queue_apply_scene(|| {
+            ui.ch().on_spawn_apply_scene(|| {
                 bsn! {
                     @FeathersToolButton {
                         @variant: ButtonVariant::Plain,
@@ -726,7 +726,7 @@ fn demo_column_2(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
                 }
             });
             ui.ch().on_spawn_apply_scene(flex_spacer);
-            ui.ch().on_spawn_queue_apply_scene(|| {
+            ui.ch().on_spawn_apply_scene(|| {
                 bsn! {
                     @FeathersToolButton {
                         @variant: ButtonVariant::Plain,
@@ -905,7 +905,7 @@ fn demo_list_view(ui: &mut Imm<CapsUiFeathers>, state: &mut GalleryState) {
                 });
             let scroll_target = scroll_container.entity();
 
-            ui.ch().on_spawn_queue_apply_scene(move || {
+            ui.ch().on_spawn_apply_scene(move || {
                 bsn! {
                     @FeathersScrollbar {
                         @target: {scroll_target},
