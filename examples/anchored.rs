@@ -185,10 +185,9 @@ fn dropdown_content(ui: &mut Imm<'_, '_, CapsUi>) {
                                                 // Do something
 
                                                 // Mark menu hierarchy to be closed
-                                                let event = FocusCloseCurrentTree {
-                                                    entity: button.entity(),
-                                                };
-                                                button.commands().trigger(event);
+                                                button
+                                                    .entity_commands()
+                                                    .trigger(FocusCloseCurrentTree::new);
                                             }
                                         }
                                     });
