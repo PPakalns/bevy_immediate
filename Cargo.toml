@@ -86,7 +86,7 @@ bevy = { version = "0.19.0", default-features = false, features = [
   "bevy_text",
   "bevy_input_focus",
   "default_font",
-  "bevy_picking",
+  "ui_picking",
   "ghost_nodes",
   "png",
 
