@@ -46,19 +46,6 @@ impl ImmediateAttach<CapsUi> for WidgetUseExampleRoot {
 
         ui.ch()
             .on_spawn_insert(styles::text_style)
-            .on_spawn_text("Embed native widgets");
-
-        for i in 0..2 {
-            ui.ch_id(("native", i))
-                .on_spawn_insert(|| Node::DEFAULT)
-                .on_spawn_insert(|| NativeWidgetComp {
-                    title: "Count".into(),
-                    counter: 45 + i * 14,
-                });
-        }
-
-        ui.ch()
-            .on_spawn_insert(styles::text_style)
             .on_spawn_text("Embed functional widgets");
 
         for (idx, counter) in params.functional_counter.values.iter_mut().enumerate() {
@@ -73,6 +60,21 @@ impl ImmediateAttach<CapsUi> for WidgetUseExampleRoot {
                         },
                     );
                 });
+        }
+
+        ui.ch()
+            .on_spawn_insert(styles::text_style)
+            .on_spawn_text("Embed native widgets");
+
+        for i in 0..2 {
+            ui.ch_id(("native", i))
+                .on_spawn_insert(|| Node::DEFAULT)
+                .on_spawn_insert(|| NativeWidgetComp {
+                    title: "Count".into(),
+                    counter: 45 + i * 14,
+                });
+            // To extract value from this widget, you will need to
+            // query the `NativeWidgetComp` value or implement new capability (see extension.rs example)
         }
     }
 }

@@ -26,9 +26,9 @@ pub fn my_functional_widget(ui: &mut Imm<CapsUi>, value: WidgetParams) {
 }
 
 /// If you develop a library, use generic functional widget variant so that users can use your widget
-/// with `Caps` in which they could have additional capability support
+/// with `Caps`(capability set) in which they could have additional capability support
 ///
-/// In this case we require for at least CapsUi capabilities to be implemented
+/// In this case we require for at least CapsUi capabilities to be implemented to use this widget
 pub fn my_functional_widget_generic<Caps: ImplCapsUi>(ui: &mut Imm<Caps>, value: WidgetParams) {
     ui.ch()
         .on_spawn_insert(|| Node {

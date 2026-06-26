@@ -60,6 +60,9 @@ impl ImmediateAttach<CapsMyUi> for ExtensionUseExampleRoot {
     type Params = Params;
 
     fn construct(ui: &mut Imm<CapsMyUi>, _params: &mut Params) {
+        // This example uses custom toggle implementation
+        // that allows to store toggle state on entity.
+
         let mut button = ui.ch().on_spawn_insert(styles::button_bundle);
 
         let toggle = button.get_toggle();

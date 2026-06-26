@@ -1,4 +1,4 @@
-use bevy::ecs::component::Component;
+use bevy::ecs::{component::Component, entity::Entity, system::Command};
 use bevy_immediate::{CapSet, ImmCapability, ImmEntity, ImplCap};
 
 // This extension example tries to showcase the WORST case.
@@ -6,6 +6,7 @@ use bevy_immediate::{CapSet, ImmCapability, ImmEntity, ImplCap};
 //
 // For very simple capability implementations see
 // [bevy_immediate::ui] capability implementations
+// like [bevy_immediate::ui::checked]
 
 pub struct ExtensionExamplePlugin;
 
@@ -40,6 +41,7 @@ impl ImmCapability for CapUiToggle {
     }
 }
 
+/// Component which will be modified by capability
 #[derive(Component)]
 struct ToggleState {
     state: bool,
@@ -49,10 +51,13 @@ struct ToggleState {
 #[allow(unused)]
 pub trait ImmCapUiCollapse {
     fn get_toggle(&mut self) -> bool;
-    fn set_toggle(&mut self, value: bool);
     fn flip_toggle(&mut self);
+
+    fn set_toggle(self, value: bool) -> Self;
     fn on_insert_toggle(self, toggle: bool) -> Self;
-    fn with_toggle(&mut self, f: impl FnOnce(&mut bool));
+
+    /// Toggle toggle with given transformation function
+    fn with_toggle(&mut self, f: impl FnOnce(Option<bool>) -> bool);
 }
 
 impl<Caps> ImmCapUiCollapse for ImmEntity<'_, '_, '_, Caps>
@@ -62,65 +67,84 @@ where
     Caps: ImplCap<CapUiToggle>,
 {
     fn get_toggle(&mut self) -> bool {
-        let mut ret = false;
-        self.with_toggle(|state| {
-            ret = *state;
-        });
-        ret
+        if let Ok(Some(toggle)) = self.cap_get_component::<ToggleState>() {
+            toggle.state
+        } else {
+            let entity = self.entity();
+            self.commands().queue(SetOrInitToggleStateCommand {
+                entity,
+                state: false,
+            });
+            false
+        }
     }
 
-    fn set_toggle(&mut self, value: bool) {
+    fn set_toggle(mut self, value: bool) -> Self {
         self.with_toggle(|state| {
-            *state = value;
+            let _ = state;
+            value
         });
+        self
     }
 
     fn flip_toggle(&mut self) {
         self.with_toggle(|state| {
-            *state = !*state;
+            match state {
+                Some(state) => !state,
+                // We assume toggle is off by default
+                None => true,
+            }
         });
     }
 
     fn on_insert_toggle(mut self, state: bool) -> Self {
         if self.will_be_spawned() {
             self.with_toggle(|stored_state| {
-                *stored_state = state;
+                let _ = stored_state;
+                state
             });
         }
         self
     }
 
-    fn with_toggle(&mut self, f: impl FnOnce(&mut bool)) {
-        // For simpler extension see [`bevy_immediate::ui::selected`]
-        //
-        // This showcases the worst case where stored state is important.
+    fn with_toggle(&mut self, f: impl FnOnce(Option<bool>) -> bool) {
+        if let Ok(Some(mut toggle)) = self.cap_get_component_mut::<ToggleState>() {
+            let new_state = f(Some(toggle.state));
 
-        if let Ok(Some(mut comp)) = self.cap_get_component_mut::<ToggleState>() {
-            // Lookup directly from component
-            f(&mut comp.state);
-        } else if let Some(tmp_store) = self.cap_entity_tmp_store_mut().get_mut::<ToggleState>() {
-            // Entity currently being built, use temporary value
-            let old_state = tmp_store.state;
-            f(&mut tmp_store.state);
-            let new_state = tmp_store.state;
-
-            // Overwrite inserted component with the new value
-            if new_state != old_state {
-                self.entity_commands()
-                    .insert(ToggleState { state: new_state });
+            // minimize change triggers
+            if new_state != toggle.state {
+                toggle.state = new_state;
             }
-        } else {
-            // Toggle state not yet set for entity, assume false as default
-            let mut state = false;
-            f(&mut state);
+            return;
+        }
 
-            // Insert state into component and in entity tmp store
-            //
-            // Tmp store is required because components can not be looked up from entity_commands
-            // therefore for first frame we need additionally to store in tmp store the toggle state
-            self.entity_commands().insert(ToggleState { state });
-            self.cap_entity_tmp_store_mut()
-                .insert(ToggleState { state });
+        let new_state = f(None);
+        let entity = self.entity();
+        self.commands().queue(SetOrInitToggleStateCommand {
+            entity,
+            state: new_state,
+        });
+    }
+}
+
+struct SetOrInitToggleStateCommand {
+    entity: Entity,
+    state: bool,
+}
+
+impl Command for SetOrInitToggleStateCommand {
+    type Out = ();
+
+    fn apply(self, world: &mut bevy::ecs::world::World) -> Self::Out {
+        if let Ok(mut entity) = world.get_entity_mut(self.entity) {
+            if let Some(mut comp) = entity.get_mut::<ToggleState>() {
+                // minimize change triggers
+                if comp.state != self.state {
+                    comp.state = self.state;
+                }
+                return;
+            }
+            entity.insert(ToggleState { state: self.state });
         }
     }
 }

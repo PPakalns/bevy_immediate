@@ -120,7 +120,7 @@ impl CurrentExample {
             CurrentExample::Anchored => "Anchored UI",
             CurrentExample::FloatingWindows => "Floating windows",
             CurrentExample::WidgetUse => "Widget usage",
-            CurrentExample::ExtensionUse => "Extension usage",
+            CurrentExample::ExtensionUse => "Extension use",
             CurrentExample::PowerUser => "Power user",
             CurrentExample::HotPatching => "Hot patching",
             CurrentExample::TextEdit => "Text edit",
