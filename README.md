@@ -22,7 +22,7 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
 - **Fully compatible with Bevy**  
   Heavy lifting is done by Bevy ECS and `bevy_ui` retained mode UI.
 - **Supports Bevy Scene Notation (BSN)**  
-  Add scenes on components by calling `.on_spawn_apply_scene`, `.on_spawn_queue_apply_scene`.
+  Add scenes on entities by calling `.on_spawn_apply_scene`, `.on_spawn_queue_apply_scene`.
 - **Custom extension support**  
   Add custom capabilities like `.clicked()`, `.selected(true)`, `.hovered()`. 
   Extension use integrated with rust type system for autocompletion and compile time check support.

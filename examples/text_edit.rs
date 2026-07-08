@@ -3,8 +3,10 @@ use bevy::ecs::{
     component::Component,
     system::{Local, SystemParam},
 };
+use bevy::input_focus::tab_navigation::{TabGroup, TabIndex};
 use bevy::text::{EditableText, TextCursorStyle, TextLayout};
 use bevy::ui::{BackgroundColor, FlexDirection, Node, px};
+use bevy::ui_widgets::EditableTextInputPlugin;
 use bevy::utils::default;
 use bevy_immediate::{
     Imm,
@@ -19,6 +21,10 @@ pub struct TextEditExamplePlugin;
 
 impl bevy::app::Plugin for TextEditExamplePlugin {
     fn build(&self, app: &mut bevy::app::App) {
+        if !app.is_plugin_added::<EditableTextInputPlugin>() {
+            // Is already included in DefaultPlugins
+            app.add_plugins(EditableTextInputPlugin);
+        }
         app.add_plugins(BevyImmediateAttachPlugin::<CapsMyUi, TextEditExampleRoot>::new());
     }
 }
@@ -37,10 +43,15 @@ impl ImmediateAttach<CapsMyUi> for TextEditExampleRoot {
 
     fn construct(ui: &mut Imm<CapsMyUi>, params: &mut Params) {
         ui.ch()
-            .on_spawn_insert(|| Node {
-                flex_direction: FlexDirection::Column,
-                row_gap: px(4.),
-                ..default()
+            .on_spawn_insert(|| {
+                (
+                    Node {
+                        flex_direction: FlexDirection::Column,
+                        row_gap: px(4.),
+                        ..default()
+                    },
+                    TabGroup::default(),
+                )
             })
             .add(|ui| {
                 for idx in 0..10 {
@@ -49,7 +60,6 @@ impl ImmediateAttach<CapsMyUi> for TextEditExampleRoot {
                             (
                                 Node {
                                     width: px(500.),
-                                    height: px(30.),
                                     ..default()
                                 },
                                 BackgroundColor(GRAY_700.into()),
@@ -63,6 +73,7 @@ impl ImmediateAttach<CapsMyUi> for TextEditExampleRoot {
                                     unfocused_selection_color: GRAY_500.into(),
                                     selected_text_color: None,
                                 },
+                                TabIndex::default(),
                                 TextLayout::no_wrap(),
                             )
                         })

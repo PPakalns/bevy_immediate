@@ -39,6 +39,7 @@ impl bevy::app::Plugin for DemoStylePlugin {
 #[derive(Component)]
 pub struct MyStyle;
 
+/// For better styling examples see bevy examples
 #[allow(clippy::type_complexity)]
 fn button_system(
     mut interaction_query: Query<
@@ -48,14 +49,20 @@ fn button_system(
             &mut BorderColor,
             Has<Selected>,
             Has<Pressed>,
+            Has<Selectable>,
         ),
-        (With<Button>, With<MyStyle>, With<Selectable>),
+        (With<Button>, With<MyStyle>),
     >,
     changed: Query<
         Entity,
         (
-            Or<(Changed<Hovered>, Changed<Selected>, Changed<Pressed>)>,
-            (With<Button>, With<MyStyle>, With<Selectable>),
+            Or<(
+                Changed<Hovered>,
+                Changed<Selected>,
+                Changed<Selectable>,
+                Changed<Pressed>,
+            )>,
+            (With<Button>, With<MyStyle>),
         ),
     >,
     mut removed_pressed: RemovedComponents<Pressed>,
@@ -70,11 +77,13 @@ fn button_system(
         .chain(removed_pressed.read())
         .chain(removed_selected.read())
     {
-        let Ok((hovered, mut color, mut border_color, is_selected, pressed)) =
+        let Ok((hovered, mut color, mut border_color, is_selected, pressed, selectable)) =
             interaction_query.get_mut(entity)
         else {
             continue;
         };
+
+        let _ = selectable;
 
         if pressed {
             color.0 = PRESSED_BUTTON;
