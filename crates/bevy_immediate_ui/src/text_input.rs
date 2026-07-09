@@ -148,8 +148,6 @@ where
 
         helper.finalize(&mut self);
         if self.will_be_spawned() {
-            self.entity_commands().insert(Text(text.clone()));
-        } else {
             self.entity_commands()
                 .queue_silenced(SetText { text: text.clone() });
         }
