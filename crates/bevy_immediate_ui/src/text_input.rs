@@ -6,7 +6,6 @@ use bevy_immediate_core::{
     CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap, imm_id,
     utils::ImmLocalHashMemoryHelper,
 };
-use bevy_ui::widget::Text;
 
 /// Capability that allows reading and writing UI input text in immediate mode.
 pub struct CapabilityUiTextInput;
