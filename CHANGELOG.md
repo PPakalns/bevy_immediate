@@ -1,5 +1,9 @@
 # Changelog
 
+# 0.8.2
+
+* Added helper utility methods for TextSpan, see ImmUiTextSpan trait methods.
+
 # 0.8.0
 
 ## Breaking changes

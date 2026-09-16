@@ -1,5 +1,6 @@
 use std::ops::Deref;
 
+use bevy_text::TextSpan;
 use bevy_ui::widget::Text;
 
 use bevy_immediate_core::{
@@ -12,6 +13,7 @@ pub struct CapabilityUiText;
 impl ImmCapability for CapabilityUiText {
     fn build<Cap: CapSet>(app: &mut bevy_app::App, cap_req: &mut ImmCapAccessRequests<Cap>) {
         cap_req.request_component_write::<Text>(app.world_mut());
+        cap_req.request_component_write::<TextSpan>(app.world_mut());
     }
 }
 
@@ -91,6 +93,89 @@ where
                 text_comp.0 = text();
             } else {
                 self.entity_commands().insert(Text(text()));
+            }
+        }
+
+        self
+    }
+}
+
+/// Implements methods to update [`TextSpan`] in immediate mode.
+pub trait ImmUiTextSpan {
+    /// Insert [`TextSpan`] on entity spawn and update it to given text upon change
+    fn text_span(self, text: impl Deref<Target = str> + Into<String>) -> Self;
+
+    /// On entity spawn insert given text into [`TextSpan`]
+    fn on_spawn_text_span_fn(self, text: impl FnOnce() -> String) -> Self;
+
+    /// On entity spawn insert given text into [`TextSpan`]
+    fn on_spawn_text_span(self, text: &str) -> Self;
+
+    /// Insert text span if something changed
+    fn on_change_text_span_fn(self, changed: bool, text: impl FnOnce() -> String) -> Self;
+
+    /// Update text span when hash changes for given `hash_source`
+    fn on_hash_change_text_span_fn<T: std::hash::Hash>(
+        self,
+        hash_source: &T,
+        text: impl FnOnce() -> String,
+    ) -> Self;
+}
+
+impl<Cap> ImmUiTextSpan for ImmEntity<'_, '_, '_, Cap>
+where
+    Cap: ImplCap<CapabilityUiText>,
+{
+    fn text_span(mut self, text: impl Deref<Target = str> + Into<String>) -> Self {
+        'text_exists: {
+            let Ok(Some(mut text_comp)) = self.cap_get_component_mut::<TextSpan>() else {
+                break 'text_exists;
+            };
+
+            // No need to update text and trigger state change
+            if text_comp.0 == text.deref() {
+                return self;
+            }
+            *text_comp = TextSpan(text.into());
+
+            return self;
+        }
+
+        // Fallback
+        self.entity_commands().insert_if_new(TextSpan(text.into()));
+        self
+    }
+
+    fn on_spawn_text_span_fn(self, text: impl FnOnce() -> String) -> Self {
+        self.on_spawn_insert(|| TextSpan(text()))
+    }
+
+    fn on_spawn_text_span(self, text: &str) -> Self {
+        self.on_spawn_insert(|| TextSpan(text.to_owned()))
+    }
+
+    fn on_change_text_span_fn(self, changed: bool, text: impl FnOnce() -> String) -> Self {
+        self.on_change_insert(changed, || TextSpan(text()))
+    }
+
+    fn on_hash_change_text_span_fn<T: std::hash::Hash>(
+        mut self,
+        hash_source: &T,
+        text: impl FnOnce() -> String,
+    ) -> Self {
+        struct SealedKey;
+
+        let source = imm_id(hash_source);
+
+        let current = self.hash_get_typ::<SealedKey>();
+
+        if current != Some(source) {
+            self.hash_set_typ::<SealedKey>(source);
+
+            if let Ok(Some(mut text_comp)) = self.cap_get_component_mut::<TextSpan>() {
+                text_comp.0 = text();
+            } else {
+                self.entity_commands().insert(TextSpan(text()));
             }
         }
 
