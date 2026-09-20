@@ -6,6 +6,8 @@ Bevy 0.20 support
 
 ## Breaking changes
 * Floating window resize cursors use `bevy_picking::cursor` behind the `custom_cursor` feature (also enabled by `bevy_feathers` feature).
+* Text fields using `ImmUiTextInput` / `EditableText` must also include `bevy_ui_widgets::TextInput` (Bevy 0.20); 
+  keyboard and pointer editing only run for entities with that marker.
 
 ## New features
 * Added helper utility methods for TextSpan, see ImmUiTextSpan trait methods.

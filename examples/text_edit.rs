@@ -6,7 +6,7 @@ use bevy::ecs::{
 use bevy::input_focus::tab_navigation::{TabGroup, TabIndex};
 use bevy::text::{EditableText, TextCursorStyle, TextLayout};
 use bevy::ui::{BackgroundColor, FlexDirection, Node, px};
-use bevy::ui_widgets::TextInputPlugin;
+use bevy::ui_widgets::{TextInput, TextInputPlugin};
 use bevy::utils::default;
 use bevy_immediate::{
     Imm,
@@ -63,6 +63,7 @@ impl ImmediateAttach<CapsMyUi> for TextEditExampleRoot {
                                     ..default()
                                 },
                                 BackgroundColor(GRAY_700.into()),
+                                TextInput,
                                 EditableText {
                                     max_characters: Some(100),
                                     ..default()
