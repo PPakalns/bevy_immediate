@@ -8,7 +8,7 @@ description = "A simple, fast, and modular immediate mode UI library for Bevy"
 keywords = ["bevy", "ui", "immediate", "simple", "ecs"]
 categories = ["gui", "graphics", "game-development"]
 license = "MIT"
-rust-version = "1.95"
+rust-version = "1.97"
 exclude = ["/.github"]
 autoexamples = false
 

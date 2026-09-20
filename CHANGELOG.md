@@ -5,6 +5,7 @@
 Bevy 0.20 support
 
 ## Breaking changes
+* MSRV: 1.97 (required by Bevy 0.20 / `wesl`)
 * Floating window resize cursors use `bevy_picking::cursor` behind the `custom_cursor` feature (also enabled by `bevy_feathers` feature).
 * Text fields using `ImmUiTextInput` / `EditableText` must also include `bevy_ui_widgets::TextInput` (Bevy 0.20); 
   keyboard and pointer editing only run for entities with that marker.
