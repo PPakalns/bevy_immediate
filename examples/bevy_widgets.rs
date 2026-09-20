@@ -165,7 +165,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
                             @variant: ButtonVariant::Normal,
                             @corners: RoundedCorners::Left,
                         } Children [
-                            (Text("+"))
+                            Text("+")
                         ]
                     }
                 });
@@ -185,7 +185,7 @@ impl ImmediateAttach<CapsUiFeathers> for BevyWidgetExampleRoot {
                                 @variant: ButtonVariant::Normal,
                                 @corners: RoundedCorners::Left,
                             } Children [
-                                (Text("-"))
+                                Text("-")
                             ]
                         }
                     })

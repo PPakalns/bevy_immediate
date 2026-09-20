@@ -369,7 +369,7 @@ fn demo_column_1(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
         .on_spawn_apply_scene(|| {
             bsn! {
                 @FeathersButton
-                Children [ (Text("Toggle override") ThemedText) ]
+                Children [ Text("Toggle override") ThemedText ]
             }
         })
         .activated()
@@ -696,7 +696,7 @@ fn demo_column_2(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
                     @FeathersToolButton {
                         @variant: ButtonVariant::Primary,
                     }
-                    Children [(Text("\u{0398}") ThemedText)]
+                    Children [Text("\u{0398}") ThemedText]
                 }
             });
 
@@ -712,7 +712,7 @@ fn demo_column_2(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
                         @FeathersToolButton {
                             @variant: ButtonVariant::Plain,
                         }
-                        Children [(Text(text) ThemedText)]
+                        Children [Text(text) ThemedText]
                     }
                 });
             }
@@ -892,7 +892,7 @@ fn demo_list_view(ui: &mut Imm<CapsUiFeathers>, state: &mut GalleryState) {
                             .ch_id(("list_row", index))
                             .on_spawn_apply_scene(move || {
                                 bsn! {
-                                    @FeathersListRow Children [ (Text(label) ThemedText) ]
+                                    @FeathersListRow Children [ Text(label) ThemedText ]
                                 }
                             })
                             .selected_set(selected)
