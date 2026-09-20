@@ -12,7 +12,7 @@ impl bevy_app::Plugin for FloatingUiOrderingPlugin {
     fn build(&self, app: &mut bevy_app::App) {
         app.add_systems(
             bevy_app::PostUpdate,
-            update_ui_layer_order.before(UiSystems::Prepare),
+            update_ui_layer_order.before_weak(UiSystems::Prepare),
         );
 
         app.add_observer(window_on_focus);

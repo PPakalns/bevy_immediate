@@ -60,12 +60,12 @@ impl bevy_app::Plugin for FloatingWindowPlugin {
 
         app.add_systems(
             bevy_app::PostUpdate,
-            floating_window_node_update_system.before(UiSystems::Prepare),
+            floating_window_node_update_system.before_weak(UiSystems::Prepare),
         );
 
         app.add_systems(
             bevy_app::PostUpdate,
-            floating_window_node_init_system.before(UiSystems::Prepare),
+            floating_window_node_init_system.before_weak(UiSystems::Prepare),
         );
 
         app.insert_resource(FloatingWindowLocationStore::default());

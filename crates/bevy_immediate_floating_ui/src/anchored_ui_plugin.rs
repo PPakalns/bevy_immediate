@@ -8,7 +8,6 @@ use bevy_ecs::{
 };
 use bevy_math::{BVec2, Vec2};
 use bevy_shape::{Aabb2d, BoundingVolume};
-use bevy_transform::TransformSystems;
 use bevy_ui::{
     ComputedNode, ComputedUiRenderTargetInfo, LayoutConfig, Node, UiGlobalTransform, UiSystems,
     Val, px,
@@ -25,8 +24,8 @@ impl bevy_app::Plugin for AnchoredUiPlugin {
         app.add_systems(
             bevy_app::PostUpdate,
             position_anchor
-                .after(UiSystems::Layout)
-                .before(TransformSystems::Propagate),
+                .after_weak(UiSystems::Layout)
+                .before_weak(UiSystems::PostLayout),
         );
     }
 }
