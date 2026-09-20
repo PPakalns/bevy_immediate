@@ -257,8 +257,8 @@ fn floating_window_node_update_system(
         }
 
         let left =
-            resolve_x(node.left, comp_target_info, &comp_node).unwrap_or(0.) + offset_to_add.x;
-        let top = resolve_y(node.top, comp_target_info, &comp_node).unwrap_or(0.) + offset_to_add.y;
+            resolve_x(node.left, comp_target_info, comp_node).unwrap_or(0.) + offset_to_add.x;
+        let top = resolve_y(node.top, comp_target_info, comp_node).unwrap_or(0.) + offset_to_add.y;
 
         node.left = px(left * comp_node.inverse_scale_factor);
         node.top = px(top * comp_node.inverse_scale_factor);
