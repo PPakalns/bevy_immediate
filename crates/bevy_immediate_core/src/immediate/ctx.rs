@@ -19,11 +19,15 @@ use crate::{
 pub struct ImmCtx<'w, 's, Caps: CapSet> {
     /// Access data from entities for components that were requested by capabilities
     ///
+    /// Filtered with [`Without<IsResource>`] so it does not conflict with
+    /// [`ImmCapResourcesParam`](crate::capabilities::ImmCapResourcesParam).
+    ///
     /// In case of collision. Use [`super::ImmQuery`] or
     /// [`bevy_ecs::prelude::Without<ImmMarker<()>>`] (replace () with your used `Cap``)
     pub cap_entities: ImmCapQueryParam<'w, 's, Caps>,
 
     /// Access requested resources that were requested by capabilities
+    /// (resource entities filtered with [`With<IsResource>`](bevy_ecs::resource::IsResource))
     pub cap_resources: ImmCapResourcesParam<'w, 's, Caps>,
 
     /// World commands

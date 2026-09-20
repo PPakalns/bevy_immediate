@@ -670,7 +670,7 @@ impl<'r, 'w, 's, Caps: CapSet> ImmEntity<'r, 'w, 's, Caps> {
     /// Retrieve mutable resource from capabilities
     ///
     /// Useful in implementing capabilities [`crate::ImmCapabiility`]
-    pub fn cap_get_resource_mut<R: Resource>(
+    pub fn cap_get_resource_mut<R: Resource + Component<Mutability = Mutable>>(
         &mut self,
     ) -> Result<bevy_ecs::world::Mut<'_, R>, ResourceFetchError> {
         self.ctx_mut().cap_resources.get_mut::<R>()
