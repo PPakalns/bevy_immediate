@@ -114,7 +114,8 @@ where
 
             if let Some(new_value) = NewValueChange::take(&mut new_value) {
                 *value = new_value;
-                helper.store(&value.hash_bits());
+                // Since bevy 0.20 number input doesn't update itselft anymore
+                // helper.store(&value.hash_bits());
             }
 
             if !helper.is_stored(&value.hash_bits()) {
