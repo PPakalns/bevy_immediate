@@ -4,7 +4,6 @@ version = "0.8.0"
 edition = "2024"
 authors = ["Pēteris Pakalns"]
 repository = "https://github.com/PPakalns/bevy_immediate/"
-homepage = "https://github.com/PPakalns/bevy_immediate/"
 description = "A simple, fast, and modular immediate mode UI library for Bevy"
 keywords = ["bevy", "ui", "immediate", "simple", "ecs"]
 categories = ["gui", "graphics", "game-development"]
@@ -26,7 +25,6 @@ bevy_ecs = { version = "0.20.0-rc.1", default-features = false }
 bevy_app = { version = "0.20.0-rc.1", default-features = false }
 bevy_platform = { version = "0.20.0-rc.1", default-features = false }
 bevy_derive = { version = "0.20.0-rc.1", default-features = false }
-bevy_internal = { version = "0.20.0-rc.1", default-features = false }
 
 bevy_math = { version = "0.20.0-rc.1", default-features = false }
 bevy_shape = { version = "0.20.0-rc.1", default-features = false }
@@ -129,7 +127,6 @@ wasm-opt = ["-Oz", "--enable-bulk-memory"]
 # bevy_picking = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
 # bevy_derive = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
 # bevy_color = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
-# bevy_internal = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
 # bevy_input = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
 # bevy_input_focus = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
 # bevy_ui_widgets = { git = "https://github.com/bevyengine/bevy", rev = "c822005" }
