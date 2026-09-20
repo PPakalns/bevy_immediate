@@ -32,7 +32,7 @@ pub fn init<Caps: Send + Sync + 'static>(app: &mut bevy_app::App) {
 }
 
 fn on_imm_marker_added<Caps: Send + Sync + 'static>(
-    trigger: On<lifecycle::Add, ImmMarker<Caps>>,
+    trigger: On<lifecycle::Add<ImmMarker<Caps>>>,
     marker: Query<&ImmMarker<Caps>>,
     mut mapping: ResMut<ImmediateModeEntityMapping<Caps>>,
 ) {
@@ -50,7 +50,7 @@ fn on_imm_marker_added<Caps: Send + Sync + 'static>(
 }
 
 fn on_imm_marker_removed<Caps: Send + Sync + 'static>(
-    trigger: On<lifecycle::Remove, ImmMarker<Caps>>,
+    trigger: On<lifecycle::Remove<ImmMarker<Caps>>>,
     marker: Query<&ImmMarker<Caps>>,
     mut mapping: ResMut<ImmediateModeEntityMapping<Caps>>,
 ) {

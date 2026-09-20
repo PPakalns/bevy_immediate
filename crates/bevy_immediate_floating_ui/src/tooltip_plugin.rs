@@ -7,7 +7,7 @@ use bevy_ecs::{
     resource::Resource,
     system::{Query, Res, ResMut},
 };
-use bevy_picking::events::{Move, Pointer};
+use bevy_picking::events::PointerMove;
 use bevy_time::{Real, Time};
 
 /// Implements functionality to calculate when tooltip should be displayed
@@ -94,7 +94,7 @@ impl TooltipGlobalState {
 }
 
 fn on_mouse_move(
-    pointer: On<Pointer<Move>>,
+    pointer: On<PointerMove>,
     query: Query<(), With<TooltipSource>>,
     q_parents: Query<&ChildOf>,
     mut res: ResMut<TooltipGlobalState>,

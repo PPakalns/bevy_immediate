@@ -34,9 +34,10 @@ bevy_math = { workspace = true, optional = true }
 [features]
 default = []
 bevy_ui_widgets = ["dep:bevy_ui_widgets"]
+custom_cursor = ["bevy_immediate_floating_ui/custom_cursor"]
 bevy_feathers = [
   "bevy_ui_widgets",
   "dep:bevy_feathers",
   "dep:bevy_math",
-  "bevy_immediate_floating_ui/bevy_feathers",
+  "custom_cursor",
 ]

@@ -1,5 +1,5 @@
 use bevy_ecs::hierarchy::Children;
-use bevy_feathers::controls::{NumberInputValue, UpdateNumberInput};
+use bevy_feathers::controls::NumberInputValue;
 use bevy_input_focus::InputFocus;
 
 use crate::track_value_change_plugin::{NewValueChange, TrackValueChangePlugin};
@@ -120,10 +120,9 @@ where
             if !helper.is_stored(&value.hash_bits()) {
                 helper.store(&value.hash_bits());
                 let entity = self.entity();
-                self.commands().trigger(UpdateNumberInput {
-                    entity,
-                    value: value.to_number_input_value(),
-                });
+                self.commands()
+                    .entity(entity)
+                    .insert(value.to_number_input_value());
             }
 
             helper.finalize(&mut self);
@@ -133,10 +132,9 @@ where
         let entity_id = self.entity();
         self.entity_commands()
             .insert(NewValueChange::<T>::default());
-        self.commands().trigger(UpdateNumberInput {
-            entity: entity_id,
-            value: value.to_number_input_value(),
-        });
+        self.commands()
+            .entity(entity_id)
+            .insert(value.to_number_input_value());
         helper.finalize(&mut self);
         self
     }
@@ -144,7 +142,7 @@ where
 
 /// Maps application number types to [`NumberInputValue`].
 pub trait ImmUiNumberInputValue: Copy + Clone + PartialEq + Send + Sync + 'static {
-    /// Widget value for [`UpdateNumberInput`].
+    /// Widget value for [`NumberInputValue`].
     fn to_number_input_value(self) -> NumberInputValue;
 
     /// Per-type immediate-mode hash memory key.

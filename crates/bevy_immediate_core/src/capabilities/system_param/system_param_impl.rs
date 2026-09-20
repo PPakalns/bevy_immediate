@@ -49,10 +49,10 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapQueryParam<'_, '_, Caps> {
     fn init_access(
         state: &Self::State,
         system_meta: &mut SystemMeta,
-        component_access_set: &mut bevy_ecs::query::FilteredAccessSet,
+        system_access: &mut bevy_ecs::system::SystemAccess,
         world: &mut World,
     ) {
-        Query::init_access(&state.state, system_meta, component_access_set, world)
+        Query::init_access(&state.state, system_meta, system_access, world)
     }
 
     fn apply(state: &mut Self::State, system_meta: &SystemMeta, world: &mut World) {
@@ -145,10 +145,10 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapResourcesParam<'_, '_, Caps> {
     fn init_access(
         state: &Self::State,
         system_meta: &mut SystemMeta,
-        component_access_set: &mut bevy_ecs::query::FilteredAccessSet,
+        system_access: &mut bevy_ecs::system::SystemAccess,
         world: &mut World,
     ) {
-        FilteredResourcesMut::init_access(&state.access, system_meta, component_access_set, world)
+        FilteredResourcesMut::init_access(&state.access, system_meta, system_access, world)
     }
 }
 

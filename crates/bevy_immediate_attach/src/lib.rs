@@ -130,7 +130,7 @@ fn run_system_on_insert<Caps: CapSet, RootComponent: ImmediateAttach<Caps>>(
 }
 
 fn on_insert<Caps: CapSet, RootComponent: ImmediateAttach<Caps>>(
-    trigger: On<lifecycle::Add, RootComponent>,
+    trigger: On<lifecycle::Add<RootComponent>>,
     mut commands: Commands,
 ) {
     let entity = trigger.event().entity;

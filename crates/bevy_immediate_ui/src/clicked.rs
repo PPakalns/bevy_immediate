@@ -4,10 +4,7 @@ use bevy_ecs::{
     query::With,
     system::{Query, ResMut},
 };
-use bevy_picking::{
-    events::{Click, Pointer},
-    pointer::PointerButton,
-};
+use bevy_picking::{events::PointerClick, pointer::PointerButton};
 use bevy_platform::collections::HashMap;
 
 use bevy_immediate_core::{CapSet, ImmCapAccessRequests, ImmCapability, ImmEntity, ImplCap};
@@ -40,7 +37,7 @@ pub trait ImmUiClicked {
     /// Pointer button that was used to click this entity
     fn clicked_by(&mut self) -> Option<PointerButton>;
     /// Access reference to stored pointer click event
-    fn pointer_click(&mut self) -> Option<&Pointer<Click>>;
+    fn pointer_click(&mut self) -> Option<&PointerClick>;
 }
 
 impl<Cap: CapSet> ImmUiClicked for ImmEntity<'_, '_, '_, Cap>
@@ -67,7 +64,7 @@ where
         self.pointer_click().map(|event| event.button)
     }
 
-    fn pointer_click(&mut self) -> Option<&Pointer<Click>> {
+    fn pointer_click(&mut self) -> Option<&PointerClick> {
         'correct: {
             if !self.cap_entity_contains::<TrackClicked>() {
                 break 'correct;
@@ -106,7 +103,7 @@ impl bevy_app::Plugin for TrackClickedPlugin {
 pub struct TrackClicked;
 
 fn on_click(
-    trigger: On<Pointer<Click>>,
+    trigger: On<PointerClick>,
     query: Query<(), With<TrackClicked>>,
     mut resource: ResMut<TrackClickedEntitiesResource>,
 ) {
@@ -120,7 +117,7 @@ fn on_click(
 
 #[derive(bevy_ecs::resource::Resource, Default)]
 struct TrackClickedEntitiesResource {
-    pub clicked: HashMap<Entity, Pointer<Click>>,
+    pub clicked: HashMap<Entity, PointerClick>,
 }
 
 fn reset_clicked_tracking(mut res: ResMut<TrackClickedEntitiesResource>) {

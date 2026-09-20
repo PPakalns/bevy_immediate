@@ -2,7 +2,7 @@ use bevy_ecs::{
     component::Component, entity::Entity, hierarchy::ChildOf, observer::On,
     schedule::IntoScheduleConfigs, system::Query,
 };
-use bevy_picking::events::{Pointer, Press};
+use bevy_picking::events::PointerPress;
 use bevy_ui::{GlobalZIndex, UiSystems};
 
 /// Logic to handle UI layer Z ordering
@@ -39,7 +39,7 @@ impl Default for UiBringForward {
 }
 
 fn window_on_focus(
-    pointer: On<Pointer<Press>>,
+    pointer: On<PointerPress>,
     mut forward: Query<&mut UiBringForward>,
     child_of: Query<&ChildOf>,
 ) {

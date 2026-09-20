@@ -1,7 +1,13 @@
 # Changelog
 
-# 0.8.2
+# 0.9.0
 
+Bevy 0.20 support
+
+## Breaking changes
+* Floating window resize cursors use `bevy_picking::cursor` behind the `custom_cursor` feature (also enabled by `bevy_feathers` feature).
+
+## New features
 * Added helper utility methods for TextSpan, see ImmUiTextSpan trait methods.
 
 # 0.8.0

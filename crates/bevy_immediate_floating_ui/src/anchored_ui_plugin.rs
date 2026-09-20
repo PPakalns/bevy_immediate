@@ -6,10 +6,8 @@ use bevy_ecs::{
     schedule::IntoScheduleConfigs,
     system::{Query, Single},
 };
-use bevy_math::{
-    BVec2, Vec2,
-    bounding::{Aabb2d, BoundingVolume},
-};
+use bevy_math::{BVec2, Vec2};
+use bevy_shape::{Aabb2d, BoundingVolume};
 use bevy_transform::TransformSystems;
 use bevy_ui::{
     ComputedNode, ComputedUiRenderTargetInfo, LayoutConfig, Node, UiGlobalTransform, UiSystems,
@@ -234,6 +232,8 @@ fn position_anchor(
                         comp_target_info.scale_factor(),
                         comp_target_info.physical_size().x as f32,
                         comp_target_info.physical_size().as_vec2(),
+                        comp_node.em_size,
+                        comp_node.rem_size,
                     )
                     .unwrap_or(0.);
 
@@ -244,6 +244,8 @@ fn position_anchor(
                         comp_target_info.scale_factor(),
                         comp_target_info.physical_size().y as f32,
                         comp_target_info.physical_size().as_vec2(),
+                        comp_node.em_size,
+                        comp_node.rem_size,
                     )
                     .unwrap_or(0.);
 

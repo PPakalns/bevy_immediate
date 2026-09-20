@@ -11,7 +11,7 @@ use bevy::ecs::{
 use bevy::input::{ButtonInput, keyboard::KeyCode};
 use bevy::input_focus::InputDispatchPlugin;
 use bevy::picking::{
-    events::{Drag, DragStart, Pointer, Scroll},
+    events::{PointerDrag, PointerDragStart, PointerScroll},
     hover::Hovered,
 };
 use bevy::ui::{
@@ -60,7 +60,7 @@ impl bevy::app::Plugin for BevyScrollareaExamplePlugin {
         app.add_systems(bevy::app::Update, update_scrollbar_style_on_drag);
 
         app.add_observer(
-            |event: On<lifecycle::Add, MyScrollableNode>, mut commands: Commands| {
+            |event: On<lifecycle::Add<MyScrollableNode>>, mut commands: Commands| {
                 commands
                     .entity(event.event().entity)
                     .insert(ScrollState::default())
@@ -322,7 +322,7 @@ struct ScrollState {
 }
 
 fn scroll_on_mouse(
-    scroll: On<Pointer<Scroll>>,
+    scroll: On<PointerScroll>,
     mut scroll_position_query: Query<(&mut ScrollPosition, &ComputedNode), With<MyScrollableNode>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
@@ -353,7 +353,7 @@ fn scroll_on_mouse(
 }
 
 fn scroll_on_drag_start(
-    mut drag_start: On<Pointer<DragStart>>,
+    mut drag_start: On<PointerDragStart>,
     mut scroll_position_query: Query<(&ComputedNode, &mut ScrollState), With<MyScrollableNode>>,
 ) {
     if let Ok((computed_node, mut state)) = scroll_position_query.get_mut(drag_start.entity) {
@@ -363,7 +363,7 @@ fn scroll_on_drag_start(
 }
 
 fn scroll_on_drag(
-    mut drag: On<Pointer<Drag>>,
+    mut drag: On<PointerDrag>,
     ui_scale: Res<UiScale>,
     mut scroll_position_query: Query<
         (&mut ScrollPosition, &ComputedNode, &ScrollState),

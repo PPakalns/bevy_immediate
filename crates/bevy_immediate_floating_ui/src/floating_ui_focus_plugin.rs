@@ -7,7 +7,7 @@ use bevy_ecs::{
     query::With,
     system::{Commands, Query},
 };
-use bevy_picking::events::Pointer;
+use bevy_picking::events::PointerClick;
 use bevy_platform::collections::HashSet;
 
 /// Implements logic for handling user focus over floating anchored ui hierarchies
@@ -80,7 +80,7 @@ fn should_close_current_tree_observer(
 }
 
 fn update_should_close(
-    pointer: On<Pointer<bevy_picking::events::Click>>,
+    pointer: On<PointerClick>,
     should_close: Query<Entity, With<FocusDetectShouldClose>>,
     focus_parents: Query<&FocusParent>,
     child_of: Query<&ChildOf>,

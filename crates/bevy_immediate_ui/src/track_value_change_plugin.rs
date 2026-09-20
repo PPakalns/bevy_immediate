@@ -55,7 +55,7 @@ impl<T> NewValueChange<T> {
 
 // Insert on_click picking observer only once
 #[allow(unused_mut)]
-fn track_inserted<T>(trigger: On<lifecycle::Add, NewValueChange<T>>, mut commands: Commands)
+fn track_inserted<T>(trigger: On<lifecycle::Add<NewValueChange<T>>>, mut commands: Commands)
 where
     T: Sync + Send + 'static + Copy + Clone,
 {

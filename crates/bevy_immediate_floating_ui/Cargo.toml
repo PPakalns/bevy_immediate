@@ -16,18 +16,16 @@ exclude = ["/.github"]
 bevy_ecs = { workspace = true }
 bevy_picking = { workspace = true }
 bevy_ui = { workspace = true }
-bevy_ui_widgets = { workspace = true }
 bevy_app = { workspace = true }
 bevy_math = { workspace = true }
+bevy_shape = { workspace = true }
 bevy_time = { workspace = true }
 bevy_platform = { workspace = true }
 bevy_window = { workspace = true }
 bevy_transform = { workspace = true }
 
-bevy_feathers = { workspace = true, optional = true }
-
 rand = { workspace = true }
 
 [features]
 default = []
-bevy_feathers = ["dep:bevy_feathers"]
+custom_cursor = ["bevy_picking/custom_cursor"]

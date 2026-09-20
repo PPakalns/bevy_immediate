@@ -25,7 +25,6 @@ use bevy::feathers::{
         FeathersNumberInput, FeathersRadio, FeathersScrollbar, FeathersSlider, FeathersTextInput,
         FeathersTextInputContainer, FeathersToggleSwitch, FeathersToolButton,
     },
-    cursor::{EntityCursor, OverrideCursor},
     dark_theme::create_dark_theme,
     display::{icon, label, label_dim, label_small},
     font_styles::InheritableFont,
@@ -37,6 +36,7 @@ use bevy::input_focus::tab_navigation::TabGroup;
 use bevy::input_focus::tab_navigation::TabIndex;
 use bevy::log::info;
 use bevy::math::Vec3;
+use bevy::picking::cursor::{EntityCursor, OverrideCursor};
 use bevy::scene::bsn;
 use bevy::ui::widget::Text;
 use bevy::ui::{
@@ -44,7 +44,7 @@ use bevy::ui::{
 };
 use bevy::ui_widgets::{
     Activate, ActivateOnPress, ControlOrientation, ListBox, RadioGroup, ScrollArea,
-    SliderPrecision, SliderStep, ValueChange,
+    SliderPrecision, SliderStep, SliderValue, ValueChange,
 };
 use bevy::utils::default;
 use bevy::window::SystemCursorIcon;
@@ -514,8 +514,8 @@ fn demo_column_1(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
             bsn! {
                 @FeathersSlider {
                     @max: 100.0,
-                    @value: 20.0,
                 }
+                SliderValue(20.0)
                 SliderStep(10.)
                 SliderPrecision(2)
             }
@@ -721,8 +721,8 @@ fn demo_column_2(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
                 bsn! {
                     @FeathersToolButton {
                         @variant: ButtonVariant::Plain,
+                        @caption: bsn! { @icon(icons::CHEVRON_DOWN) }
                     }
-                    Children [icon(icons::CHEVRON_DOWN)]
                 }
             });
             ui.ch().on_spawn_apply_scene(flex_spacer);
@@ -730,8 +730,8 @@ fn demo_column_2(ui: &mut Imm<CapsUiFeathers>, params: &mut Params) {
                 bsn! {
                     @FeathersToolButton {
                         @variant: ButtonVariant::Plain,
+                        @caption: bsn! { @icon(icons::X) }
                     }
-                    Children [icon(icons::X)]
                 }
             });
         });
