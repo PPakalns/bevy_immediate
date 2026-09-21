@@ -51,6 +51,7 @@ A **simple, fast, and modular UI library for [Bevy](https://bevyengine.org)**, c
 
 | bevy_immediate | bevy | MSRV           |
 |------------|------------| ----------------|
+| 0.9        | 0.20           | 1.97 |
 | 0.8        | 0.19           | 1.95 |
 | 0.7        | 0.19           | 1.95 |
 | 0.6        | 0.18.1         | 1.89 |

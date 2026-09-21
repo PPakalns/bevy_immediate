@@ -1,4 +1,4 @@
-#[cfg(feature = "bevy_feathers")]
+#[cfg(feature = "custom_cursor")]
 use bevy_ecs::system::Local;
 use bevy_ecs::{
     bundle::Bundle,
@@ -12,28 +12,28 @@ use bevy_ecs::{
     schedule::IntoScheduleConfigs,
     system::{Commands, Query, Res, ResMut},
 };
-use bevy_math::{I8Vec2, Vec2, bounding::Aabb2d};
+use bevy_math::{I8Vec2, Vec2};
+#[cfg(feature = "custom_cursor")]
+use bevy_picking::cursor::{self, EntityCursor};
 use bevy_picking::{
     Pickable,
-    events::{Drag, DragEnd, DragStart, Pointer},
+    events::{PointerDrag, PointerDragEnd, PointerDragStart},
     hover::Hovered,
 };
 use bevy_platform::collections::HashMap;
+use bevy_shape::Aabb2d;
 use bevy_ui::{
     ComputedNode, ComputedUiRenderTargetInfo, LayoutConfig, Node, Pressed, RepeatedGridTrack,
     UiGlobalTransform, UiScale, UiSystems, Val, px,
 };
+#[cfg(feature = "custom_cursor")]
+use bevy_window::SystemCursorIcon;
 use rand::RngExt;
 
 use crate::{
     floating_ui_ordering_plugin::{FloatingUiOrderingPlugin, UiBringForward, UiZOrderLayer},
     utils::fully_inside,
 };
-
-#[cfg(feature = "bevy_feathers")]
-use bevy_feathers::cursor;
-#[cfg(feature = "bevy_feathers")]
-use bevy_window::SystemCursorIcon;
 
 /// Plugin implements floating windows
 /// and such functionality as window
@@ -55,17 +55,17 @@ impl bevy_app::Plugin for FloatingWindowPlugin {
             .add_observer(window_resize_drag)
             .add_observer(window_resize_drag_end);
         app.insert_resource(FloatingWindowResizeState::default());
-        #[cfg(feature = "bevy_feathers")]
-        app.add_systems(bevy_app::Update, update_bevy_feathers_cursor);
+        #[cfg(feature = "custom_cursor")]
+        app.add_systems(bevy_app::Update, update_resize_override_cursor);
 
         app.add_systems(
             bevy_app::PostUpdate,
-            floating_window_node_update_system.before(UiSystems::Prepare),
+            floating_window_node_update_system.before_weak(UiSystems::Prepare),
         );
 
         app.add_systems(
             bevy_app::PostUpdate,
-            floating_window_node_init_system.before(UiSystems::Prepare),
+            floating_window_node_init_system.before_weak(UiSystems::Prepare),
         );
 
         app.insert_resource(FloatingWindowLocationStore::default());
@@ -256,8 +256,9 @@ fn floating_window_node_update_system(
             offset_to_add.y *= -1.;
         }
 
-        let left = resolve_x(node.left, comp_target_info).unwrap_or(0.) + offset_to_add.x;
-        let top = resolve_y(node.top, comp_target_info).unwrap_or(0.) + offset_to_add.y;
+        let left =
+            resolve_x(node.left, comp_target_info, comp_node).unwrap_or(0.) + offset_to_add.x;
+        let top = resolve_y(node.top, comp_target_info, comp_node).unwrap_or(0.) + offset_to_add.y;
 
         node.left = px(left * comp_node.inverse_scale_factor);
         node.top = px(top * comp_node.inverse_scale_factor);
@@ -278,7 +279,7 @@ struct FloatingWindowInteractionState {
 }
 
 fn window_on_drag_start(
-    mut drag_start: On<Pointer<DragStart>>,
+    mut drag_start: On<PointerDragStart>,
     mut scroll_position_query: Query<
         (&UiGlobalTransform, &mut FloatingWindowInteractionState),
         With<FloatingWindowInteractionState>,
@@ -294,7 +295,7 @@ fn window_on_drag_start(
 }
 
 fn window_on_drag(
-    mut drag: On<Pointer<Drag>>,
+    mut drag: On<PointerDrag>,
     mut scroll_position_query: Query<
         (
             &mut FloatingWindowInteractionState,
@@ -336,7 +337,7 @@ fn window_on_drag(
 }
 
 fn window_on_drag_end(
-    mut drag: On<Pointer<DragEnd>>,
+    mut drag: On<PointerDragEnd>,
     mut scroll_position_query: Query<
         &mut FloatingWindowInteractionState,
         With<FloatingWindowInteractionState>,
@@ -358,32 +359,38 @@ pub struct WindowResizeDragDirection(pub I8Vec2);
 fn resolve_x(
     y: Val,
     target_info: &ComputedUiRenderTargetInfo,
+    comp_node: &ComputedNode,
 ) -> Result<f32, bevy_ui::ValArithmeticError> {
     y.resolve(
         target_info.scale_factor(),
         target_info.physical_size().x as f32,
         target_info.physical_size().as_vec2(),
+        comp_node.em_size,
+        comp_node.rem_size,
     )
 }
 fn resolve_y(
     y: Val,
     target_info: &ComputedUiRenderTargetInfo,
+    comp_node: &ComputedNode,
 ) -> Result<f32, bevy_ui::ValArithmeticError> {
     y.resolve(
         target_info.scale_factor(),
         target_info.physical_size().y as f32,
         target_info.physical_size().as_vec2(),
+        comp_node.em_size,
+        comp_node.rem_size,
     )
 }
 
-/// Function to update bevy feathers cursor while resizing window
-#[cfg(feature = "bevy_feathers")]
-fn update_bevy_feathers_cursor(
+/// Sync [`cursor::OverrideCursor`] while a window edge is being resized.
+#[cfg(feature = "custom_cursor")]
+fn update_resize_override_cursor(
     override_cursor: Option<ResMut<cursor::OverrideCursor>>,
     resize_state: Res<FloatingWindowResizeState>,
-    q: Query<&cursor::EntityCursor>,
+    q: Query<&EntityCursor>,
 
-    mut stored_cursor: Local<Option<Option<Option<cursor::EntityCursor>>>>,
+    mut stored_cursor: Local<Option<Option<Option<EntityCursor>>>>,
 ) {
     let Some(mut override_cursor) = override_cursor else {
         return;
@@ -415,7 +422,7 @@ fn update_bevy_feathers_cursor(
 
 #[allow(clippy::too_many_arguments)]
 fn window_resize_drag_start(
-    mut drag_start: On<Pointer<DragStart>>,
+    mut drag_start: On<PointerDragStart>,
     mut q_target: Query<(), With<WindowResizeDragDirection>>,
     mut q_windows: Query<
         (
@@ -456,13 +463,13 @@ fn window_resize_drag_start(
     window_interaction_state.currently_resize = true;
     window_interaction_state.initial_resize_size = window_comp_node.size;
     window_interaction_state.initial_resize_offset = Vec2::new(
-        resolve_x(node.left, window_comp_target_info).unwrap_or(0.),
-        resolve_y(node.top, window_comp_target_info).unwrap_or(0.),
+        resolve_x(node.left, window_comp_target_info, window_comp_node).unwrap_or(0.),
+        resolve_y(node.top, window_comp_target_info, window_comp_node).unwrap_or(0.),
     );
 }
 
 fn window_resize_drag(
-    mut drag: On<Pointer<Drag>>,
+    mut drag: On<PointerDrag>,
     mut position_query: Query<&WindowResizeDragDirection>,
     q_parents: Query<&ChildOf>,
     mut q_windows: Query<(
@@ -532,17 +539,39 @@ fn window_resize_drag(
 
         final_width = final_width
             .min(
-                resolve_x(floating_window.max_width, window_comp_target_info)
-                    .unwrap_or(window_comp_target_info.physical_size().x as f32),
+                resolve_x(
+                    floating_window.max_width,
+                    window_comp_target_info,
+                    window_comp_node,
+                )
+                .unwrap_or(window_comp_target_info.physical_size().x as f32),
             )
-            .max(resolve_x(floating_window.min_width, window_comp_target_info).unwrap_or(50.));
+            .max(
+                resolve_x(
+                    floating_window.min_width,
+                    window_comp_target_info,
+                    window_comp_node,
+                )
+                .unwrap_or(50.),
+            );
 
         final_height = final_height
             .min(
-                resolve_x(floating_window.max_height, window_comp_target_info)
-                    .unwrap_or(window_comp_target_info.physical_size().y as f32),
+                resolve_x(
+                    floating_window.max_height,
+                    window_comp_target_info,
+                    window_comp_node,
+                )
+                .unwrap_or(window_comp_target_info.physical_size().y as f32),
             )
-            .max(resolve_x(floating_window.min_height, window_comp_target_info).unwrap_or(50.));
+            .max(
+                resolve_x(
+                    floating_window.min_height,
+                    window_comp_target_info,
+                    window_comp_node,
+                )
+                .unwrap_or(50.),
+            );
 
         window_node.min_width = px(final_width * window_comp_node.inverse_scale_factor);
         window_node.min_height = px(final_height * window_comp_node.inverse_scale_factor);
@@ -563,7 +592,7 @@ fn window_resize_drag(
 }
 
 fn window_resize_drag_end(
-    drag_end: On<Pointer<DragEnd>>,
+    drag_end: On<PointerDragEnd>,
     mut q_target: Query<(), With<WindowResizeDragDirection>>,
     q_parents: Query<&ChildOf>,
     mut commands: Commands,
@@ -628,29 +657,29 @@ pub fn resizable_borders(border_thickness: f32, additional: impl Bundle + Copy) 
             (
                 Node::DEFAULT,
                 WindowResizeDragDirection(I8Vec2 { x: -1, y: -1 }),
-                #[cfg(feature = "bevy_feathers")]
-                cursor::EntityCursor::System(SystemCursorIcon::NwResize),
+                #[cfg(feature = "custom_cursor")]
+                EntityCursor::System(SystemCursorIcon::NwResize),
                 additional
             ),
             (
                 Node::DEFAULT,
                 WindowResizeDragDirection(I8Vec2 { x: 0, y: -1 }),
-                #[cfg(feature = "bevy_feathers")]
-                cursor::EntityCursor::System(SystemCursorIcon::NResize),
+                #[cfg(feature = "custom_cursor")]
+                EntityCursor::System(SystemCursorIcon::NResize),
                 additional
             ),
             (
                 Node::DEFAULT,
                 WindowResizeDragDirection(I8Vec2 { x: 1, y: -1 }),
-                #[cfg(feature = "bevy_feathers")]
-                cursor::EntityCursor::System(SystemCursorIcon::NeResize),
+                #[cfg(feature = "custom_cursor")]
+                EntityCursor::System(SystemCursorIcon::NeResize),
                 additional
             ),
             (
                 Node::DEFAULT,
                 WindowResizeDragDirection(I8Vec2 { x: -1, y: 0 }),
-                #[cfg(feature = "bevy_feathers")]
-                cursor::EntityCursor::System(SystemCursorIcon::WResize),
+                #[cfg(feature = "custom_cursor")]
+                EntityCursor::System(SystemCursorIcon::WResize),
                 additional
             ),
             (
@@ -663,29 +692,29 @@ pub fn resizable_borders(border_thickness: f32, additional: impl Bundle + Copy) 
             (
                 Node::DEFAULT,
                 WindowResizeDragDirection(I8Vec2 { x: 1, y: 0 }),
-                #[cfg(feature = "bevy_feathers")]
-                cursor::EntityCursor::System(SystemCursorIcon::EResize),
+                #[cfg(feature = "custom_cursor")]
+                EntityCursor::System(SystemCursorIcon::EResize),
                 additional
             ),
             (
                 Node::DEFAULT,
                 WindowResizeDragDirection(I8Vec2 { x: -1, y: 1 }),
-                #[cfg(feature = "bevy_feathers")]
-                cursor::EntityCursor::System(SystemCursorIcon::SwResize),
+                #[cfg(feature = "custom_cursor")]
+                EntityCursor::System(SystemCursorIcon::SwResize),
                 additional
             ),
             (
                 Node::DEFAULT,
                 WindowResizeDragDirection(I8Vec2 { x: 0, y: 1 }),
-                #[cfg(feature = "bevy_feathers")]
-                cursor::EntityCursor::System(SystemCursorIcon::SResize),
+                #[cfg(feature = "custom_cursor")]
+                EntityCursor::System(SystemCursorIcon::SResize),
                 additional
             ),
             (
                 Node::DEFAULT,
                 WindowResizeDragDirection(I8Vec2 { x: 1, y: 1 }),
-                #[cfg(feature = "bevy_feathers")]
-                cursor::EntityCursor::System(SystemCursorIcon::SeResize),
+                #[cfg(feature = "custom_cursor")]
+                EntityCursor::System(SystemCursorIcon::SeResize),
                 additional
             ),
         ]

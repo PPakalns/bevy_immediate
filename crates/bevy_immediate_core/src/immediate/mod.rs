@@ -6,11 +6,11 @@ use bevy_ecs::{
     change_detection::DetectChanges,
     component::{Component, Mutable},
     entity::Entity,
-    event::EntityEvent,
     hierarchy::ChildOf,
+    observer::IntoEntityObserver,
     query::{QueryEntityError, Without},
     resource::Resource,
-    system::{Commands, EntityCommands, IntoObserverSystem, Query},
+    system::{Commands, EntityCommands, Query},
     world::{FilteredEntityRef, Mut, error::ResourceFetchError},
 };
 
@@ -609,10 +609,7 @@ impl<'r, 'w, 's, Caps: CapSet> ImmEntity<'r, 'w, 's, Caps> {
 
     /// Observe with [`bevy_ecs::system::ObserverSystem`]
     /// (added only when entity is created).
-    pub fn on_spawn_observe<E: EntityEvent, B: Bundle, M>(
-        self,
-        observer: impl IntoObserverSystem<E, B, M>,
-    ) -> Self {
+    pub fn on_spawn_observe<M>(self, observer: impl IntoEntityObserver<M>) -> Self {
         self.on_spawn_apply_commands(|commands| {
             commands.observe(observer);
         })
@@ -673,7 +670,7 @@ impl<'r, 'w, 's, Caps: CapSet> ImmEntity<'r, 'w, 's, Caps> {
     /// Retrieve mutable resource from capabilities
     ///
     /// Useful in implementing capabilities [`crate::ImmCapabiility`]
-    pub fn cap_get_resource_mut<R: Resource>(
+    pub fn cap_get_resource_mut<R: Resource + Component<Mutability = Mutable>>(
         &mut self,
     ) -> Result<bevy_ecs::world::Mut<'_, R>, ResourceFetchError> {
         self.ctx_mut().cap_resources.get_mut::<R>()

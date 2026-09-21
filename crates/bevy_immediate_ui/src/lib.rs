@@ -138,7 +138,7 @@ pub mod checked;
 #[cfg(feature = "bevy_ui_widgets")]
 pub mod activated;
 
-/// Module implments `Pointer<Click>` related
+/// Module implements `PointerClick` related
 /// functionality like `.clicked()`
 pub mod clicked;
 

@@ -6,7 +6,7 @@ use bevy::ecs::{
 use bevy::input_focus::tab_navigation::{TabGroup, TabIndex};
 use bevy::text::{EditableText, TextCursorStyle, TextLayout};
 use bevy::ui::{BackgroundColor, FlexDirection, Node, px};
-use bevy::ui_widgets::EditableTextInputPlugin;
+use bevy::ui_widgets::{TextInput, TextInputPlugin};
 use bevy::utils::default;
 use bevy_immediate::{
     Imm,
@@ -21,9 +21,9 @@ pub struct TextEditExamplePlugin;
 
 impl bevy::app::Plugin for TextEditExamplePlugin {
     fn build(&self, app: &mut bevy::app::App) {
-        if !app.is_plugin_added::<EditableTextInputPlugin>() {
+        if !app.is_plugin_added::<TextInputPlugin>() {
             // Is already included in DefaultPlugins
-            app.add_plugins(EditableTextInputPlugin);
+            app.add_plugins(TextInputPlugin);
         }
         app.add_plugins(BevyImmediateAttachPlugin::<CapsMyUi, TextEditExampleRoot>::new());
     }
@@ -63,6 +63,7 @@ impl ImmediateAttach<CapsMyUi> for TextEditExampleRoot {
                                     ..default()
                                 },
                                 BackgroundColor(GRAY_700.into()),
+                                TextInput,
                                 EditableText {
                                     max_characters: Some(100),
                                     ..default()
@@ -72,6 +73,7 @@ impl ImmediateAttach<CapsMyUi> for TextEditExampleRoot {
                                     selection_color: GRAY_300.into(),
                                     unfocused_selection_color: GRAY_500.into(),
                                     selected_text_color: None,
+                                    selection_radius: 0.,
                                 },
                                 TabIndex::default(),
                                 TextLayout::no_wrap(),

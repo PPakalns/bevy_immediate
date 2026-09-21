@@ -1,12 +1,14 @@
 use std::marker::PhantomData;
 
 use bevy_ecs::{
-    query::With,
+    component::Components,
+    query::{With, Without},
+    resource::{IsResource, ResourceEntities},
     system::{
-        FilteredResourcesMutParamBuilder, Query, QueryParamBuilder, SystemMeta, SystemParam,
-        SystemParamBuilder, SystemParamValidationError,
+        Query, QueryParamBuilder, SystemMeta, SystemParam, SystemParamBuilder,
+        SystemParamValidationError,
     },
-    world::{FilteredEntityMut, FilteredResourcesMut, World},
+    world::{FilteredEntityMut, World},
 };
 
 use crate::{
@@ -25,21 +27,24 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapQueryParam<'_, '_, Caps> {
             .expect("bevy_immediate mode plugin not correctly added");
         let requested_access = requested_access.capabilities.clone();
 
-        let params =
-            QueryParamBuilder::new::<FilteredEntityMut, With<ImmMarker<Caps>>>(|builder| {
-                builder.with::<ImmMarker<Caps>>();
+        let params = QueryParamBuilder::new::<
+            FilteredEntityMut,
+            (With<ImmMarker<Caps>>, Without<IsResource>),
+        >(|builder| {
+            builder.with::<ImmMarker<Caps>>();
+            builder.without::<IsResource>();
 
-                for (&component_id, request) in requested_access.requested_components().iter() {
-                    builder.optional(|builder| match request.mutable {
-                        true => {
-                            builder.mut_id(component_id);
-                        }
-                        false => {
-                            builder.ref_id(component_id);
-                        }
-                    });
-                }
-            });
+            for (&component_id, request) in requested_access.requested_components().iter() {
+                builder.optional(|builder| match request.mutable {
+                    true => {
+                        builder.mut_id(component_id);
+                    }
+                    false => {
+                        builder.ref_id(component_id);
+                    }
+                });
+            }
+        });
 
         let query_state = params.build(world);
 
@@ -49,10 +54,10 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapQueryParam<'_, '_, Caps> {
     fn init_access(
         state: &Self::State,
         system_meta: &mut SystemMeta,
-        component_access_set: &mut bevy_ecs::query::FilteredAccessSet,
+        system_access: &mut bevy_ecs::system::SystemAccess,
         world: &mut World,
     ) {
-        Query::init_access(&state.state, system_meta, component_access_set, world)
+        Query::init_access(&state.state, system_meta, system_access, world)
     }
 
     fn apply(state: &mut Self::State, system_meta: &SystemMeta, world: &mut World) {
@@ -80,7 +85,10 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapQueryParam<'_, '_, Caps> {
 }
 
 pub struct CapQueryState<Caps: CapSet> {
-    state: bevy_ecs::query::QueryState<FilteredEntityMut<'static, 'static>, With<ImmMarker<Caps>>>,
+    state: bevy_ecs::query::QueryState<
+        FilteredEntityMut<'static, 'static>,
+        (With<ImmMarker<Caps>>, Without<IsResource>),
+    >,
 }
 
 #[expect(unsafe_code)]
@@ -94,22 +102,23 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapResourcesParam<'_, '_, Caps> {
             .expect("bevy_immediate mode plugin not correctly added");
         let requested_access = requested_access.capabilities.clone();
 
-        let builder = FilteredResourcesMutParamBuilder::new(|builder| {
+        let params = QueryParamBuilder::new::<FilteredEntityMut, With<IsResource>>(|builder| {
+            builder.with::<IsResource>();
+
             for (&component_id, res) in requested_access.requested_resources().iter() {
-                match res.mutable {
+                builder.optional(|builder| match res.mutable {
                     true => {
-                        builder.add_write_by_id(component_id);
+                        builder.mut_id(component_id);
                     }
                     false => {
-                        builder.add_read_by_id(component_id);
+                        builder.ref_id(component_id);
                     }
-                }
+                });
             }
         });
-        let state = builder.build(world);
 
         CapResourceState {
-            access: state,
+            state: params.build(world),
             _ph: PhantomData,
         }
     }
@@ -120,39 +129,47 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapResourcesParam<'_, '_, Caps> {
         world: bevy_ecs::world::unsafe_world_cell::UnsafeWorldCell<'world>,
         change_tick: bevy_ecs::change_detection::Tick,
     ) -> Result<Self::Item<'world, 'state>, SystemParamValidationError> {
-        let resources = unsafe {
-            FilteredResourcesMut::get_param(&mut state.access, system_meta, world, change_tick)
-        }?;
+        let query = unsafe { Query::get_param(&mut state.state, system_meta, world, change_tick) }?;
 
         Ok(Self::Item::<'world, 'state> {
-            resources,
+            query,
+            // SAFETY: SystemParam init_access requested shared access to ResourceEntities and Components
+            resource_entities: unsafe { world.resource_entities() },
+            components: world.components(),
             _ph: PhantomData,
         })
     }
 
     fn apply(state: &mut Self::State, system_meta: &SystemMeta, world: &mut World) {
-        FilteredResourcesMut::apply(&mut state.access, system_meta, world)
+        Query::apply(&mut state.state, system_meta, world);
+        <&ResourceEntities as SystemParam>::apply(&mut (), system_meta, world);
+        <&Components as SystemParam>::apply(&mut (), system_meta, world);
     }
 
     fn queue(
         state: &mut Self::State,
         system_meta: &SystemMeta,
-        world: bevy_ecs::world::DeferredWorld,
+        mut world: bevy_ecs::world::DeferredWorld,
     ) {
-        FilteredResourcesMut::queue(&mut state.access, system_meta, world)
+        Query::queue(&mut state.state, system_meta, world.reborrow());
+        <&ResourceEntities as SystemParam>::queue(&mut (), system_meta, world.reborrow());
+        <&Components as SystemParam>::queue(&mut (), system_meta, world);
     }
 
     fn init_access(
         state: &Self::State,
         system_meta: &mut SystemMeta,
-        component_access_set: &mut bevy_ecs::query::FilteredAccessSet,
+        system_access: &mut bevy_ecs::system::SystemAccess,
         world: &mut World,
     ) {
-        FilteredResourcesMut::init_access(&state.access, system_meta, component_access_set, world)
+        Query::init_access(&state.state, system_meta, system_access, world);
+        // `get_param` also borrows `ResourceEntities` and `Components` from the world
+        <&ResourceEntities as SystemParam>::init_access(&(), system_meta, system_access, world);
+        <&Components as SystemParam>::init_access(&(), system_meta, system_access, world);
     }
 }
 
 pub struct CapResourceState<Caps: CapSet> {
     _ph: PhantomData<Caps>,
-    access: bevy_ecs::query::Access,
+    state: bevy_ecs::query::QueryState<FilteredEntityMut<'static, 'static>, With<IsResource>>,
 }

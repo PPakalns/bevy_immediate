@@ -1,4 +1,4 @@
-use bevy_math::bounding::Aabb2d;
+use bevy_shape::Aabb2d;
 
 /// Calculates if [`Aabb2d`] is fully inside another [`Aabb2d`]
 pub fn fully_inside(inside: &Aabb2d, outside: &Aabb2d) -> bool {
@@ -8,7 +8,7 @@ pub fn fully_inside(inside: &Aabb2d, outside: &Aabb2d) -> bool {
         && inside.max.y <= outside.max.y
 }
 
-/// Calculates overlap of two [`Aabb2d`]. Check [`bevy_math::bounding::BoundingVolume::visible_area`]
+/// Calculates overlap of two [`Aabb2d`]. Check [`bevy_shape::BoundingVolume::visible_area`]
 /// to see if it even overlaps.
 pub fn aabb_overlap(a: &Aabb2d, b: &Aabb2d) -> Aabb2d {
     Aabb2d {
