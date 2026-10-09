@@ -13,6 +13,7 @@ Bevy 0.20 support
 ## New features
 * Added helper utility methods for TextSpan, see ImmUiTextSpan trait methods.
 * Added [`Imm::tch`](https://docs.rs/bevy_immediate_core/latest/bevy_immediate_core/immediate/struct.Imm.html#method.tch) to create child entities with ids derived from the call site (`#[track_caller]`) and parent scope.
+* Added egui-style api example.
 
 # 0.8.0
 

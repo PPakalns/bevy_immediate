@@ -106,6 +106,7 @@ pub enum CurrentExample {
     WidgetUse,
     ExtensionUse,
     PowerUser,
+    EguiStyleApi,
     HotPatching,
     TextEdit,
 }
@@ -122,6 +123,7 @@ impl CurrentExample {
             CurrentExample::WidgetUse => "Widget usage",
             CurrentExample::ExtensionUse => "Extension use",
             CurrentExample::PowerUser => "Power user",
+            CurrentExample::EguiStyleApi => "Egui-style API",
             CurrentExample::HotPatching => "Hot patching",
             CurrentExample::TextEdit => "Text edit",
             CurrentExample::FeathersGallery => "Feathers gallery",

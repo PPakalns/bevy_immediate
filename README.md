@@ -71,6 +71,7 @@ Examples can be viewed: (`cargo run --example demo`).
 
 - [Hello world](./examples/hello_world.rs) - Minimal usage example
 - [Power user](./examples/power_user.rs) - Customized API for complex use cases
+- [egui-style API](./examples/egui_style_api.rs) - egui style API for your UI implementation.
 - [Plain UI](./examples/plain_ui.rs) - Create your UI as a single system
 - **Bevy inbuilt widgets**:
   - [Widgets](./examples/bevy_widgets.rs) - Showcases how to use widgets from bevy
@@ -198,6 +199,30 @@ impl ImmediateAttach<CapsUi> for PowerUserExampleRoot {
 }
 ```
 
+### Egui-style API example
+
+```rust,ignore
+ui.column(|ui| {
+    ui.label("Egui-style API");
+
+    ui.row(|ui| {
+        ui.column(|ui| {
+            for i in 0..5 {
+                let mut ui = ui.with_add_id_pref(i);
+                ui.label(&format!("Item {i}"));
+            }
+        });
+        ui.column(|ui| {
+            for i in 0..5 {
+                let mut ui = ui.with_add_id_pref(i);
+                if ui.button(&format!("Button {i}")).clicked() {
+                    params.click_count += 1;
+                }
+            }
+        });
+    });
+});
+```
 
 ### Extend functionality by implementing new capability
 

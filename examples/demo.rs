@@ -31,6 +31,7 @@ fn main() {
         .add_plugins(extension::ExtensionExamplePlugin)
         .add_plugins(extension_use::ExtensionUseExamplePlugin)
         .add_plugins(power_user::PowerUserExamplePlugin)
+        .add_plugins(egui_style_api::EguiStyleApiExamplePlugin)
         .add_plugins(hot_patching::HotPatchingExamplePlugin)
         .add_plugins(tooltip::TooltipExamplePlugin)
         .add_plugins(text_edit::TextEditExamplePlugin)
@@ -65,6 +66,8 @@ mod extension;
 mod extension_use;
 
 mod power_user;
+
+mod egui_style_api;
 
 mod hot_patching;
 

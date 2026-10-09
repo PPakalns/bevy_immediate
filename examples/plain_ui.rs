@@ -14,6 +14,7 @@ use crate::{
     hot_patching::HotPatchingRoot,
     main_menu::{CurrentExample, MenuUiRoot},
     power_user::PowerUserExampleRoot,
+    egui_style_api::EguiStyleApiExampleRoot,
     styles,
     text_edit::TextEditExampleRoot,
     tooltip::TooltipExampleRoot,
@@ -80,6 +81,9 @@ fn ui_system(ctx: ImmCtx<CapsUi>, example: ResMut<CurrentExample>) {
                 }
                 CurrentExample::PowerUser => {
                     content.on_spawn_insert(|| PowerUserExampleRoot);
+                }
+                CurrentExample::EguiStyleApi => {
+                    content.on_spawn_insert(|| EguiStyleApiExampleRoot);
                 }
                 CurrentExample::BevyWidgets => {
                     content.on_spawn_insert(|| BevyWidgetExampleRoot);
