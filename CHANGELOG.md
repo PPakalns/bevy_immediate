@@ -12,6 +12,8 @@ Bevy 0.20 support
 
 ## New features
 * Added helper utility methods for TextSpan, see ImmUiTextSpan trait methods.
+* Added [`Imm::tch`](https://docs.rs/bevy_immediate_core/latest/bevy_immediate_core/immediate/struct.Imm.html#method.tch) to create child entities with ids derived from the call site (`#[track_caller]`) and parent scope.
+* Child creation detects duplicate sibling ids within the same frame (in debug builds logs a warning) and applies best-effort id disambiguation (see [New entity creation](https://github.com/PPakalns/bevy_immediate/#new-entity-creation)). In loops, use `with_add_id_pref` (or explicit `ch_id` / `lch!`) instead of relying on disambiguation.
 
 # 0.8.0
 

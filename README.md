@@ -250,48 +250,58 @@ where
 
 ## New entity creation
 
-New child entities can be created with `.ch`, `.ch_id`, `.ch_with_manual_id` family of functions.
+New child entities can be created with `.ch`, `.ch_id`, `.tch`, `.ch_with_manual_id` and related helpers.
 
-For child entity creation that could appear, disappear, that are created inside loop: **unique id must be provided**.
+For child entity creation that could appear, disappear, or that are created inside a loop: **a unique id must be provided**.
 
-Provided id is combined with parent id. **Id must be unique between siblings**.
+Provided id is combined with the parent id. **Ids must be unique between siblings in the same frame**.
+
+### Choosing an API
+
+| API | When to use |
+|-----|-------------|
+| `.tch()` | Stable UI at a fixed call site: id comes from `#[track_caller]` (file, line, column) plus parent scope. If you call `.tch()` from a shared helper, add `#[track_caller]` on that helper so the id matches the real call site. |
+| `.ch_id(...)` / `lch!(ui, …)` | Explicit or line/column-based ids; loops need a per-iteration suffix (see below). |
+| `.ch()` | Sequential auto ids only when sibling count is fixed and entities never appear/disappear between frames. |
+| `.with_add_id_pref(...)` | **Useful in loops** (and similar dynamic scopes) when using `.ch()` or `.tch()` so each iteration gets its own id prefix. |
+
+If two siblings reuse the same id in one frame, bevy_immediate logs a **debug warning** in debug mode and tries to assign a disambiguated id automatically. That recovery is best-effort. Prefer explicit ids or `with_add_id_pref` instead of relying on it.
 
 Examples:
 ```rs
-ui.ch_id("my_id");
-ui.ch_id(lid!());
-lch!(ui);
+
+ui.tch(); // Id is automatically assigned based on code location (file, line, column) 
+for idx in 0..count {
+    // Inside loops  still unique idx must be provided to uniquely identify UI entity
+    let mut ui = ui.with_add_id_pref(idx);
+    ui.tch();
+}
+
+ui.ch(); // Internal counter; not for appearing/disappearing entities
+         // (such entities may be misidentified between frames).
+         
+ui.ch_id("my_id");  // Child entity created with unique id by combining parent scope id and given argument.
+ui.ch_id(lid!());   // The same as above, but given argument is code location (line, column)
+lch!(ui);           // The same as ui.ch_id(lid!())
 
 for idx in 0..count {
-    ui.ch_id(("my_loop", idx));
+    ui.ch_id(("my_loop", idx));    // Inside loops you need to provide additional unique id source
     ui.ch_id(lid!(idx));
     lch!(ui, idx);
+    
+    // Or use `with_add_id_pref`
+    let mut ui = ui.with_add_id_pref(idx);
+    ui.ch();
+    ui.tch();
+    ui.ch_id("my_id");  // Child entity created with unique id by combining parent scope id and given argument.
+    ui.ch_id(lid!());   // The same as above, but given argument is code location (line, column)
+    lch!(ui);           // The same as ui.ch_id(lid!())
 }
 
-ui.ch(); // Has internal counter for id generation, but can not be used
-         // for appearing, disappearing entities.
-         // Because between frames entities may get misidentified.
-
-for idx in 0..count {
-    // In case of many items inside block, you can add additional id to auto id generation
-    // In that case you have a new unique scope for which unique id requirements are restored.
-    let mut ui = ui.with_add_id_pref(("my_loop_2", idx));
-    ui.ch();
-    ui.ch();
-    ui.ch();
-}
-
-// Or even simpler
-for idx in 0..count {
-    let mut ui = ui.with_add_id_pref(lid!(idx));
-    ui.ch();
-    ui.ch();
-    ui.ch();
-}
 
 ```
 
-`lid, lch` helper macros use current column, line numbers to generate auto id. But still inside loops you need to provide additional unique id.
+`lid!` / `lch!` use the macro’s line and column for id data. Inside a loop, the line/column is the same every iteration. Use `with_add_id_pref`, `ch_id`, or `lch!(ui, idx)` so each item gets a distinct id.
 
 ## Hotpatching
 
@@ -350,4 +360,3 @@ Publish your own crate that is built using `bevy_immediate`!
   - [x] Tooltips
   - [x] Popups
   - [x] Draggable, resizable windows (like `egui::Window`)
-
