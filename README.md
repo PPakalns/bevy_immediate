@@ -265,7 +265,7 @@ Provided id is combined with the parent id. **Ids must be unique between sibling
 | `.ch()` | Sequential auto ids only when sibling count is fixed and entities never appear/disappear between frames. |
 | `.with_add_id_pref(...)` | **Useful in loops** (and similar dynamic scopes) when using `.ch()` or `.tch()` so each iteration gets its own id prefix. |
 
-If two siblings reuse the same id in one frame, bevy_immediate logs a **debug warning** in debug mode and tries to assign a disambiguated id automatically. That recovery is best-effort. Prefer explicit ids or `with_add_id_pref` instead of relying on it.
+If two siblings reuse the same id in one frame, they map to the same entity and UI will misbehave. Use `with_add_id_pref` or explicit ids in loops.
 
 Examples:
 ```rs
@@ -277,7 +277,18 @@ for idx in 0..count {
     ui.tch();
 }
 
-ui.ch(); // Internal counter; not for appearing/disappearing entities
+// Helper methods that use tch needs to use #[track_caller] annotation
+#[track_caller]
+fn helper(ui: &ImmEntity<Caps>) {
+    ui.tch();
+}
+helper(ui);
+helper(ui);
+
+// ################################################################
+
+ui.ch(); // Uses internal counter for id generation; 
+         // Should not be used for appearing/disappearing entities
          // (such entities may be misidentified between frames).
          
 ui.ch_id("my_id");  // Child entity created with unique id by combining parent scope id and given argument.
@@ -289,10 +300,10 @@ for idx in 0..count {
     ui.ch_id(lid!(idx));
     lch!(ui, idx);
     
-    // Or use `with_add_id_pref`
+    // Or use `with_add_id_pref` to provide unique id source to all following calls in scope
     let mut ui = ui.with_add_id_pref(idx);
-    ui.ch();
     ui.tch();
+    ui.ch();
     ui.ch_id("my_id");  // Child entity created with unique id by combining parent scope id and given argument.
     ui.ch_id(lid!());   // The same as above, but given argument is code location (line, column)
     lch!(ui);           // The same as ui.ch_id(lid!())

@@ -147,31 +147,8 @@ impl<'w, 's, Caps: CapSet> Imm<'w, 's, Caps> {
                     break 'entity_full_reuse;
                 };
 
-                if qentity.tracker.iteration == self.ctx.state.iteration {
-                    // Entity id collision!!!
-                    // We add additional data to id to try to avoid id collision
-                    // by assigning best guess unique id using collision count
-                    qentity.tracker.collision_count += 1;
-                    let collide_id = qentity.tracker.collision_count;
-                    #[cfg(debug_assertions)]
-                    {
-                        log::warn!(
-                            "Bevy immediate child entity id collision, \
-                            trying to assign best guess unique id. \
-                            Read more: https://github.com/PPakalns/bevy_immediate/#new-entity-creation"
-                        );
-                    }
-
-                    // Add collision_count to id to try to fix id collision
-                    const COLLIDE_CONST: u32 = 534911923;
-                    return self.ch_with_manual_id(ImmIdBuilder::Unique(
-                        id.with((COLLIDE_CONST, collide_id)),
-                    ));
-                }
-
                 // Update iteration for entity upkeep tracking
                 qentity.tracker.iteration = self.ctx.state.iteration;
-                qentity.tracker.collision_count = 0;
 
                 if qentity.child_of.map(|ch| ch.parent()) != self.current.entity.map(|e| e.entity) {
                     // Parent changed
@@ -195,7 +172,6 @@ impl<'w, 's, Caps: CapSet> Imm<'w, 's, Caps> {
                 ImmMarker::<Caps> {
                     id,
                     iteration: self.ctx.state.iteration,
-                    collision_count: 0,
                     _ph: PhantomData,
                 },
             ));
@@ -857,7 +833,6 @@ impl<'r, 'w, 's, Caps: CapSet> ImmEntity<'r, 'w, 's, Caps> {
 pub struct ImmMarker<Caps> {
     id: ImmId,
     iteration: u32,
-    collision_count: u32,
     _ph: PhantomData<Caps>,
 }
 
