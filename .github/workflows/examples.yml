@@ -12,7 +12,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.97
+          toolchain: 1.97.1
           targets: wasm32-unknown-unknown
 
       - uses: Swatinem/rust-cache@v2
