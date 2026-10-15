@@ -55,9 +55,8 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapQueryParam<'_, '_, Caps> {
         state: &Self::State,
         system_meta: &mut SystemMeta,
         system_access: &mut bevy_ecs::system::SystemAccess,
-        world: &mut World,
-    ) {
-        Query::init_access(&state.state, system_meta, system_access, world)
+    ) -> Result<(), bevy_ecs::system::SystemParamAccessConflict> {
+        Query::init_access(&state.state, system_meta, system_access)
     }
 
     fn apply(state: &mut Self::State, system_meta: &SystemMeta, world: &mut World) {
@@ -160,12 +159,12 @@ unsafe impl<Caps: CapSet> SystemParam for ImmCapResourcesParam<'_, '_, Caps> {
         state: &Self::State,
         system_meta: &mut SystemMeta,
         system_access: &mut bevy_ecs::system::SystemAccess,
-        world: &mut World,
-    ) {
-        Query::init_access(&state.state, system_meta, system_access, world);
+    ) -> Result<(), bevy_ecs::system::SystemParamAccessConflict> {
+        Query::init_access(&state.state, system_meta, system_access)?;
         // `get_param` also borrows `ResourceEntities` and `Components` from the world
-        <&ResourceEntities as SystemParam>::init_access(&(), system_meta, system_access, world);
-        <&Components as SystemParam>::init_access(&(), system_meta, system_access, world);
+        <&ResourceEntities as SystemParam>::init_access(&(), system_meta, system_access)?;
+        <&Components as SystemParam>::init_access(&(), system_meta, system_access)?;
+        Ok(())
     }
 }
 
